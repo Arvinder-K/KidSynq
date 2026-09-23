@@ -6,8 +6,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
     School, Users, UserCheck, Armchair, 
-    Search, Plus, UserPlus, FileText, CheckCircle2, XCircle, AlertCircle
+    Search, Plus, UserPlus, FileText, CheckCircle2, XCircle, AlertCircle, Calendar
 } from 'lucide-react';
+
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -182,34 +183,32 @@ const ClassroomDashboard: React.FC = () => {
 
     return (
         <Layout>
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
-                <div>
-                    <h1 className="text-2xl font-bold text-slate-800">Classroom Dashboard</h1>
-                    <p className="text-slate-500 mt-1">Overview of all classrooms and occupancy.</p>
+            <div className="space-y-6 max-w-7xl mx-auto font-sans">
+                {/* Header */}
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                        <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Classrooms</h1>
+                        <p className="text-gray-500 text-sm mt-1">Overview of room capacities, ratio coverage, and educator assignments.</p>
+                    </div>
+                    <div className="flex gap-2.5">
+                        <button 
+                            onClick={() => setIsAddModalOpen(true)}
+                            className="flex items-center gap-1.5 bg-indigo-600 text-white px-4 py-2.5 rounded-xl text-xs font-semibold hover:bg-indigo-700 transition-all shadow-xs"
+                        >
+                            <Plus className="w-4 h-4" />
+                            <span>Add Classroom</span>
+                        </button>
+                    </div>
                 </div>
-                <div className="flex gap-3">
-                    <button className="flex items-center gap-2 bg-white border border-slate-200 text-slate-700 px-4 py-2 rounded-xl hover:bg-slate-50 transition-colors shadow-sm">
-                        <FileText className="w-4 h-4" />
-                        <span className="text-sm font-medium">Report</span>
-                    </button>
-                    <button 
-                        onClick={() => setIsAddModalOpen(true)}
-                        className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-xl hover:bg-indigo-700 transition-colors shadow-sm shadow-indigo-200"
-                    >
-                        <Plus className="w-4 h-4" />
-                        <span className="text-sm font-medium">Add Classroom</span>
-                    </button>
-                </div>
-            </div>
 
             {/* Top Stats */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
                 {[
-                    { label: 'Total Classrooms', value: stats.total_classrooms, icon: School, color: 'text-blue-600', bg: 'bg-blue-100' },
-                    { label: 'Active Classrooms', value: stats.active_classrooms, icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-100' },
-                    { label: 'Students Assigned', value: stats.students_assigned, icon: Users, color: 'text-indigo-600', bg: 'bg-indigo-100' },
-                    { label: 'Teachers Assigned', value: stats.teachers_assigned, icon: UserCheck, color: 'text-purple-600', bg: 'bg-purple-100' },
-                    { label: 'Available Seats', value: stats.available_seats, icon: Armchair, color: 'text-orange-600', bg: 'bg-orange-100' },
+                    { label: 'Total Classrooms', value: stats.total_classrooms, icon: School, color: 'text-emerald-700', bg: 'bg-emerald-100' },
+                    { label: 'Active Classrooms', value: stats.active_classrooms, icon: CheckCircle2, color: 'text-teal-700', bg: 'bg-teal-100' },
+                    { label: 'Students Assigned', value: stats.students_assigned, icon: Users, color: 'text-emerald-800', bg: 'bg-emerald-100' },
+                    { label: 'Teachers Assigned', value: stats.teachers_assigned, icon: UserCheck, color: 'text-lime-800', bg: 'bg-lime-100' },
+                    { label: 'Available Seats', value: stats.available_seats, icon: Armchair, color: 'text-amber-700', bg: 'bg-amber-100' },
                 ].map((stat, i) => (
                     <motion.div 
                         initial={{ opacity: 0, y: 10 }}
@@ -314,13 +313,13 @@ const ClassroomDashboard: React.FC = () => {
                                 placeholder="Search classrooms..." 
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="pl-9 pr-4 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent w-full sm:w-64 bg-slate-50"
+                                className="pl-9 pr-4 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent w-full sm:w-64 bg-slate-50"
                             />
                         </div>
                         <select 
                             value={statusFilter}
                             onChange={(e) => setStatusFilter(e.target.value)}
-                            className="px-4 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50"
+                            className="px-4 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-slate-50"
                         >
                             <option value="All">All Status</option>
                             <option value="Active">Active</option>
@@ -344,7 +343,9 @@ const ClassroomDashboard: React.FC = () => {
                             {filteredClassrooms.map((c) => (
                                 <tr key={c.id} className="hover:bg-slate-50/50 transition-colors">
                                     <td className="py-4 px-6">
-                                        <p className="font-semibold text-slate-800">{c.name}</p>
+                                        <Link to={`/daycare/classrooms/${c.id}`} className="font-semibold text-slate-800 hover:text-emerald-700 transition-colors">
+                                            {c.name}
+                                        </Link>
                                         <p className="text-xs text-slate-500 mt-0.5">Created {new Date(c.created_at).toLocaleDateString()}</p>
                                     </td>
                                     <td className="py-4 px-6 text-sm text-slate-600">
@@ -367,8 +368,15 @@ const ClassroomDashboard: React.FC = () => {
                                     <td className="py-4 px-6 text-right">
                                         <div className="flex justify-end gap-2">
                                             <Link 
-                                                to={`/classrooms/${c.id}/teachers`}
-                                                className="p-2 text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors inline-block" 
+                                                to={`/daycare/classrooms/${c.id}/schedule`}
+                                                className="p-2 text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors inline-block" 
+                                                title="Classroom Schedule & Ratio Coverage"
+                                            >
+                                                <Calendar className="w-4 h-4" />
+                                            </Link>
+                                            <Link 
+                                                to={`/daycare/classrooms/${c.id}/teachers`}
+                                                className="p-2 text-purple-600 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors inline-block" 
                                                 title="Manage Teachers"
                                             >
                                                 <UserCheck className="w-4 h-4" />
@@ -383,6 +391,7 @@ const ClassroomDashboard: React.FC = () => {
                                         </div>
                                     </td>
                                 </tr>
+
                             ))}
                             {filteredClassrooms.length === 0 && (
                                 <tr>
@@ -529,6 +538,7 @@ const ClassroomDashboard: React.FC = () => {
                     </div>
                 )}
             </AnimatePresence>
+            </div>
         </Layout>
     );
 };

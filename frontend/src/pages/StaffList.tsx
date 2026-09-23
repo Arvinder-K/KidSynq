@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import Layout from '../components/Layout';
 import api from '../api';
+import TimeOffTab from '../components/staff/TimeOffTab';
+import StaffAttendanceTab from '../components/staff/StaffAttendanceTab';
 
 interface User {
     id: number;
@@ -23,6 +25,9 @@ const StaffList: React.FC = () => {
     const [staff, setStaff] = useState<Employee[]>([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
+    const [activeTab, setActiveTab] = useState('Overview');
+    
+    const tabs = ['Overview', 'Roles', 'Documents', 'Time Off', 'Attendance'];
     
     // Form state
     const [firstName, setFirstName] = useState('');
@@ -89,11 +94,35 @@ const StaffList: React.FC = () => {
                 </button>
             </div>
 
-            <div className="bg-white shadow overflow-hidden sm:rounded-lg">
-                {loading ? (
-                    <div className="text-center py-12 text-gray-500">Loading staff directory...</div>
-                ) : (
-                    <table className="min-w-full divide-y divide-gray-200">
+            <div className="mb-6 border-b border-gray-200">
+                <nav className="-mb-px flex space-x-8">
+                    {tabs.map(tab => (
+                        <button
+                            key={tab}
+                            onClick={() => setActiveTab(tab)}
+                            className={`${
+                                activeTab === tab
+                                    ? 'border-indigo-500 text-indigo-600'
+                                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                            } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+                        >
+                            {tab}
+                        </button>
+                    ))}
+                </nav>
+            </div>
+
+            {activeTab === 'Time Off' && <TimeOffTab />}
+            {activeTab === 'Attendance' && <StaffAttendanceTab />}
+            {activeTab === 'Roles' && <div className="p-8 bg-white shadow rounded-lg text-center text-gray-500">Roles Management feature is under development.</div>}
+            {activeTab === 'Documents' && <div className="p-8 bg-white shadow rounded-lg text-center text-gray-500">Staff Documents feature is under development.</div>}
+
+            {activeTab === 'Overview' && (
+                <div className="bg-white shadow overflow-hidden sm:rounded-lg">
+                    {loading ? (
+                        <div className="text-center py-12 text-gray-500">Loading staff directory...</div>
+                    ) : (
+                        <table className="min-w-full divide-y divide-gray-200">
                         <thead className="bg-gray-50">
                             <tr>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
@@ -143,6 +172,7 @@ const StaffList: React.FC = () => {
                     </table>
                 )}
             </div>
+            )}
 
             {/* Add Staff Modal */}
             {showModal && (

@@ -101,12 +101,12 @@ const TeacherAssignmentPage: React.FC = () => {
         <Layout>
             <div className="max-w-5xl mx-auto">
                 <div className="flex items-center gap-4 mb-8">
-                    <Link to="/classrooms" className="p-2 bg-white rounded-xl border border-slate-200 text-slate-500 hover:text-indigo-600 hover:border-indigo-200 transition-colors">
+                    <Link to="/daycare/classrooms" className="p-2 bg-white rounded-xl border border-slate-200 text-slate-500 hover:text-emerald-600 hover:border-emerald-200 transition-colors shadow-xs">
                         <ArrowLeft className="w-5 h-5" />
                     </Link>
                     <div>
-                        <h1 className="text-2xl font-bold text-slate-800">Teacher Assignments: {classroom.room_name}</h1>
-                        <p className="text-slate-500 mt-1">Manage primary and assistant teachers for this classroom.</p>
+                        <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Teacher Assignments: {classroom.room_name}</h1>
+                        <p className="mt-1 text-sm text-gray-500">Manage primary and assistant teachers for this classroom.</p>
                     </div>
                 </div>
 

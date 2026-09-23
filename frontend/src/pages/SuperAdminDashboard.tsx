@@ -5,30 +5,89 @@ import { useAuth } from '../contexts/AuthContext';
 import { 
     LayoutDashboard, Users, Building2, CreditCard, 
     Plus, Edit2, CheckCircle2, ShieldCheck,
-    LogOut, UserCircle, XCircle, TrendingUp
+    LogOut, UserCircle, XCircle, TrendingUp, Shield,
+    FileText, MessageSquare, FileSpreadsheet, AlertCircle, Loader2
 } from 'lucide-react';
+import DaycareOnboardingModal from '../components/DaycareOnboardingModal';
+import DaycareManagementTab from '../components/DaycareManagementTab';
+import DaycareAdminManagementTab from '../components/DaycareAdminManagementTab';
+import PlanManagementTab from '../components/PlanManagementTab';
+import SubscriptionManagementTab from '../components/SubscriptionManagementTab';
+import PaymentHistoryTab from '../components/PaymentHistoryTab';
+import InvoiceListTab from '../components/InvoiceListTab';
+import SaaSAnalyticsTab from '../components/SaaSAnalyticsTab';
+import AuditLogTab from '../components/AuditLogTab';
+import SystemAnnouncementTab from '../components/SystemAnnouncementTab';
+import SupportTicketTab from '../components/SupportTicketTab';
+import RatioRulesManagementTab from '../components/RatioRulesManagementTab';
+import { Scale } from 'lucide-react';
+
+import {
+  Chart as ChartJS, CategoryScale, LinearScale, PointElement,
+  LineElement, BarElement, ArcElement, Title, Tooltip, Legend
+} from 'chart.js';
+import { Line, Bar } from 'react-chartjs-2';
+
+ChartJS.register(
+  CategoryScale, LinearScale, PointElement, LineElement,
+  BarElement, ArcElement, Title, Tooltip, Legend
+);
+
+
+class ErrorBoundary extends React.Component<any, {hasError: boolean, error: any}> {
+  constructor(props: any) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error: any) {
+    return { hasError: true, error };
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="p-8 text-red-500 font-mono whitespace-pre-wrap bg-red-50 border border-red-200 rounded">
+          <h2>Something went wrong.</h2>
+          <p>{this.state.error?.toString()}</p>
+          <p>{this.state.error?.stack}</p>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 export default function SuperAdminDashboard() {
     const { logout, user } = useAuth();
-    const [activeTab, setActiveTab] = useState<'daycares' | 'users' | 'plans' | 'subscriptions'>('daycares');
+    const [activeTab, setActiveTab] = useState<'dashboard' | 'analytics' | 'daycares' | 'daycare-admins' | 'users' | 'plans' | 'subscriptions' | 'logs' | 'tickets' | 'invoices' | 'payments' | 'announcements' | 'ratio-rules'>('dashboard');
     
     const [daycares, setDaycares] = useState<any[]>([]);
     const [users, setUsers] = useState<any[]>([]);
     const [plans, setPlans] = useState<any[]>([]);
     const [subscriptions, setSubscriptions] = useState<any[]>([]);
+    const [dashboardData, setDashboardData] = useState<any>(null);
+    const [isLoadingDashboard, setIsLoadingDashboard] = useState(true);
+    const [dashboardError, setDashboardError] = useState<string | null>(null);
 
     const [isDaycareModalOpen, setIsDaycareModalOpen] = useState(false);
     const [isUserModalOpen, setIsUserModalOpen] = useState(false);
     const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
     const [isSubModalOpen, setIsSubModalOpen] = useState(false);
+    const [isOnboardingModalOpen, setIsOnboardingModalOpen] = useState(false);
 
     const [formData, setFormData] = useState<any>({});
 
     const fetchData = () => {
-        api.get('/admin/daycares/').then(res => setDaycares(res.data)).catch(console.error);
-        api.get('/admin/users/').then(res => setUsers(res.data)).catch(console.error);
-        api.get('/admin/subscriptions/plans/').then(res => setPlans(res.data)).catch(console.error);
-        api.get('/admin/subscriptions/assigned/').then(res => setSubscriptions(res.data)).catch(console.error);
+        api.get('/super-admin/daycares/').then(res => {
+            setDaycares(res.data.results || res.data || []);
+        }).catch(console.error);
+        api.get('/super-admin/users/').then(res => setUsers(res.data.results || res.data || [])).catch(console.error);
+        api.get('/super-admin/subscription-plans/').then(res => setPlans(res.data.results || res.data || [])).catch(console.error);
+        api.get('/super-admin/subscriptions/assigned/').then(res => setSubscriptions(res.data.results || res.data || [])).catch(console.error);
+        setIsLoadingDashboard(true);
+        api.get('/super-admin/dashboard/')
+           .then(res => { setDashboardData(res.data); setDashboardError(null); })
+           .catch(() => setDashboardError('Failed to load dashboard data.'))
+           .finally(() => setIsLoadingDashboard(false));
     };
 
     useEffect(() => {
@@ -44,9 +103,9 @@ export default function SuperAdminDashboard() {
         e.preventDefault();
         try {
             if (formData.id) {
-                await api.patch(`/admin/daycares/${formData.id}/`, formData);
+                await api.patch(`/super-admin/daycares/${formData.id}/`, formData);
             } else {
-                await api.post('/admin/daycares/', formData);
+                await api.post('/super-admin/daycares/', formData);
             }
             setIsDaycareModalOpen(false);
             setFormData({});
@@ -67,9 +126,9 @@ export default function SuperAdminDashboard() {
             }
 
             if (formData.id) {
-                await api.patch(`/admin/users/${formData.id}/`, payload);
+                await api.patch(`/super-admin/users/${formData.id}/`, payload);
             } else {
-                await api.post('/admin/users/', payload);
+                await api.post('/super-admin/users/', payload);
             }
             setIsUserModalOpen(false);
             setFormData({});
@@ -83,9 +142,9 @@ export default function SuperAdminDashboard() {
         e.preventDefault();
         try {
             if (formData.id) {
-                await api.patch(`/admin/subscriptions/plans/${formData.id}/`, formData);
+                await api.patch(`/super-admin/subscription-plans/${formData.id}/`, formData);
             } else {
-                await api.post('/admin/subscriptions/plans/', formData);
+                await api.post('/super-admin/subscription-plans/', formData);
             }
             setIsPlanModalOpen(false);
             setFormData({});
@@ -99,9 +158,9 @@ export default function SuperAdminDashboard() {
         e.preventDefault();
         try {
             if (formData.id) {
-                await api.patch(`/admin/subscriptions/assigned/${formData.id}/`, formData);
+                await api.patch(`/super-admin/subscriptions/assigned/${formData.id}/`, formData);
             } else {
-                await api.post('/admin/subscriptions/assigned/', formData);
+                await api.post('/super-admin/subscriptions/assigned/', formData);
             }
             setIsSubModalOpen(false);
             setFormData({});
@@ -112,10 +171,18 @@ export default function SuperAdminDashboard() {
     };
 
     const navItems = [
+        { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+        { id: 'analytics', label: 'Analytics', icon: TrendingUp },
         { id: 'daycares', label: 'Daycares', icon: Building2 },
-        { id: 'users', label: 'Users', icon: Users },
+        { id: 'daycare-admins', label: 'Daycare Admins', icon: Shield },
+        { id: 'users', label: 'Platform Users', icon: Users },
         { id: 'plans', label: 'Plans', icon: LayoutDashboard },
         { id: 'subscriptions', label: 'Subscriptions', icon: CreditCard },
+        { id: 'ratio-rules', label: 'Provincial Ratio Rules', icon: Scale },
+        { id: 'invoices', label: 'Invoices', icon: FileSpreadsheet },
+        { id: 'tickets', label: 'Support Tickets', icon: MessageSquare },
+        { id: 'announcements', label: 'Announcements', icon: FileText },
+        { id: 'logs', label: 'Audit Logs', icon: FileText },
     ];
 
     return (
@@ -179,15 +246,17 @@ export default function SuperAdminDashboard() {
                 {/* Dashboard Area */}
                 <div className="flex-1 overflow-auto p-8 relative">
                     {/* Top Stats Cards */}
-                    <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
+                    {activeTab === 'dashboard' && (
+                        <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
                         {[
                             { label: 'Monthly Revenue', value: (() => {
                                 let mrr = 0;
-                                subscriptions.forEach(sub => {
-                                    if (sub.subscription_status === 'Active') {
-                                        const plan = plans.find(p => p.id === sub.subscription_plan);
-                                        if (plan && plan.price) {
-                                            mrr += parseFloat(plan.price);
+                                (subscriptions || []).forEach(sub => {
+                                    if (sub.subscription_status?.toLowerCase() === 'active') {
+                                        const planId = typeof sub.subscription_plan === 'object' ? sub.subscription_plan?.id : sub.subscription_plan;
+                                        const plan = plans.find(p => p.id === planId);
+                                        if (plan && (plan.monthly_price || plan.price)) {
+                                            mrr += parseFloat(plan.monthly_price || plan.price);
                                         }
                                     }
                                 });
@@ -195,7 +264,7 @@ export default function SuperAdminDashboard() {
                             })(), icon: TrendingUp, color: 'text-emerald-600', bg: 'bg-emerald-100' },
                             { label: 'Total Daycares', value: daycares.length, icon: Building2, color: 'text-blue-600', bg: 'bg-blue-100' },
                             { label: 'Platform Users', value: users.length, icon: Users, color: 'text-indigo-600', bg: 'bg-indigo-100' },
-                            { label: 'Active Subs', value: subscriptions.filter(s => s.subscription_status==='Active').length, icon: CheckCircle2, color: 'text-green-600', bg: 'bg-green-100' },
+                            { label: 'Active Subs', value: (subscriptions || []).filter(s => s.subscription_status?.toLowerCase() === 'active').length, icon: CheckCircle2, color: 'text-green-600', bg: 'bg-green-100' },
                             { label: 'Available Plans', value: plans.length, icon: LayoutDashboard, color: 'text-purple-600', bg: 'bg-purple-100' }
                         ].map((stat, i) => (
                             <motion.div 
@@ -214,43 +283,26 @@ export default function SuperAdminDashboard() {
                                 </div>
                             </motion.div>
                         ))}
-                    </div>
+                        </div>
+                    )}
 
-                    {/* Main Table Card */}
-                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                        
-                        {/* Daycares Tab */}
-                        {activeTab === 'daycares' && (
-                            <div>
-                                <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-                                    <h3 className="text-lg font-semibold text-gray-800">Manage Daycares</h3>
-                                    <button onClick={() => { setFormData({}); setIsDaycareModalOpen(true); }} className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium shadow-sm transition-colors text-sm flex items-center">
-                                        <Plus className="w-4 h-4 mr-1" /> Add Daycare
-                                    </button>
-                                </div>
-                                <ul className="divide-y divide-gray-100">
-                                    {daycares.map((daycare) => (
-                                        <li key={daycare.id} className="hover:bg-gray-50 transition-colors">
-                                            <div className="px-6 py-4 flex justify-between items-center">
-                                                <div>
-                                                    <p className="text-sm font-bold text-gray-900">{daycare.name}</p>
-                                                    <p className="text-sm text-gray-500 mt-1">{daycare.email} • {daycare.phone}</p>
-                                                </div>
-                                                <div className="flex items-center gap-6">
-                                                    <span className={`px-2.5 py-1 text-xs font-semibold rounded-full ${daycare.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
-                                                        {daycare.status}
-                                                    </span>
-                                                    <button onClick={() => { setFormData(daycare); setIsDaycareModalOpen(true); }} className="text-slate-400 hover:text-indigo-600 p-2 hover:bg-indigo-50 rounded-lg transition-colors">
-                                                        <Edit2 className="w-4 h-4" />
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </li>
-                                    ))}
-                                    {daycares.length === 0 && <li className="px-6 py-8 text-center text-gray-500">No daycares found.</li>}
-                                </ul>
-                            </div>
-                        )}
+                    {/* Standalone Tabs */}
+                    {activeTab === 'plans' && <PlanManagementTab />}
+                    {activeTab === 'subscriptions' && <SubscriptionManagementTab />}
+                    {activeTab === 'invoices' && <InvoiceListTab />}
+                    {activeTab === 'payments' && <PaymentHistoryTab />}
+                    {activeTab === 'analytics' && <SaaSAnalyticsTab />}
+                    {activeTab === 'ratio-rules' && <ErrorBoundary><RatioRulesManagementTab /></ErrorBoundary>}
+
+                    {/* Main Table Card (For older tabs) */}
+                    {['daycares', 'daycare-admins', 'users', 'dashboard', 'logs', 'tickets', 'announcements'].includes(activeTab) && (
+                        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                            
+                            {/* Daycares Tab */}
+                        {activeTab === 'daycares' && <DaycareManagementTab />}
+
+                        {/* Daycare Admins Tab */}
+                        {activeTab === 'daycare-admins' && <DaycareAdminManagementTab />}
 
                         {/* Users Tab */}
                         {activeTab === 'users' && (
@@ -262,7 +314,7 @@ export default function SuperAdminDashboard() {
                                     </button>
                                 </div>
                                 <ul className="divide-y divide-gray-100">
-                                    {users.map((u) => (
+                                    {users.filter((u: any) => u.is_superuser).map((u) => (
                                         <li key={u.id} className="hover:bg-gray-50 transition-colors">
                                             <div className="px-6 py-4 flex justify-between items-center">
                                                 <div className="flex items-center gap-4">
@@ -295,80 +347,129 @@ export default function SuperAdminDashboard() {
                             </div>
                         )}
 
-                        {/* Plans Tab */}
-                        {activeTab === 'plans' && (
-                            <div>
-                                <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-                                    <h3 className="text-lg font-semibold text-gray-800">Subscription Plans</h3>
-                                    <button onClick={() => { setFormData({}); setIsPlanModalOpen(true); }} className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium shadow-sm transition-colors text-sm flex items-center">
-                                        <Plus className="w-4 h-4 mr-1" /> Add Plan
-                                    </button>
-                                </div>
-                                <ul className="divide-y divide-gray-100">
-                                    {plans.map((p) => (
-                                        <li key={p.id} className="hover:bg-gray-50 transition-colors">
-                                            <div className="px-6 py-4 flex justify-between items-center">
-                                                <div>
-                                                    <p className="text-sm font-bold text-gray-900 text-lg">{p.name}</p>
-                                                    <p className="text-sm font-medium text-indigo-600">${p.price} <span className="text-gray-500 font-normal">/ month</span></p>
-                                                </div>
-                                                <div className="flex items-center gap-6">
-                                                    <div className="text-xs text-gray-500 space-y-1 text-right mr-4">
-                                                        <div><span className="font-semibold text-gray-700">{p.max_students}</span> Students</div>
-                                                        <div><span className="font-semibold text-gray-700">{p.max_staff}</span> Staff</div>
-                                                    </div>
-                                                    <button onClick={() => { setFormData(p); setIsPlanModalOpen(true); }} className="text-slate-400 hover:text-indigo-600 p-2 hover:bg-indigo-50 rounded-lg transition-colors">
-                                                        <Edit2 className="w-4 h-4" />
-                                                    </button>
+
+                        {/* Dashboard Tab */}
+                        {activeTab === 'dashboard' && (
+                            <div className="p-8">
+                                <h3 className="text-xl font-bold text-gray-900 mb-6">Super Admin Dashboard</h3>
+                                
+                                {isLoadingDashboard ? (
+                                    <div className="flex flex-col items-center justify-center py-20">
+                                        <Loader2 className="w-8 h-8 text-indigo-600 animate-spin mb-4" />
+                                        <p className="text-gray-500">Loading metrics...</p>
+                                    </div>
+                                ) : dashboardError ? (
+                                    <div className="flex flex-col items-center justify-center py-20 text-red-500">
+                                        <AlertCircle className="w-12 h-12 mb-4 opacity-50" />
+                                        <p>{dashboardError}</p>
+                                    </div>
+                                ) : !dashboardData ? (
+                                    <div className="text-center py-20 text-gray-500">No data available</div>
+                                ) : (
+                                    <div className="space-y-8">
+                                        {/* Metrics Grid */}
+                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                                            <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                                                <p className="text-sm font-semibold text-gray-500 mb-1">Total Daycares</p>
+                                                <p className="text-3xl font-bold text-gray-900">{dashboardData.metrics.total_daycares}</p>
+                                                <div className="mt-2 flex gap-2 text-xs">
+                                                    <span className="text-green-600 bg-green-50 px-2 py-0.5 rounded">{dashboardData.metrics.active_daycares} Active</span>
+                                                    <span className="text-orange-600 bg-orange-50 px-2 py-0.5 rounded">{dashboardData.metrics.suspended_daycares} Suspended</span>
                                                 </div>
                                             </div>
-                                        </li>
-                                    ))}
-                                </ul>
+                                            <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                                                <p className="text-sm font-semibold text-gray-500 mb-1">Total Revenue</p>
+                                                <p className="text-3xl font-bold text-gray-900">${dashboardData.metrics.monthly_revenue.toFixed(2)}</p>
+                                            </div>
+                                            <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                                                <p className="text-sm font-semibold text-gray-500 mb-1">Active Subscriptions</p>
+                                                <p className="text-3xl font-bold text-gray-900">{dashboardData.metrics.active_subscriptions}</p>
+                                                <div className="mt-2 flex gap-2 text-xs">
+                                                    <span className="text-blue-600 bg-blue-50 px-2 py-0.5 rounded">{dashboardData.metrics.trial_daycares} Trials</span>
+                                                </div>
+                                            </div>
+                                            <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                                                <p className="text-sm font-semibold text-gray-500 mb-1">Total Students</p>
+                                                <p className="text-3xl font-bold text-gray-900">{dashboardData.metrics.total_students}</p>
+                                                <div className="mt-2 flex gap-2 text-xs text-gray-500">
+                                                    Across {dashboardData.metrics.total_classrooms} Classrooms
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Charts Grid */}
+                                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                                            <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                                                <h4 className="text-sm font-bold text-gray-700 mb-4">Daycare Growth</h4>
+                                                <div className="h-64">
+                                                    <Line 
+                                                        data={{
+                                                            labels: dashboardData.charts.daycare_growth.map((d: any) => d.month),
+                                                            datasets: [{
+                                                                label: 'New Daycares',
+                                                                data: dashboardData.charts.daycare_growth.map((d: any) => d.count),
+                                                                borderColor: 'rgb(79, 70, 229)',
+                                                                backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                                                                fill: true,
+                                                                tension: 0.4
+                                                            }]
+                                                        }}
+                                                        options={{ responsive: true, maintainAspectRatio: false }}
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                                                <h4 className="text-sm font-bold text-gray-700 mb-4">Revenue History</h4>
+                                                <div className="h-64">
+                                                    <Bar 
+                                                        data={{
+                                                            labels: dashboardData.charts.revenue_history.map((d: any) => d.month),
+                                                            datasets: [{
+                                                                label: 'Revenue ($)',
+                                                                data: dashboardData.charts.revenue_history.map((d: any) => d.total),
+                                                                backgroundColor: 'rgb(34, 197, 94)',
+                                                            }]
+                                                        }}
+                                                        options={{ responsive: true, maintainAspectRatio: false }}
+                                                    />
+                                                </div>
+                                            </div>
+                                            
+                                            <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm lg:col-span-2">
+                                                <h4 className="text-sm font-bold text-gray-700 mb-4">Platform Overview</h4>
+                                                <div className="grid grid-cols-3 gap-6 text-center">
+                                                    <div className="p-4 bg-gray-50 rounded-lg">
+                                                        <p className="text-gray-500 text-sm">Total Staff</p>
+                                                        <p className="text-2xl font-bold text-gray-900">{dashboardData.metrics.total_staff}</p>
+                                                    </div>
+                                                    <div className="p-4 bg-gray-50 rounded-lg">
+                                                        <p className="text-gray-500 text-sm">Pending Tickets</p>
+                                                        <p className="text-2xl font-bold text-orange-600">{dashboardData.metrics.pending_tickets}</p>
+                                                    </div>
+                                                    <div className="p-4 bg-gray-50 rounded-lg">
+                                                        <p className="text-gray-500 text-sm">Expired Subscriptions</p>
+                                                        <p className="text-2xl font-bold text-red-600">{dashboardData.metrics.expired_subscriptions}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         )}
 
-                        {/* Subscriptions Tab */}
-                        {activeTab === 'subscriptions' && (
-                            <div>
-                                <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-                                    <h3 className="text-lg font-semibold text-gray-800">Assigned Subscriptions</h3>
-                                    <button onClick={() => { setFormData({}); setIsSubModalOpen(true); }} className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium shadow-sm transition-colors text-sm flex items-center">
-                                        <Plus className="w-4 h-4 mr-1" /> Assign Sub
-                                    </button>
-                                </div>
-                                <ul className="divide-y divide-gray-100">
-                                    {subscriptions.map((s) => {
-                                        const daycare = daycares.find(d => d.id === s.daycare);
-                                        const plan = plans.find(p => p.id === s.subscription_plan);
-                                        return (
-                                            <li key={s.id} className="hover:bg-gray-50 transition-colors">
-                                            <div className="px-6 py-4 flex justify-between items-center">
-                                                    <div>
-                                                        <p className="text-sm font-bold text-gray-900">{daycare?.name || 'Unknown Daycare'}</p>
-                                                        <p className="text-sm text-gray-500">Plan: <span className="font-medium">{plan?.name || 'Unknown Plan'}</span></p>
-                                                    </div>
-                                                    <div className="flex items-center gap-6 text-sm text-gray-500">
-                                                        <div className="text-right">
-                                                            <div className="mb-1">
-                                                                <span className={`px-2 py-0.5 text-xs font-semibold rounded-full ${s.subscription_status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                                                                    {s.subscription_status}
-                                                                </span>
-                                                            </div>
-                                                            <div className="text-xs">Expires: {s.expiry_date}</div>
-                                                        </div>
-                                                        <button onClick={() => { setFormData(s); setIsSubModalOpen(true); }} className="text-slate-400 hover:text-indigo-600 p-2 hover:bg-indigo-50 rounded-lg transition-colors">
-                                                            <Edit2 className="w-4 h-4" />
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            </li>
-                                        );
-                                    })}
-                                </ul>
-                            </div>
-                        )}
+                        {/* Logs Tab */}
+                        {activeTab === 'logs' && <ErrorBoundary><AuditLogTab /></ErrorBoundary>}
+
+                        {/* Announcements Tab */}
+                        {activeTab === 'announcements' && <ErrorBoundary><SystemAnnouncementTab /></ErrorBoundary>}
+
+                        {/* Tickets Tab */}
+                        {activeTab === 'tickets' && <ErrorBoundary><SupportTicketTab /></ErrorBoundary>}
+
                     </div>
+                )}
                 </div>
             </main>
 
@@ -542,6 +643,13 @@ export default function SuperAdminDashboard() {
                     </motion.div>
                 )}
             </AnimatePresence>
+
+            {/* Onboarding Modal */}
+            <DaycareOnboardingModal 
+                isOpen={isOnboardingModalOpen}
+                onClose={() => setIsOnboardingModalOpen(false)}
+                onComplete={() => { setIsOnboardingModalOpen(false); fetchData(); }}
+            />
         </div>
     );
 }

@@ -9,12 +9,16 @@ interface User {
     last_name: string;
     role: string;
     is_superuser: boolean;
+    daycare?: { id?: number | string; name?: string } | string | null;
+    daycare_limits?: {
+        max_branches: number;
+    };
 }
 
 interface AuthContextType {
     user: User | null;
     loading: boolean;
-    login: (access: string, refresh: string) => Promise<void>;
+    login: (access: string, refresh: string) => Promise<User | null>;
     logout: () => void;
 }
 
@@ -28,9 +32,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         try {
             const response = await api.get('/users/me/');
             setUser(response.data);
+            return response.data;
         } catch (error) {
             console.error("Failed to fetch user", error);
             setUser(null);
+            return null;
         } finally {
             setLoading(false);
         }
@@ -48,7 +54,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const login = async (access: string, refresh: string) => {
         localStorage.setItem('access_token', access);
         localStorage.setItem('refresh_token', refresh);
-        await fetchUser();
+        return await fetchUser();
     };
 
     const logout = () => {

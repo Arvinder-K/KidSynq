@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
 import api from '../api';
+import { FileText, CreditCard, Sparkles, ArrowRight } from 'lucide-react';
 
 interface InvoiceItem {
     id: string;
@@ -24,6 +26,8 @@ interface Invoice {
     issue_date: string;
     due_date: string;
     total_amount: string;
+    total?: string;
+    balance_due?: string;
     amount_paid: string;
     status: string;
     items: InvoiceItem[];
@@ -34,8 +38,12 @@ interface SubscriptionPlan {
     id: string;
     name: string;
     price: string;
+    monthly_price: string;
     max_teachers: number;
     max_staff: number;
+    max_students: number;
+    max_classrooms: number;
+    max_storage_mb: number;
     attendance: boolean;
     activities: boolean;
     fees: boolean;
@@ -52,10 +60,15 @@ interface CurrentSubscription {
     start_date: string;
     expiry_date: string;
     renewal_date: string;
+    billing_cycle: string;
+    amount: string;
+    trial_start_date?: string;
+    trial_end_date?: string;
 }
 
 const BillingDashboard: React.FC = () => {
-    const [activeTab, setActiveTab] = useState<'invoices' | 'subscription'>('invoices');
+    const navigate = useNavigate();
+    const [activeTab, setActiveTab] = useState<'invoices' | 'subscription'>('subscription');
     
     // Invoices State
     const [invoices, setInvoices] = useState<Invoice[]>([]);
@@ -74,6 +87,10 @@ const BillingDashboard: React.FC = () => {
     const [currentSub, setCurrentSub] = useState<CurrentSubscription | null>(null);
     const [subLoading, setSubLoading] = useState(true);
     const [checkoutLoading, setCheckoutLoading] = useState(false);
+    
+    // Upgrade Modal State
+    const [upgradePreview, setUpgradePreview] = useState<any>(null);
+    const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
     useEffect(() => {
         if (activeTab === 'invoices') {
@@ -158,10 +175,32 @@ const BillingDashboard: React.FC = () => {
     const handleSubscribe = async (planId: string) => {
         setCheckoutLoading(true);
         try {
-            await api.post('/billing/subscriptions/checkout/', { plan_id: planId });
-            fetchSubscriptions();
+            const res = await api.post('/subscription/upgrade-preview/', { plan_id: planId, billing_cycle: 'Monthly' });
+            setUpgradePreview(res.data);
+            setShowUpgradeModal(true);
         } catch (error) {
-            console.error("Subscription failed", error);
+            console.error("Failed to preview upgrade", error);
+            alert("Failed to load plan upgrade preview.");
+        } finally {
+            setCheckoutLoading(false);
+        }
+    };
+
+    const confirmUpgrade = async () => {
+        if (!upgradePreview) return;
+        setCheckoutLoading(true);
+        try {
+            await api.post('/subscription/upgrade-confirm/', { 
+                plan_id: upgradePreview.new_plan.id,
+                billing_cycle: upgradePreview.billing_cycle
+            });
+            setShowUpgradeModal(false);
+            setUpgradePreview(null);
+            fetchSubscriptions();
+            alert("Subscription updated successfully!");
+        } catch (error) {
+            console.error("Upgrade failed", error);
+            alert("Upgrade failed.");
         } finally {
             setCheckoutLoading(false);
         }
@@ -213,40 +252,60 @@ const BillingDashboard: React.FC = () => {
 
             {/* Invoices Tab */}
             {activeTab === 'invoices' && (
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    {/* Invoice List */}
-                    <div className={`lg:col-span-1 bg-white shadow overflow-hidden sm:rounded-lg ${selectedInvoice ? 'hidden lg:block' : ''}`}>
-                        <div className="px-4 py-5 border-b border-gray-200 sm:px-6">
-                            <h3 className="text-lg leading-6 font-medium text-gray-900">Recent Invoices</h3>
+                <div className="space-y-4">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 bg-teal-50 border border-teal-200 rounded-2xl">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 bg-teal-100 text-teal-700 rounded-xl">
+                                <FileText className="w-5 h-5" />
+                            </div>
+                            <div>
+                                <h4 className="text-sm font-bold text-teal-900">Looking for the Full Child Invoicing Suite?</h4>
+                                <p className="text-xs text-teal-700">Generate batch monthly tuition, configure recurring profiles, discounts, and print PDF statements.</p>
+                            </div>
                         </div>
-                        {invoicesLoading ? (
-                            <div className="p-4 text-center text-gray-500">Loading...</div>
-                        ) : (
-                            <ul className="divide-y divide-gray-200 h-[600px] overflow-y-auto">
-                                {invoices.map((inv) => (
-                                    <li key={inv.id}>
-                                        <button 
-                                            onClick={() => setSelectedInvoice(inv)}
-                                            className={`w-full text-left px-4 py-4 hover:bg-gray-50 transition ${selectedInvoice?.id === inv.id ? 'bg-indigo-50 border-l-4 border-indigo-600' : ''}`}
-                                        >
-                                            <div className="flex justify-between items-center mb-1">
-                                                <span className="text-sm font-medium text-indigo-600">{inv.invoice_number}</span>
-                                                <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(inv.status)}`}>{inv.status}</span>
-                                            </div>
-                                            <p className="text-sm font-semibold text-gray-900">{inv.student_name}</p>
-                                            <div className="flex justify-between items-center mt-2">
-                                                <span className="text-xs text-gray-500">Due: {inv.due_date}</span>
-                                                <span className="text-sm font-bold text-gray-900">${inv.total_amount}</span>
-                                            </div>
-                                        </button>
-                                    </li>
-                                ))}
-                                {invoices.length === 0 && (
-                                    <div className="p-4 text-center text-gray-500 text-sm">No invoices found.</div>
-                                )}
-                            </ul>
-                        )}
+                        <button
+                            onClick={() => navigate('/daycare/billing/invoices')}
+                            className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-bold shadow-xs whitespace-nowrap flex items-center gap-1.5"
+                        >
+                            <span>Open Invoicing Engine</span>
+                            <ArrowRight className="w-3.5 h-3.5" />
+                        </button>
                     </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        {/* Invoice List */}
+                        <div className={`lg:col-span-1 bg-white shadow overflow-hidden sm:rounded-lg ${selectedInvoice ? 'hidden lg:block' : ''}`}>
+                            <div className="px-4 py-5 border-b border-gray-200 sm:px-6">
+                                <h3 className="text-lg leading-6 font-medium text-gray-900">Recent Invoices</h3>
+                            </div>
+                            {invoicesLoading ? (
+                                <div className="p-4 text-center text-gray-500">Loading...</div>
+                            ) : (
+                                <ul className="divide-y divide-gray-200 h-[600px] overflow-y-auto">
+                                    {invoices.map((inv) => (
+                                        <li key={inv.id}>
+                                            <button 
+                                                onClick={() => setSelectedInvoice(inv)}
+                                                className={`w-full text-left px-4 py-4 hover:bg-gray-50 transition ${selectedInvoice?.id === inv.id ? 'bg-indigo-50 border-l-4 border-indigo-600' : ''}`}
+                                            >
+                                                <div className="flex justify-between items-center mb-1">
+                                                    <span className="text-sm font-medium text-indigo-600">{inv.invoice_number}</span>
+                                                    <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(inv.status)}`}>{inv.status}</span>
+                                                </div>
+                                                <p className="text-sm font-semibold text-gray-900">{inv.student_name || (inv as any).family_name || 'Student'}</p>
+                                                <div className="flex justify-between items-center mt-2">
+                                                    <span className="text-xs text-gray-500">Due: {inv.due_date}</span>
+                                                    <span className="text-sm font-bold text-gray-900">${(inv as any).total || inv.total_amount || (inv as any).balance_due || '0.00'}</span>
+                                                </div>
+                                            </button>
+                                        </li>
+                                    ))}
+                                    {invoices.length === 0 && (
+                                        <div className="p-4 text-center text-gray-500 text-sm">No invoices found.</div>
+                                    )}
+                                </ul>
+                            )}
+                        </div>
 
                     {/* Invoice Detail */}
                     <div className={`lg:col-span-2 ${!selectedInvoice ? 'hidden lg:block' : ''}`}>
@@ -374,6 +433,7 @@ const BillingDashboard: React.FC = () => {
                         )}
                     </div>
                 </div>
+            </div>
             )}
 
             {/* Subscriptions Tab */}
@@ -384,7 +444,7 @@ const BillingDashboard: React.FC = () => {
                         <div className="px-4 py-5 sm:px-6 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
                             <h3 className="text-lg leading-6 font-medium text-gray-900">Current Subscription</h3>
                             {currentSub && (
-                                <span className={`px-3 py-1 text-xs font-semibold rounded-full ${currentSub.subscription_status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                                <span className={`px-3 py-1 text-xs font-semibold rounded-full capitalize ${currentSub.subscription_status.toLowerCase() === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
                                     {currentSub.subscription_status}
                                 </span>
                             )}
@@ -393,18 +453,53 @@ const BillingDashboard: React.FC = () => {
                             {subLoading ? (
                                 <p className="text-gray-500 text-sm">Loading subscription info...</p>
                             ) : currentSub ? (
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
-                                    <div>
-                                        <p className="text-sm font-medium text-gray-500 uppercase tracking-wide">Plan</p>
-                                        <p className="mt-1 text-2xl font-semibold text-gray-900">{currentSub.plan_name}</p>
+                                <div className="space-y-6">
+                                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                                        <div className="bg-white border rounded-lg p-4 text-center shadow-sm">
+                                            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Plan</p>
+                                            <p className="mt-1 text-xl font-bold text-gray-900">{currentSub.plan_name}</p>
+                                        </div>
+                                        <div className="bg-white border rounded-lg p-4 text-center shadow-sm">
+                                            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Status</p>
+                                            <p className={`mt-1 text-lg font-bold capitalize ${currentSub.subscription_status.toLowerCase() === 'active' ? 'text-green-600' : currentSub.subscription_status.toLowerCase() === 'trial' ? 'text-blue-600' : 'text-red-600'}`}>
+                                                {currentSub.subscription_status}
+                                            </p>
+                                        </div>
+                                        <div className="bg-white border rounded-lg p-4 text-center shadow-sm">
+                                            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Billing Cycle</p>
+                                            <p className="mt-1 text-lg font-bold text-gray-900">{currentSub.billing_cycle || 'N/A'}</p>
+                                        </div>
+                                        <div className="bg-white border rounded-lg p-4 text-center shadow-sm">
+                                            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Amount</p>
+                                            <p className="mt-1 text-lg font-bold text-gray-900">${currentSub.amount || '0.00'}</p>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <p className="text-sm font-medium text-gray-500 uppercase tracking-wide">Renews On</p>
-                                        <p className="mt-1 text-lg font-medium text-gray-900">{currentSub.renewal_date}</p>
-                                    </div>
-                                    <div>
-                                        <p className="text-sm font-medium text-gray-500 uppercase tracking-wide">Status</p>
-                                        <p className="mt-1 text-lg font-medium text-green-600">Active</p>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 border-t pt-6">
+                                        <div className="flex justify-between border-b pb-2">
+                                            <span className="text-sm text-gray-500">Start Date</span>
+                                            <span className="text-sm font-medium text-gray-900">{currentSub.start_date || 'N/A'}</span>
+                                        </div>
+                                        <div className="flex justify-between border-b pb-2">
+                                            <span className="text-sm text-gray-500">Renewal Date</span>
+                                            <span className="text-sm font-medium text-gray-900">{currentSub.renewal_date || 'N/A'}</span>
+                                        </div>
+                                        <div className="flex justify-between border-b pb-2">
+                                            <span className="text-sm text-gray-500">Expiry Date</span>
+                                            <span className="text-sm font-medium text-gray-900">{currentSub.expiry_date || 'N/A'}</span>
+                                        </div>
+                                        {currentSub.trial_start_date && (
+                                            <div className="flex justify-between border-b pb-2">
+                                                <span className="text-sm text-gray-500">Trial Started</span>
+                                                <span className="text-sm font-medium text-gray-900">{currentSub.trial_start_date}</span>
+                                            </div>
+                                        )}
+                                        {currentSub.trial_end_date && (
+                                            <div className="flex justify-between border-b pb-2">
+                                                <span className="text-sm text-gray-500">Trial Ends</span>
+                                                <span className="text-sm font-medium text-gray-900">{currentSub.trial_end_date}</span>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             ) : (
@@ -424,7 +519,7 @@ const BillingDashboard: React.FC = () => {
                                         <div className="px-6 py-8 bg-gray-50 border-b border-gray-200 text-center">
                                             <h3 className="text-xl font-medium text-gray-900 mb-2">{plan.name}</h3>
                                             <div className="flex justify-center items-baseline text-4xl font-extrabold text-gray-900">
-                                                ${plan.price}
+                                                ${plan.monthly_price}
                                                 <span className="text-xl font-medium text-gray-500">/mo</span>
                                             </div>
                                         </div>
@@ -433,6 +528,18 @@ const BillingDashboard: React.FC = () => {
                                                 <li className="flex items-start">
                                                     <span className="text-green-500 mr-2">✓</span>
                                                     <span className="text-sm text-gray-700">Up to {plan.max_staff} Staff Members</span>
+                                                </li>
+                                                <li className="flex items-start">
+                                                    <span className="text-green-500 mr-2">✓</span>
+                                                    <span className="text-sm text-gray-700">Up to {plan.max_students || 'Unlimited'} Students</span>
+                                                </li>
+                                                <li className="flex items-start">
+                                                    <span className="text-green-500 mr-2">✓</span>
+                                                    <span className="text-sm text-gray-700">Up to {plan.max_classrooms || 'Unlimited'} Classrooms</span>
+                                                </li>
+                                                <li className="flex items-start">
+                                                    <span className="text-green-500 mr-2">✓</span>
+                                                    <span className="text-sm text-gray-700">Up to {plan.max_storage_mb || 'Unlimited'} MB Storage</span>
                                                 </li>
                                                 <li className="flex items-start">
                                                     <span className={(plan as any).activities ? "text-green-500 mr-2" : "text-gray-300 mr-2"}>{(plan as any).activities ? "✓" : "✗"}</span>
@@ -514,6 +621,77 @@ const BillingDashboard: React.FC = () => {
                                     </button>
                                 </div>
                             </form>
+                        </div>
+                    </div>
+                </div>
+            )}
+            
+            {/* Upgrade Preview Modal */}
+            {showUpgradeModal && upgradePreview && (
+                <div className="fixed z-10 inset-0 overflow-y-auto">
+                    <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={() => setShowUpgradeModal(false)}></div>
+                        <span className="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
+                        <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                            <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                                <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">Confirm Plan Change</h3>
+                                
+                                <div className="mb-4">
+                                    <p className="text-sm text-gray-500">You are about to change your subscription plan.</p>
+                                </div>
+                                
+                                <div className="grid grid-cols-2 gap-4 mb-6">
+                                    <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Current Plan</p>
+                                        <p className="font-medium text-gray-900">{upgradePreview.current_plan?.name || 'None'}</p>
+                                        {upgradePreview.current_plan && (
+                                            <ul className="mt-2 text-xs text-gray-600 space-y-1">
+                                                <li>Students: {upgradePreview.current_plan.max_students || 'Unl'}</li>
+                                                <li>Staff: {upgradePreview.current_plan.max_staff || 'Unl'}</li>
+                                                <li>Rooms: {upgradePreview.current_plan.max_classrooms || 'Unl'}</li>
+                                            </ul>
+                                        )}
+                                    </div>
+                                    <div className="bg-indigo-50 p-4 rounded-lg border border-indigo-200">
+                                        <p className="text-xs font-semibold text-indigo-500 uppercase tracking-wider mb-2">New Plan</p>
+                                        <p className="font-medium text-indigo-900">{upgradePreview.new_plan.name}</p>
+                                        <ul className="mt-2 text-xs text-indigo-700 space-y-1">
+                                            <li>Students: {upgradePreview.new_plan.max_students || 'Unl'}</li>
+                                            <li>Staff: {upgradePreview.new_plan.max_staff || 'Unl'}</li>
+                                            <li>Rooms: {upgradePreview.new_plan.max_classrooms || 'Unl'}</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                
+                                <div className="border-t border-gray-200 pt-4">
+                                    <div className="flex justify-between items-center text-sm mb-2">
+                                        <span className="text-gray-500">Billing Cycle:</span>
+                                        <span className="font-medium">{upgradePreview.billing_cycle}</span>
+                                    </div>
+                                    <div className="flex justify-between items-center text-lg font-bold text-gray-900">
+                                        <span>New Amount Due:</span>
+                                        <span>${upgradePreview.new_price}</span>
+                                    </div>
+                                    <p className="text-xs text-gray-400 mt-2 text-right">An invoice will be generated upon confirmation.</p>
+                                </div>
+                            </div>
+                            <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                                <button
+                                    type="button"
+                                    disabled={checkoutLoading}
+                                    onClick={confirmUpgrade}
+                                    className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50"
+                                >
+                                    {checkoutLoading ? 'Processing...' : 'Confirm Upgrade'}
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setShowUpgradeModal(false)}
+                                    className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+                                >
+                                    Cancel
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>

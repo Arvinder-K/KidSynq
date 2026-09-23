@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { useNavigate, Navigate } from 'react-router-dom';
+import { useNavigate, Navigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
 import { LogIn, KeyRound, User, AlertCircle, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 interface LoginProps {
-    type?: 'daycare' | 'admin';
+    type?: 'daycare' | 'admin' | 'family';
 }
 
 const Login: React.FC<LoginProps> = ({ type = 'daycare' }) => {
@@ -18,8 +18,11 @@ const Login: React.FC<LoginProps> = ({ type = 'daycare' }) => {
     const navigate = useNavigate();
 
     if (user) {
-        if (type === 'admin') {
+        if (user.is_superuser) {
             return <Navigate to="/admin" replace />;
+        }
+        if (user.role === 'Guardian') {
+            return <Navigate to="/family/profile" replace />;
         }
         return <Navigate to="/dashboard" replace />;
     }
@@ -34,12 +37,35 @@ const Login: React.FC<LoginProps> = ({ type = 'daycare' }) => {
                 username,
                 password,
             });
-            await login(response.data.access, response.data.refresh);
+            const loggedInUser = await login(response.data.access, response.data.refresh);
             
-            if (type === 'admin') {
-                navigate('/admin');
+            if (loggedInUser) {
+                if (type === 'admin') {
+                    if (loggedInUser.is_superuser) {
+                        navigate('/admin');
+                    } else {
+                        // Not a superadmin but tried to use admin login
+                        setError('Unauthorized: You are not a Super Admin.');
+                        setIsLoading(false);
+                    }
+                } else if (type === 'family') {
+                    if (loggedInUser.role === 'Guardian') {
+                        navigate('/family/profile');
+                    } else {
+                        setError('Unauthorized: This portal is only for Guardians.');
+                        setIsLoading(false);
+                    }
+                } else {
+                    if (!loggedInUser.is_superuser && loggedInUser.role !== 'Guardian') {
+                        navigate('/dashboard');
+                    } else {
+                        setError('Unauthorized: Please use the appropriate login portal.');
+                        setIsLoading(false);
+                    }
+                }
             } else {
-                navigate('/dashboard');
+                setError('Failed to fetch user profile.');
+                setIsLoading(false);
             }
         } catch (err: any) {
             setError(err.response?.data?.detail || 'Login failed. Please check your credentials.');
@@ -49,10 +75,21 @@ const Login: React.FC<LoginProps> = ({ type = 'daycare' }) => {
 
     const gradientClass = type === 'admin' 
         ? "from-slate-900 via-purple-900 to-slate-900" 
-        : "from-blue-600 via-indigo-700 to-purple-800";
+        : type === 'family'
+            ? "from-teal-600 via-emerald-700 to-indigo-800"
+            : "from-blue-600 via-indigo-700 to-purple-800";
 
-    const title = type === 'admin' ? 'Platform Administration' : 'Daycare Dashboard';
-    const subtitle = type === 'admin' ? 'Manage your KidSynq ecosystem' : 'Welcome back to KidSynq';
+    const title = type === 'admin' 
+        ? 'Platform Administration' 
+        : type === 'family'
+            ? 'Guardian Portal'
+            : 'Daycare Dashboard';
+            
+    const subtitle = type === 'admin' 
+        ? 'Manage your KidSynq ecosystem' 
+        : type === 'family'
+            ? "Access your child's daycare records"
+            : 'Welcome back to KidSynq';
 
     return (
         <div className={`min-h-screen flex items-center justify-center bg-gradient-to-br ${gradientClass} p-4 sm:p-6 lg:p-8 relative overflow-hidden`}>
@@ -131,6 +168,14 @@ const Login: React.FC<LoginProps> = ({ type = 'daycare' }) => {
                                 />
                             </div>
                         </div>
+
+                        {type === 'family' && (
+                            <div className="flex items-center justify-end text-xs">
+                                <Link to="/family/forgot-password" style={{ color: 'rgba(255,255,255,0.7)' }} className="hover:text-white transition-colors">
+                                    Forgot Password?
+                                </Link>
+                            </div>
+                        )}
 
                         <motion.button
                             whileHover={{ scale: 1.02 }}
