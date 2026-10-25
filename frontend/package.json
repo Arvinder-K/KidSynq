@@ -17,6 +17,7 @@
     "chart.js": "^4.5.1",
     "framer-motion": "^12.43.0",
     "html2pdf.js": "^0.14.0",
+    "kidsynq": "file:..",
     "lucide-react": "^1.28.0",
     "qrcode": "^1.5.4",
     "react": "^19.2.8",
