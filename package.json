@@ -5,9 +5,15 @@
     "description": "KidSynq Daycare Management SaaS",
     "scripts": {
         "build": "npm install --prefix frontend --include=dev && npm run build --prefix frontend",
-        "start": "npm start --prefix frontend"
+        "start": "node server.js",
+        "dev": "vite",
+        "lint": "oxlint",
+        "preview": "vite preview"
     },
     "engines": {
         "node": ">=20"
+    },
+    "dependencies": {
+        "express": "^5.3.0"
     }
 }
