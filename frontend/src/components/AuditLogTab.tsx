@@ -36,7 +36,7 @@ const AuditLogTab: React.FC = () => {
   const fetchLogs = async () => {
     try {
       setLoading(true);
-      let url = 'http://localhost:8000/api/super-admin/audit-logs/';
+      let url = '/super-admin/audit-logs/';
       const params = new URLSearchParams();
       if (moduleFilter) params.append('module', moduleFilter);
       if (searchQuery) params.append('search', searchQuery);

@@ -45,10 +45,16 @@ class BillingPhase4Tests(TestCase):
         # Daycare Settings
         self.settings = DaycareSettings.objects.create(
             daycare=self.daycare,
+            timezone="America/Toronto",
+            date_format="YYYY-MM-DD",
+            time_format="12h",
             currency="CAD",
-            legal_name="Sunshine Academy Ltd.",
-            business_number="123456789RT0001",
-            address="123 Sunny St, Toronto, ON"
+            default_language="en",
+            week_start_day="Monday",
+            allow_parent_notifications=True,
+            allow_staff_notifications=True,
+            created_at=timezone.now(),
+            updated_at=timezone.now(),
         )
 
         # Create Users

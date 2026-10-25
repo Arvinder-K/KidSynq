@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useOutletContext } from 'react-router-dom';
-import axios from 'axios';
+import api from '../../../api';
 import { FileText, Printer, CheckCircle2, AlertTriangle } from 'lucide-react';
 
 
@@ -15,11 +15,8 @@ export const ClassroomReportsTab: React.FC = () => {
         const fetchReportData = async () => {
             try {
                 setLoading(true);
-                const token = localStorage.getItem('access_token');
                 const todayStr = new Date().toISOString().split('T')[0];
-                const res = await axios.get(`http://localhost:8000/api/daycare/classrooms/${classroomId}/schedule/?date=${todayStr}`, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
+                const res = await api.get(`/daycare/classrooms/${classroomId}/schedule/?date=${todayStr}`);
                 setScheduleData(res.data);
             } catch (err) {
                 console.error("Failed to load report data", err);

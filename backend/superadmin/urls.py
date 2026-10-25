@@ -3,7 +3,13 @@ from . import views
 
 urlpatterns = [
     path('daycares/', views.AdminDaycareListView.as_view(), name='admin_daycare_list'),
+    path('daycares/bulk-action/', views.AdminDaycareBulkActionView.as_view(), name='admin_daycare_bulk_action'),
     path('daycares/<uuid:pk>/', views.AdminDaycareDetailView.as_view(), name='admin_daycare_detail'),
+    path('daycares/<uuid:pk>/manage-details/', views.AdminDaycareManageDetailView.as_view(), name='admin_daycare_manage_details'),
+    path('daycares/<uuid:pk>/profile/', views.AdminDaycareProfileView.as_view(), name='admin_daycare_profile'),
+    path('daycares/<uuid:pk>/admins/', views.AdminDaycareAdminCreateView.as_view(), name='admin_daycare_admin_create'),
+    path('daycares/<uuid:pk>/assign-plan/', views.AdminDaycareAssignPlanView.as_view(), name='admin_daycare_assign_plan'),
+    path('daycares/<uuid:pk>/care-options/', views.DaycareCareOptionsView.as_view(), name='admin_daycare_care_options'),
     path('users/', views.AdminUserListView.as_view(), name='admin_user_list'),
     path('users/<uuid:pk>/', views.AdminUserDetailView.as_view(), name='admin_user_detail'),
     path('subscription-plans/', views.AdminSubscriptionPlanListView.as_view(), name='admin_subscription_plans'),
@@ -23,6 +29,7 @@ urlpatterns = [
     path('support-tickets/<uuid:pk>/', views.SupportTicketDetailView.as_view(), name='admin_support_ticket_detail'),
     path('support-tickets/<uuid:pk>/messages/', views.SupportTicketMessageCreateView.as_view(), name='admin_support_ticket_messages'),
     path('invoices/', views.SubscriptionInvoiceListView.as_view(), name='admin_invoices'),
+    path('invoices/clear-mocks/', views.SubscriptionInvoiceClearMocksView.as_view(), name='admin_invoices_clear_mocks'),
     path('invoices/<uuid:pk>/', views.SubscriptionInvoiceDetailView.as_view(), name='admin_invoice_detail'),
     path('payments/', views.SubscriptionPaymentListView.as_view(), name='admin_payments'),
     path('dashboard/', views.SuperAdminDashboardView.as_view(), name='admin_dashboard'),

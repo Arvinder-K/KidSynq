@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import axios from 'axios';
+import api from '../../../api';
 import { 
     UserPlus, Search, ArrowUpRight, 
     CheckCircle2, AlertCircle, X 
@@ -23,17 +23,12 @@ export const ClassroomStudentsTab: React.FC = () => {
     const fetchData = async () => {
         try {
             setLoading(true);
-            const token = localStorage.getItem('access_token');
             
             // Fetch classroom details / students
-            const classRes = await axios.get(`http://localhost:8000/api/daycare/classrooms/${classroomId}/`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            const classRes = await api.get(`/daycare/classrooms/${classroomId}/`);
 
             // Fetch all students for assignment modal
-            const allRes = await axios.get(`http://localhost:8000/api/daycare/children/`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            const allRes = await api.get(`/daycare/children/`);
             const allList = allRes.data?.results || allRes.data || [];
             setAllDaycareStudents(allList);
 
@@ -63,11 +58,9 @@ export const ClassroomStudentsTab: React.FC = () => {
         try {
             setAssigning(true);
             setAssignError(null);
-            const token = localStorage.getItem('access_token');
-            await axios.post(
-                `http://localhost:8000/api/daycare/classrooms/${classroomId}/assign-student/`,
-                { student_id: selectedStudentId },
-                { headers: { Authorization: `Bearer ${token}` } }
+            await api.post(
+                `/daycare/classrooms/${classroomId}/assign-student/`,
+                { student_id: selectedStudentId }
             );
 
             setAssignSuccess("Student assigned successfully to classroom!");

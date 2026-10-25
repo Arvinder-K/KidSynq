@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Edit2, Play, Pause, Ban, RefreshCw, X, Plus } from 'lucide-react';
+import { Edit2, Play, Pause, Ban, RefreshCw, X, Plus, Trash2 } from 'lucide-react';
 import api from '../api';
 
 export default function SubscriptionManagementTab() {
@@ -17,6 +17,7 @@ export default function SubscriptionManagementTab() {
     const [selectedSub, setSelectedSub] = useState<any>(null);
     const [newPlanId, setNewPlanId] = useState('');
     const [newBillingCycle, setNewBillingCycle] = useState('Monthly');
+    const [newExpiryDate, setNewExpiryDate] = useState('');
 
     const fetchSubscriptions = () => {
         setLoading(true);
@@ -69,15 +70,32 @@ export default function SubscriptionManagementTab() {
     };
 
     const handleAction = async (subId: string, action: string) => {
-        if (!confirm(`Are you sure you want to ${action} this subscription?`)) return;
+        const actionLabel = action === 'stop' || action === 'suspend' ? 'Stop/Pause' : action;
+        if (!confirm(`Are you sure you want to ${actionLabel} this subscription?`)) return;
         try {
             await api.post(`/super-admin/subscriptions/assigned/${subId}/${action}/`, {});
             fetchSubscriptions();
             if (action === 'renew') {
-                alert('Subscription renewed. Invoice and Payment mocked successfully.');
+                alert('Subscription renewed successfully. Expiry date extended.');
+            } else if (action === 'activate') {
+                alert('Subscription activated. Daycare services restored.');
+            } else if (action === 'stop' || action === 'suspend') {
+                alert('Subscription stopped/suspended. Daycare services paused.');
             }
         } catch (err) {
             alert(`Failed to ${action} subscription`);
+        }
+    };
+
+    const handleDeleteSubscription = async (sub: any) => {
+        const name = sub.daycare_name || sub.daycare || 'this daycare';
+        if (!confirm(`Are you sure you want to PERMANENTLY REMOVE and delete the subscription for ${name}?`)) return;
+        try {
+            await api.delete(`/super-admin/subscriptions/assigned/${sub.id}/`);
+            alert(`Subscription for ${name} has been removed.`);
+            fetchSubscriptions();
+        } catch (err: any) {
+            alert(err.response?.data?.error || 'Failed to delete subscription');
         }
     };
 
@@ -92,11 +110,17 @@ export default function SubscriptionManagementTab() {
                 if (newBillingCycle === 'Annual') amount = plan.annual_price;
             }
             
-            await api.patch(`/super-admin/subscriptions/assigned/${selectedSub.id}/`, {
+            const payload: any = {
                 subscription_plan: newPlanId,
                 billing_cycle: newBillingCycle,
                 amount: amount
-            });
+            };
+            if (newExpiryDate) {
+                payload.expiry_date = newExpiryDate;
+                payload.renewal_date = newExpiryDate;
+            }
+
+            await api.patch(`/super-admin/subscriptions/assigned/${selectedSub.id}/`, payload);
             setIsModalOpen(false);
             fetchSubscriptions();
         } catch (err) {
@@ -153,33 +177,57 @@ export default function SubscriptionManagementTab() {
                                         <td className="p-4 text-sm text-gray-600">{sub.billing_cycle}</td>
                                         <td className="p-4 text-sm font-medium text-gray-900">${sub.amount}</td>
                                         <td className="p-4 text-xs text-gray-500">
-                                            <div>Start: {sub.start_date || 'N/A'}</div>
-                                            <div>Exp: {sub.expiry_date || 'N/A'}</div>
+                                            <div>Start: <span className="text-gray-700 font-medium">{sub.start_date || 'N/A'}</span></div>
+                                            <div>Expiry: <span className="text-gray-700 font-semibold">{sub.expiry_date || 'N/A'}</span></div>
+                                            {sub.days_until_expiry !== null && sub.days_until_expiry !== undefined && (
+                                                <div className="mt-1">
+                                                    {sub.is_expired || sub.days_until_expiry < 0 ? (
+                                                        <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-700">
+                                                            Expired ({Math.abs(sub.days_until_expiry)}d ago)
+                                                        </span>
+                                                    ) : sub.days_until_expiry === 0 ? (
+                                                        <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800">
+                                                            Expires Today
+                                                        </span>
+                                                    ) : sub.is_expiring_soon ? (
+                                                        <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800">
+                                                            {sub.days_until_expiry}d left
+                                                        </span>
+                                                    ) : (
+                                                        <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-medium bg-gray-100 text-gray-600">
+                                                            {sub.days_until_expiry}d left
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            )}
                                         </td>
                                         <td className="p-4">
-                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${getStatusColor(sub.subscription_status)}`}>
+                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold capitalize ${getStatusColor(sub.subscription_status)}`}>
                                                 {sub.subscription_status}
                                             </span>
                                         </td>
                                         <td className="p-4 text-right">
                                             <div className="flex justify-end gap-2">
-                                                <button onClick={() => { setSelectedSub(sub); setNewPlanId(sub.subscription_plan); setNewBillingCycle(sub.billing_cycle); setIsModalOpen(true); }} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded" title="Change Plan">
+                                                <button onClick={() => { setSelectedSub(sub); setNewPlanId(sub.subscription_plan); setNewBillingCycle(sub.billing_cycle); setNewExpiryDate(sub.expiry_date || ''); setIsModalOpen(true); }} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded" title="Edit Plan & Expiry Date">
                                                     <Edit2 className="w-4 h-4" />
                                                 </button>
                                                 <button onClick={() => handleAction(sub.id, 'renew')} className="p-1.5 text-green-600 hover:bg-green-50 rounded" title="Renew / Process Payment">
                                                     <RefreshCw className="w-4 h-4" />
                                                 </button>
-                                                {sub.subscription_status === 'Active' ? (
-                                                    <button onClick={() => handleAction(sub.id, 'suspend')} className="p-1.5 text-orange-600 hover:bg-orange-50 rounded" title="Suspend">
+                                                {['active', 'trial'].includes(sub.subscription_status?.toLowerCase()) ? (
+                                                    <button onClick={() => handleAction(sub.id, 'stop')} className="p-1.5 text-orange-600 hover:bg-orange-50 rounded" title="Stop / Pause Service Access">
                                                         <Pause className="w-4 h-4" />
                                                     </button>
                                                 ) : (
-                                                    <button onClick={() => handleAction(sub.id, 'renew')} className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded" title="Activate">
+                                                    <button onClick={() => handleAction(sub.id, 'activate')} className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded" title="Activate Service Access">
                                                         <Play className="w-4 h-4" />
                                                     </button>
                                                 )}
-                                                <button onClick={() => handleAction(sub.id, 'cancel')} className="p-1.5 text-red-600 hover:bg-red-50 rounded" title="Cancel">
+                                                <button onClick={() => handleAction(sub.id, 'cancel')} className="p-1.5 text-amber-600 hover:bg-amber-50 rounded" title="Cancel Subscription">
                                                     <Ban className="w-4 h-4" />
+                                                </button>
+                                                <button onClick={() => handleDeleteSubscription(sub)} className="p-1.5 text-rose-600 hover:bg-rose-50 rounded" title="Permanently Remove Subscription">
+                                                    <Trash2 className="w-4 h-4" />
                                                 </button>
                                             </div>
                                         </td>
@@ -222,6 +270,10 @@ export default function SubscriptionManagementTab() {
                                     <option value="Quarterly">Quarterly</option>
                                     <option value="Annual">Annual</option>
                                 </select>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Expiry Date</label>
+                                <input type="date" value={newExpiryDate} onChange={(e) => setNewExpiryDate(e.target.value)} className="w-full border rounded-lg p-2.5" />
                             </div>
                             <button type="submit" className="w-full bg-indigo-600 text-white rounded-lg py-2 font-medium hover:bg-indigo-700">
                                 Save Changes

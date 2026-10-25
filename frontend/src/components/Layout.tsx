@@ -3,6 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../api';
+import SubscriptionBanner from './SubscriptionBanner';
 import { 
     LayoutDashboard, Users, GraduationCap, CalendarCheck, 
     Activity, HeartPulse, CreditCard, FileText, 
@@ -21,6 +22,7 @@ interface SubMenuItem {
     badge?: string | number;
     badgeColor?: string;
     description?: string;
+    featureCode?: string;
 }
 
 interface NavMenuItem {
@@ -32,6 +34,7 @@ interface NavMenuItem {
     badgeColor?: string;
     tier: 'main' | 'accent';
     subItems?: SubMenuItem[];
+    featureCode?: string;
 }
 
 interface LayoutProps {
@@ -39,7 +42,7 @@ interface LayoutProps {
 }
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
-    const { user, logout } = useAuth();
+    const { user, logout, hasFeature } = useAuth();
     const location = useLocation();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({});
@@ -135,16 +138,17 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             tier: 'main',
             badge: 'Active',
             badgeColor: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+            featureCode: 'staff_management',
             subItems: [
-                { name: 'Staff & Employees', path: '/daycare/employees', icon: Users, description: 'Educators & staff profiles' },
-                { name: 'Staff Scheduling', path: '/daycare/scheduling', icon: CalendarDays, description: 'Shift builder & rosters' },
-                { name: 'Staff Attendance', path: '/daycare/staff/attendance', icon: UserCheck, description: 'Clock in/out & punch logs' },
-                { name: 'Timesheet Approvals', path: '/daycare/staff/timesheets/approvals', icon: Clock, description: 'Review & approve hours' },
-                { name: 'Leave Management', path: '/daycare/leave', icon: Calendar, description: 'Time-off requests & balances' },
-                { name: 'Shift Swaps', path: '/daycare/scheduling/swaps', icon: ArrowLeftRight, description: 'Staff peer swap requests' },
-                { name: 'Shortage Alerts', path: '/daycare/scheduling/shortages', icon: ShieldAlert, description: 'Live ratio shortage planner' },
-                { name: 'Overtime & Time Bank', path: '/daycare/scheduling/overtime', icon: PiggyBank, description: 'Banked hours & multipliers' },
-                { name: 'Credential Compliance', path: '/daycare/credentials/dashboard', icon: ShieldCheck, description: 'ECE certifications & expiry' },
+                { name: 'Staff & Employees', path: '/daycare/employees', icon: Users, description: 'Educators & staff profiles', featureCode: 'staff_management' },
+                { name: 'Staff Scheduling', path: '/daycare/scheduling', icon: CalendarDays, description: 'Shift builder & rosters', featureCode: 'staff_scheduling' },
+                { name: 'Staff Attendance', path: '/daycare/staff/attendance', icon: UserCheck, description: 'Clock in/out & punch logs', featureCode: 'staff_attendance' },
+                { name: 'Timesheet Approvals', path: '/daycare/staff/timesheets/approvals', icon: Clock, description: 'Review & approve hours', featureCode: 'timesheet_approvals' },
+                { name: 'Leave Management', path: '/daycare/leave', icon: Calendar, description: 'Time-off requests & balances', featureCode: 'leave_management' },
+                { name: 'Shift Swaps', path: '/daycare/scheduling/swaps', icon: ArrowLeftRight, description: 'Staff peer swap requests', featureCode: 'shift_swaps' },
+                { name: 'Shortage Alerts', path: '/daycare/scheduling/shortages', icon: ShieldAlert, description: 'Live ratio shortage planner', featureCode: 'staff_shortages' },
+                { name: 'Overtime & Time Bank', path: '/daycare/scheduling/overtime', icon: PiggyBank, description: 'Banked hours & multipliers', featureCode: 'overtime_timebank' },
+                { name: 'Credential Compliance', path: '/daycare/credentials/dashboard', icon: ShieldCheck, description: 'ECE certifications & expiry', featureCode: 'credential_compliance' },
             ]
         },
         {
@@ -153,11 +157,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             icon: Users,
             tier: 'main',
             subItems: [
-                { name: 'Children Roster', path: '/daycare/children', icon: GraduationCap, description: 'Active children database' },
-                { name: 'Admissions', path: '/daycare/admissions', icon: UserPlus, description: 'Enrollment applications' },
-                { name: 'Waitlist', path: '/daycare/waitlist', icon: Users, description: 'Prospective family queue' },
-                { name: 'Consent Forms', path: '/daycare/consent-forms', icon: FileText, description: 'Digital permissions & waivers' },
-                { name: 'Communication', path: '/communication', icon: MessageSquare, description: 'Parent announcements & chats' },
+                { name: 'Children Roster', path: '/daycare/children', icon: GraduationCap, description: 'Active children database', featureCode: 'students' },
+                { name: 'Admissions', path: '/daycare/admissions', icon: UserPlus, description: 'Enrollment applications', featureCode: 'admissions_waitlist' },
+                { name: 'Waitlist', path: '/daycare/waitlist', icon: Users, description: 'Prospective family queue', featureCode: 'waitlist' },
+                { name: 'Consent Forms', path: '/daycare/consent-forms', icon: FileText, description: 'Digital permissions & waivers', featureCode: 'consent_forms' },
+                { name: 'Communication', path: '/communication', icon: MessageSquare, description: 'Parent announcements & chats', featureCode: 'communication' },
             ]
         },
         {
@@ -168,13 +172,13 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             badge: 7,
             badgeColor: 'bg-sky-50 text-sky-700 border-sky-200',
             subItems: [
-                { name: 'Classrooms & Rooms', path: '/daycare/classrooms', icon: School, description: 'Room capacity & educators' },
-                { name: 'Programs & Age Groups', path: '/age-groups', icon: Layers, description: 'Infant, Toddler, Preschool' },
-                { name: 'Child Attendance', path: '/daycare/attendance', icon: UserCheck, description: 'Daily room roll call' },
-                { name: 'Attendance Command', path: '/daycare/attendance/dashboard', icon: CalendarCheck, description: 'Real-time check-in matrix' },
-                { name: 'Safe Arrival Hub', path: '/daycare/safe-arrival', icon: ShieldCheck, description: 'Arrival confirmations & alerts' },
-                { name: 'Pickup Verification', path: '/daycare/pickup-verification', icon: ShieldCheck, description: 'QR & PIN authorized release' },
-                { name: 'Ratio Live Monitor', path: '/daycare/ratio-monitoring', icon: Scale, description: 'Provincial ratio tracker' },
+                { name: 'Classrooms & Rooms', path: '/daycare/classrooms', icon: School, description: 'Room capacity & educators', featureCode: 'classrooms' },
+                { name: 'Programs & Age Groups', path: '/age-groups', icon: Layers, description: 'Infant, Toddler, Preschool', featureCode: 'age_groups' },
+                { name: 'Child Attendance', path: '/daycare/attendance', icon: UserCheck, description: 'Daily room roll call', featureCode: 'attendance' },
+                { name: 'Attendance Command', path: '/daycare/attendance/dashboard', icon: CalendarCheck, description: 'Real-time check-in matrix', featureCode: 'attendance_command' },
+                { name: 'Safe Arrival Hub', path: '/daycare/safe-arrival', icon: ShieldCheck, description: 'Arrival confirmations & alerts', featureCode: 'safe_arrival' },
+                { name: 'Pickup Verification', path: '/daycare/pickup-verification', icon: ShieldCheck, description: 'QR & PIN authorized release', featureCode: 'pickup_verification' },
+                { name: 'Ratio Live Monitor', path: '/daycare/ratio-monitoring', icon: Scale, description: 'Provincial ratio tracker', featureCode: 'ratio_monitoring' },
             ]
         },
         {
@@ -182,9 +186,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             name: 'Out of School',
             icon: CheckSquare,
             tier: 'main',
+            featureCode: 'out_of_school',
             subItems: [
-                { name: 'Before & After School', path: '/age-groups', icon: Layers, description: 'School-age care programs' },
-                { name: 'Program Schedules', path: '/programs', icon: Calendar, description: 'Camps and extended care' },
+                { name: 'Before & After School', path: '/age-groups', icon: Layers, description: 'School-age care programs', featureCode: 'out_of_school' },
+                { name: 'Program Schedules', path: '/programs', icon: Calendar, description: 'Camps and extended care', featureCode: 'out_of_school' },
             ]
         },
         {
@@ -193,8 +198,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             icon: Home,
             path: '/branches',
             tier: 'main',
+            featureCode: 'branches',
             subItems: [
-                { name: 'Branch Locations', path: '/branches', icon: Building2, description: 'Multi-campus center overview' },
+                { name: 'Branch Locations', path: '/branches', icon: Building2, description: 'Multi-campus center overview', featureCode: 'branches' },
             ]
         },
         {
@@ -205,14 +211,14 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             badge: 'Daily & Audit',
             badgeColor: 'bg-teal-50 text-teal-700 border-teal-200',
             subItems: [
-                { name: 'Daily Reports', path: '/daycare/daily-reports', icon: Sparkles, description: 'Pad changes, meals, naps, potty & mood logs' },
-                { name: 'Child Daily Attendance', path: '/daycare/reports/attendance/daily', icon: FileSpreadsheet, description: 'Daily attendance export' },
-                { name: 'Child Monthly Attendance', path: '/daycare/reports/attendance/monthly', icon: FileSpreadsheet, description: 'Monthly registry & funding' },
-                { name: 'Staff Attendance & Timesheet', path: '/daycare/reports/attendance/staff', icon: Clock, description: 'Staff payroll & worked hours' },
-                { name: 'Ratio Compliance Reports', path: '/daycare/ratio-monitoring/reports', icon: Scale, description: 'Provincial audit inspection logs' },
-                { name: 'Safe Arrival & Pickup Reports', path: '/daycare/safe-arrival/reports', icon: ShieldCheck, description: 'Custody & release timestamps' },
-                { name: 'Staff & Credential Reports', path: '/daycare/credentials/reports', icon: Shield, description: 'Certification status matrix' },
-                { name: 'Attendance Audit Trail', path: '/daycare/reports/attendance/audit', icon: FolderArchive, description: 'Immutable correction history' },
+                { name: 'Daily Reports', path: '/daycare/daily-reports', icon: Sparkles, description: 'Pad changes, meals, naps, potty & mood logs', featureCode: 'daily_reports' },
+                { name: 'Child Daily Attendance', path: '/daycare/reports/attendance/daily', icon: FileSpreadsheet, description: 'Daily attendance export', featureCode: 'attendance_reports' },
+                { name: 'Child Monthly Attendance', path: '/daycare/reports/attendance/monthly', icon: FileSpreadsheet, description: 'Monthly registry & funding', featureCode: 'attendance_reports' },
+                { name: 'Staff Attendance & Timesheet', path: '/daycare/reports/attendance/staff', icon: Clock, description: 'Staff payroll & worked hours', featureCode: 'staff_reports' },
+                { name: 'Ratio Compliance Reports', path: '/daycare/ratio-monitoring/reports', icon: Scale, description: 'Provincial audit inspection logs', featureCode: 'compliance_reports' },
+                { name: 'Safe Arrival & Pickup Reports', path: '/daycare/safe-arrival/reports', icon: ShieldCheck, description: 'Custody & release timestamps', featureCode: 'safe_arrival' },
+                { name: 'Staff & Credential Reports', path: '/daycare/credentials/reports', icon: Shield, description: 'Certification status matrix', featureCode: 'credential_compliance' },
+                { name: 'Attendance Audit Trail', path: '/daycare/reports/attendance/audit', icon: FolderArchive, description: 'Immutable correction history', featureCode: 'attendance_audit_trail' },
             ]
         },
         {
@@ -221,10 +227,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             icon: Shield,
             tier: 'main',
             subItems: [
-                { name: 'Provincial Ratio Rules', path: '/daycare/ratio-rules', icon: Scale, description: 'Configurable ratio rules engine' },
-                { name: 'Emergency Protocols', path: '/daycare/emergency-information', icon: ShieldAlert, description: 'Evacuation & hospital contacts' },
-                { name: 'Holidays & Closures', path: '/daycare/holidays', icon: Calendar, description: 'Center calendar & non-op days' },
-                { name: 'Document Vault', path: '/documents', icon: FileText, description: 'Licensing & policy documents' },
+                { name: 'Provincial Ratio Rules', path: '/daycare/ratio-rules', icon: Scale, description: 'Configurable ratio rules engine', featureCode: 'ratio_rules' },
+                { name: 'Emergency Protocols', path: '/daycare/emergency-information', icon: ShieldAlert, description: 'Evacuation & hospital contacts', featureCode: 'emergency_info' },
+                { name: 'Holidays & Closures', path: '/daycare/holidays', icon: Calendar, description: 'Center calendar & non-op days', featureCode: 'holidays_closures' },
+                { name: 'Document Vault', path: '/documents', icon: FileText, description: 'Licensing & policy documents', featureCode: 'document_manager' },
             ]
         },
 
@@ -235,8 +241,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             icon: Building2,
             tier: 'accent',
             subItems: [
-                { name: 'Licensed Capacity', path: '/daycare/classrooms', icon: School, description: 'Branch licensing quotas' },
-                { name: 'Provincial Standards', path: '/daycare/ratio-rules', icon: Scale, description: 'Regulatory guidelines' },
+                { name: 'Licensed Capacity', path: '/daycare/classrooms', icon: School, description: 'Branch licensing quotas', featureCode: 'classrooms' },
+                { name: 'Provincial Standards', path: '/daycare/ratio-rules', icon: Scale, description: 'Regulatory guidelines', featureCode: 'ratio_rules' },
             ]
         },
         {
@@ -244,15 +250,16 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             name: 'Finance',
             icon: DollarSign,
             tier: 'accent',
+            featureCode: 'billing_invoicing',
             subItems: [
-                { name: 'Invoices & Invoicing', path: '/daycare/billing/invoices', icon: FileText, description: 'Invoice generator, statuses & recurring runs' },
-                { name: 'Payments & Receipts', path: '/daycare/billing/payments', icon: Receipt, description: 'Recorded payments, receipts & refunds' },
-                { name: 'Subsidies & CWELCC', path: '/daycare/billing/subsidies', icon: ShieldCheck, description: 'Government fee reductions & co-pay' },
-                { name: 'Tax Receipts & Statements', path: '/daycare/billing/tax-receipts', icon: Layers, description: 'Annual CRA slips & account statements' },
-                { name: 'Fee Structures & Plans', path: '/daycare/billing/fee-structures', icon: DollarSign, description: 'Childcare fees, versioning & deposits' },
-                { name: 'Discounts & Credits', path: '/daycare/billing/discounts-credits', icon: Tag, description: 'Discounts, sibling policies, credits & late fees' },
+                { name: 'Invoices & Invoicing', path: '/daycare/billing/invoices', icon: FileText, description: 'Invoice generator, statuses & recurring runs', featureCode: 'billing_invoicing' },
+                { name: 'Payments & Receipts', path: '/daycare/billing/payments', icon: Receipt, description: 'Recorded payments, receipts & refunds', featureCode: 'payments_receipts' },
+                { name: 'Subsidies & CWELCC', path: '/daycare/billing/subsidies', icon: ShieldCheck, description: 'Government fee reductions & co-pay', featureCode: 'subsidies_cwelcc' },
+                { name: 'Tax Receipts & Statements', path: '/daycare/billing/tax-receipts', icon: Layers, description: 'Annual CRA slips & account statements', featureCode: 'tax_receipts' },
+                { name: 'Fee Structures & Plans', path: '/daycare/billing/fee-structures', icon: DollarSign, description: 'Childcare fees, versioning & deposits', featureCode: 'fee_structures' },
+                { name: 'Discounts & Credits', path: '/daycare/billing/discounts-credits', icon: Tag, description: 'Discounts, sibling policies, credits & late fees', featureCode: 'discounts_credits' },
                 { name: 'Daycare Subscription', path: '/daycare/subscription', icon: CreditCard, description: 'Daycare platform plan & tier' },
-                { name: 'Overtime & Banking', path: '/daycare/scheduling/overtime', icon: PiggyBank, description: 'Payroll liability ledger' },
+                { name: 'Overtime & Banking', path: '/daycare/scheduling/overtime', icon: PiggyBank, description: 'Payroll liability ledger', featureCode: 'overtime_timebank' },
             ]
         },
         {
@@ -322,12 +329,23 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         }
     ], []);
 
-    // Choose navigation based on role
+    // Choose navigation based on role and active subscription features
     const activeNavMenu = useMemo(() => {
         if (user?.is_superuser) return adminNavMenu;
         if (user?.role === 'Guardian') return guardianNavMenu;
-        return daycareNavMenu;
-    }, [user, daycareNavMenu, guardianNavMenu, adminNavMenu]);
+        
+        return daycareNavMenu.map(menu => {
+            if (!menu.subItems) return menu;
+            const visibleSubItems = menu.subItems.filter(sub => !sub.featureCode || hasFeature(sub.featureCode));
+            return {
+                ...menu,
+                subItems: visibleSubItems
+            };
+        }).filter(menu => {
+            if (menu.path) return !menu.featureCode || hasFeature(menu.featureCode);
+            return menu.subItems && menu.subItems.length > 0;
+        });
+    }, [user, daycareNavMenu, guardianNavMenu, adminNavMenu, hasFeature]);
 
     // Flatten all sub-items to find current active route for breadcrumb and auto-expansion
     const allLinks = useMemo(() => {
@@ -1169,6 +1187,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                         </div>
                     </div>
                 </header>
+
+                {/* Subscription Expiry / Trial Banner */}
+                <SubscriptionBanner />
 
                 {/* Page Content */}
                 <main className="flex-1 overflow-y-auto relative p-4 sm:p-5 lg:px-6 lg:py-5 bg-[#F8FAFC]">

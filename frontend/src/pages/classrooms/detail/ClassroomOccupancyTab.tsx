@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useOutletContext, Link } from 'react-router-dom';
-import axios from 'axios';
+import api from '../../../api';
 import { 
     PieChart, Users, AlertCircle, CheckCircle2, UserPlus, 
     ArrowUpRight, Sparkles 
@@ -33,17 +33,12 @@ export const ClassroomOccupancyTab: React.FC = () => {
         const fetchStudents = async () => {
             try {
                 setLoading(true);
-                const token = localStorage.getItem('access_token');
-                const res = await axios.get(`http://localhost:8000/api/daycare/classrooms/${classroomId}/`, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
+                const res = await api.get(`/daycare/classrooms/${classroomId}/`);
                 if (res.data?.students) {
                     setStudents(res.data.students);
                 } else {
                     // Fallback to student list query if nested students array isn't populated
-                    const studentsRes = await axios.get(`http://localhost:8000/api/daycare/children/`, {
-                        headers: { Authorization: `Bearer ${token}` }
-                    });
+                    const studentsRes = await api.get(`/daycare/children/`);
                     const assigned = (studentsRes.data?.results || studentsRes.data || []).filter(
                         (s: any) => s.classroom === classroomId || s.classroom_id === classroomId
                     );

@@ -1,7 +1,7 @@
 import { useParams, Outlet, Link, useLocation } from 'react-router-dom';
 import Layout from '../../../components/Layout';
 import { useQuery } from '@tanstack/react-query';
-import axios from 'axios';
+import api from '../../../api';
 import { 
     BookOpen, Users, Calendar, 
     PieChart, FileText, 
@@ -16,10 +16,7 @@ const ClassroomDetailLayout = () => {
     const { data: classroom, isLoading, isError, error } = useQuery({
         queryKey: ['classroom', id],
         queryFn: async () => {
-            const token = localStorage.getItem('access_token');
-            const response = await axios.get(`http://localhost:8000/api/daycare/classrooms/${id}/`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            const response = await api.get(`/daycare/classrooms/${id}/`);
             return response.data;
         }
     });

@@ -42,6 +42,7 @@ class Daycare(models.Model):
     working_days = models.JSONField(null=True, blank=True) # Assuming JSON or comma separated string
     capacity = models.IntegerField(null=True, blank=True)
     status = models.CharField(max_length=50, default='Inactive')
+    feature_overrides = models.JSONField(default=dict, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     deleted_at = models.DateTimeField(null=True, blank=True)
@@ -108,6 +109,34 @@ class DaycareSubscription(models.Model):
     suspension_reason = models.TextField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        from django.utils import timezone
+        from dateutil.relativedelta import relativedelta
+        import datetime
+
+        if not self.start_date:
+            self.start_date = timezone.now().date()
+
+        if not self.expiry_date:
+            base_date = self.start_date
+            cycle = (self.billing_cycle or 'Monthly').strip().capitalize()
+            status_lower = (self.subscription_status or 'Active').strip().lower()
+
+            if status_lower == 'trial':
+                trial_days = getattr(self.subscription_plan, 'trial_days', 14) or 14
+                self.expiry_date = base_date + datetime.timedelta(days=trial_days)
+            elif cycle in ['Quarterly', 'Quarter']:
+                self.expiry_date = base_date + relativedelta(months=3)
+            elif cycle in ['Annual', 'Yearly', 'Year']:
+                self.expiry_date = base_date + relativedelta(years=1)
+            else:
+                self.expiry_date = base_date + relativedelta(months=1)
+
+        if not self.renewal_date:
+            self.renewal_date = self.expiry_date
+
+        super().save(*args, **kwargs)
 
 class Employee(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -2005,6 +2034,14 @@ class SubscriptionFeature(models.Model):
     name = models.CharField(max_length=255)
     code = models.CharField(unique=True, max_length=255)
     description = models.TextField(blank=True, null=True)
+    category = models.CharField(max_length=100, default='General Modules', blank=True)
+    order = models.IntegerField(default=0)
+
+    class Meta:
+        ordering = ['order', 'name']
+
+    def __str__(self):
+        return f"{self.name} ({self.code})"
 
 
 class SubscriptionInvoice(models.Model):

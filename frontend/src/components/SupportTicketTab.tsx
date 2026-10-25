@@ -40,7 +40,7 @@ const SupportTicketTab: React.FC = () => {
   const fetchTickets = async () => {
     try {
       setLoading(true);
-      const response = await api.get('http://localhost:8000/api/super-admin/support-tickets/');
+      const response = await api.get('/super-admin/support-tickets/');
       setTickets(response.data.results || response.data);
       
       // Update selected ticket if it exists
@@ -57,7 +57,7 @@ const SupportTicketTab: React.FC = () => {
 
   const handleStatusChange = async (id: string, newStatus: string) => {
     try {
-      await api.patch(`http://localhost:8000/api/super-admin/support-tickets/${id}/`, { status: newStatus });
+      await api.patch(`/super-admin/support-tickets/${id}/`, { status: newStatus });
       fetchTickets();
     } catch (error) {
       console.error('Error updating ticket status:', error);
@@ -66,7 +66,7 @@ const SupportTicketTab: React.FC = () => {
 
   const handlePriorityChange = async (id: string, newPriority: string) => {
     try {
-      await api.patch(`http://localhost:8000/api/super-admin/support-tickets/${id}/`, { priority: newPriority });
+      await api.patch(`/super-admin/support-tickets/${id}/`, { priority: newPriority });
       fetchTickets();
     } catch (error) {
       console.error('Error updating ticket priority:', error);
@@ -78,7 +78,7 @@ const SupportTicketTab: React.FC = () => {
     if (!selectedTicket || !replyText.trim()) return;
     
     try {
-      await api.post(`http://localhost:8000/api/super-admin/support-tickets/${selectedTicket.id}/messages/`, 
+      await api.post(`/super-admin/support-tickets/${selectedTicket.id}/messages/`, 
         { message: replyText }
       );
       setReplyText('');

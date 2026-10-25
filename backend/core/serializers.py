@@ -18,10 +18,17 @@ from .models import (
 
 class UserSerializer(serializers.ModelSerializer):
     role = serializers.SerializerMethodField()
+    daycare_limits = serializers.SerializerMethodField()
+    subscription_features = serializers.SerializerMethodField()
+    active_subscription = serializers.SerializerMethodField()
     
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'daycare', 'role', 'is_superuser']
+        fields = [
+            'id', 'username', 'email', 'first_name', 'last_name', 
+            'daycare', 'role', 'is_superuser', 'daycare_limits', 
+            'subscription_features', 'active_subscription'
+        ]
         depth = 1
         
     def get_role(self, obj):
@@ -30,6 +37,88 @@ class UserSerializer(serializers.ModelSerializer):
         if hasattr(obj, 'guardian_profile'):
             return 'Guardian'
         return 'Daycare Admin'
+
+    def get_daycare_limits(self, obj):
+        if not obj.daycare:
+            return None
+        sub = obj.daycare.subscriptions.filter(subscription_status__in=['Active', 'active', 'Trial', 'trial']).first()
+        if sub and sub.subscription_plan:
+            plan = sub.subscription_plan
+            return {
+                'max_students': plan.max_students,
+                'max_teachers': plan.max_teachers,
+                'max_staff': plan.max_staff,
+                'max_classrooms': plan.max_classrooms,
+                'max_branches': plan.max_branches,
+                'max_storage_mb': plan.max_storage_mb,
+            }
+        return None
+
+    def get_subscription_features(self, obj):
+        from .models import SubscriptionFeature
+        if obj.is_superuser:
+            return list(SubscriptionFeature.objects.values_list('code', flat=True))
+        if not obj.daycare:
+            return []
+        
+        # 1. Base Plan Features from active / trial subscription
+        base_features = set()
+        sub = obj.daycare.subscriptions.filter(
+            subscription_status__in=['Active', 'active', 'Trial', 'trial']
+        ).order_by('-created_at').first()
+        
+        if sub and sub.subscription_plan:
+            base_features = set(sub.subscription_plan.features.values_list('code', flat=True))
+        else:
+            base_features = set()
+
+        # 2. Daycare-specific Feature Overrides
+        overrides = getattr(obj.daycare, 'feature_overrides', None) or {}
+        enabled_overrides = set(overrides.get('enabled', []))
+        disabled_overrides = set(overrides.get('disabled', []))
+
+        # Resolved Features = (Plan Features UNION Enabled Overrides) MINUS Disabled Overrides
+        final_features = (base_features | enabled_overrides) - disabled_overrides
+        return list(final_features)
+
+    def get_active_subscription(self, obj):
+        from django.utils import timezone as tz
+        if not obj.daycare:
+            return None
+        sub = obj.daycare.subscriptions.filter(subscription_status__in=['Active', 'active', 'Trial', 'trial']).first()
+        if sub:
+            today = tz.now().date()
+            is_trial = sub.subscription_status.lower() == 'trial'
+
+            # Effective end date: trial_end_date for trials, expiry_date for active
+            end_date = sub.trial_end_date if (is_trial and sub.trial_end_date) else sub.expiry_date
+
+            days_until_expiry = None
+            is_expiring_soon = False
+            is_expired = False
+            if end_date:
+                delta = (end_date - today).days
+                days_until_expiry = delta
+                is_expiring_soon = 0 <= delta <= 7
+                is_expired = delta < 0
+
+            return {
+                'id': str(sub.id),
+                'plan_name': sub.subscription_plan.name if sub.subscription_plan else 'Custom',
+                'plan_id': str(sub.subscription_plan.id) if sub.subscription_plan else None,
+                'status': sub.subscription_status,
+                'billing_cycle': sub.billing_cycle,
+                'amount': float(sub.amount) if sub.amount else 0.0,
+                'start_date': str(sub.start_date) if sub.start_date else None,
+                'expiry_date': str(end_date) if end_date else None,
+                'renewal_date': str(sub.renewal_date) if sub.renewal_date else (str(end_date) if end_date else None),
+                'trial_end_date': str(sub.trial_end_date) if sub.trial_end_date else None,
+                'days_until_expiry': days_until_expiry,
+                'is_expiring_soon': is_expiring_soon,
+                'is_expired': is_expired,
+                'is_trial': is_trial,
+            }
+        return None
 
 class EmployeeTypeSerializer(serializers.ModelSerializer):
     class Meta:
@@ -1107,13 +1196,22 @@ class SubscriptionFeatureSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class SubscriptionPlanSerializer(serializers.ModelSerializer):
+    feature_details = SubscriptionFeatureSerializer(source='features', many=True, read_only=True)
+    feature_codes = serializers.SerializerMethodField()
+
     class Meta:
         model = SubscriptionPlan
         fields = '__all__'
 
+    def get_feature_codes(self, obj):
+        return list(obj.features.values_list('code', flat=True))
+
 class DaycareSubscriptionSerializer(serializers.ModelSerializer):
     plan_name = serializers.SerializerMethodField()
     daycare_name = serializers.SerializerMethodField()
+    days_until_expiry = serializers.SerializerMethodField()
+    is_expired = serializers.SerializerMethodField()
+    is_expiring_soon = serializers.SerializerMethodField()
     
     class Meta:
         model = DaycareSubscription
@@ -1124,6 +1222,26 @@ class DaycareSubscriptionSerializer(serializers.ModelSerializer):
         
     def get_daycare_name(self, obj):
         return obj.daycare.name if obj.daycare else "None"
+
+    def get_days_until_expiry(self, obj):
+        if not obj.expiry_date:
+            obj.save()
+        if not obj.expiry_date:
+            return None
+        from django.utils import timezone
+        return (obj.expiry_date - timezone.now().date()).days
+
+    def get_is_expired(self, obj):
+        if not obj.expiry_date:
+            return obj.subscription_status.lower() in ['expired', 'cancelled', 'suspended']
+        from django.utils import timezone
+        return obj.expiry_date < timezone.now().date() or obj.subscription_status.lower() == 'expired'
+
+    def get_is_expiring_soon(self, obj):
+        days = self.get_days_until_expiry(obj)
+        if days is None:
+            return False
+        return 0 <= days <= 7
         
     def create(self, validated_data):
         from .models import SubscriptionInvoice, SubscriptionPayment
@@ -1140,6 +1258,7 @@ class DaycareSubscriptionSerializer(serializers.ModelSerializer):
         amount = subscription.amount or 0
         invoice_number = f"INV-{timezone.now().strftime('%Y%m%d')}-{random.randint(1000, 9999)}"
         
+        now_dt = timezone.now()
         invoice = SubscriptionInvoice.objects.create(
             invoice_number=invoice_number,
             daycare=subscription.daycare,
@@ -1150,7 +1269,9 @@ class DaycareSubscriptionSerializer(serializers.ModelSerializer):
             tax=0,
             total=amount,
             status='paid',
-            payment_date=timezone.now().date()
+            payment_date=timezone.now().date(),
+            created_at=now_dt,
+            updated_at=now_dt
         )
         
         SubscriptionPayment.objects.create(
@@ -1162,7 +1283,9 @@ class DaycareSubscriptionSerializer(serializers.ModelSerializer):
             currency='USD',
             payment_method='Credit Card (Mocked)',
             payment_status='completed',
-            transaction_reference=f"txn_{uuid.uuid4().hex[:16]}"
+            transaction_reference=f"txn_{uuid.uuid4().hex[:16]}",
+            created_at=now_dt,
+            updated_at=now_dt
         )
         
         if not subscription.start_date:
@@ -1245,17 +1368,105 @@ class DaycareSettingsSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'daycare', 'created_at', 'updated_at']
 
 class AdminDaycareSerializer(serializers.ModelSerializer):
+    subscription = serializers.SerializerMethodField()
+    invoices = serializers.SerializerMethodField()
+    admin_user = serializers.SerializerMethodField()
+    stats = serializers.SerializerMethodField()
+
     class Meta:
         model = Daycare
         fields = '__all__'
 
+    def get_subscription(self, obj):
+        sub = obj.subscriptions.order_by('-created_at').first()
+        if not sub:
+            return None
+        from django.utils import timezone
+        today = timezone.now().date()
+
+        if not sub.expiry_date:
+            sub.save() # Triggers model save() which calculates start_date, expiry_date & renewal_date
+
+        days_until_expiry = (sub.expiry_date - today).days if sub.expiry_date else None
+        is_expired = (sub.expiry_date and sub.expiry_date < today) or sub.subscription_status.lower() == 'expired'
+        is_expiring_soon = days_until_expiry is not None and 0 <= days_until_expiry <= 7
+
+        plan = sub.subscription_plan
+        plan_details = None
+        if plan:
+            plan_details = {
+                'id': str(plan.id),
+                'name': plan.name,
+                'monthly_price': float(plan.monthly_price),
+                'annual_price': float(plan.annual_price),
+                'max_students': plan.max_students,
+                'max_staff': plan.max_staff,
+                'max_classrooms': plan.max_classrooms,
+                'max_branches': plan.max_branches,
+                'max_storage_mb': plan.max_storage_mb,
+            }
+
+        return {
+            'id': str(sub.id),
+            'plan_id': str(plan.id) if plan else None,
+            'plan_name': plan.name if plan else 'N/A',
+            'plan_details': plan_details,
+            'billing_cycle': sub.billing_cycle,
+            'amount': float(sub.amount),
+            'start_date': str(sub.start_date) if sub.start_date else None,
+            'expiry_date': str(sub.expiry_date) if sub.expiry_date else None,
+            'renewal_date': str(sub.renewal_date) if sub.renewal_date else None,
+            'subscription_status': sub.subscription_status,
+            'days_until_expiry': days_until_expiry,
+            'is_expired': is_expired,
+            'is_expiring_soon': is_expiring_soon
+        }
+
+    def get_invoices(self, obj):
+        from core.models import SubscriptionInvoice
+        invoices = SubscriptionInvoice.objects.filter(daycare=obj).order_by('-created_at')[:10]
+        return [{
+            'id': str(inv.id),
+            'invoice_number': inv.invoice_number,
+            'issue_date': str(inv.issue_date) if inv.issue_date else None,
+            'due_date': str(inv.due_date) if inv.due_date else None,
+            'payment_date': str(inv.payment_date) if inv.payment_date else None,
+            'amount': float(inv.amount),
+            'tax': float(inv.tax) if inv.tax else 0.0,
+            'total': float(inv.total),
+            'status': inv.status
+        } for inv in invoices]
+
+    def get_admin_user(self, obj):
+        from core.models import User
+        user = User.objects.filter(daycare=obj, is_superuser=False).first()
+        if not user:
+            return None
+        return {
+            'id': str(user.id),
+            'username': user.username,
+            'email': user.email,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+            'status': getattr(user, 'status', 'Active')
+        }
+
+    def get_stats(self, obj):
+        from core.models import Student, Employee, Classroom, Branch
+        return {
+            'students_count': Student.objects.filter(daycare=obj).count(),
+            'staff_count': Employee.objects.filter(daycare=obj).exclude(status='terminated').count(),
+            'classrooms_count': Classroom.objects.filter(daycare=obj).count(),
+            'branches_count': Branch.objects.filter(daycare=obj).count()
+        }
+
 class AdminUserSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True)
+    password = serializers.CharField(write_only=True, required=False, allow_blank=True)
     role = serializers.SerializerMethodField()
     
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'password', 'first_name', 'last_name', 'role', 'daycare', 'is_staff', 'is_superuser', 'status', 'is_active']
+        fields = ['id', 'username', 'email', 'password', 'first_name', 'last_name', 'mobile', 'role', 'daycare', 'is_staff', 'is_superuser', 'status', 'is_active']
         
     def get_role(self, obj):
         if obj.is_superuser:
@@ -1265,11 +1476,21 @@ class AdminUserSerializer(serializers.ModelSerializer):
         return 'Daycare Admin'
         
     def create(self, validated_data):
-        password = validated_data.pop('password')
+        password = validated_data.pop('password', None)
         user = User(**validated_data)
-        user.set_password(password)
+        if password:
+            user.set_password(password)
         user.save()
         return user
+
+    def update(self, instance, validated_data):
+        password = validated_data.pop('password', None)
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        if password:
+            instance.set_password(password)
+        instance.save()
+        return instance
 
 from .models import AgeGroup, RatioRule, RatioManualOverride, RatioComplianceHistory
 

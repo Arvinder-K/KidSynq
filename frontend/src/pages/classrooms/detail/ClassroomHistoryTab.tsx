@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import axios from 'axios';
+import api from '../../../api';
 import { History, Users, Clock } from 'lucide-react';
 
 
@@ -13,11 +13,8 @@ export const ClassroomHistoryTab: React.FC = () => {
         const fetchHistory = async () => {
             try {
                 setLoading(true);
-                const token = localStorage.getItem('access_token');
                 // Fetch shifts for this room as activity history
-                const res = await axios.get(`http://localhost:8000/api/daycare/classrooms/${classroomId}/schedule/`, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
+                const res = await api.get(`/daycare/classrooms/${classroomId}/schedule/`);
                 const shifts = res.data?.shifts || [];
                 setEvents(shifts);
             } catch (err) {

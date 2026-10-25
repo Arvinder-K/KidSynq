@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
+import api from '../../../api';
 import { Plus, UserMinus, History } from 'lucide-react';
 
 
@@ -21,10 +21,7 @@ const ClassroomTeachers = () => {
     const { data: staff, isLoading: staffLoading, isError: staffError, error: staffErrObj } = useQuery({
         queryKey: ['classroom-staff', id],
         queryFn: async () => {
-            const token = localStorage.getItem('access_token');
-            const res = await axios.get(`http://localhost:8000/api/daycare/classrooms/${id}/staff/`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            const res = await api.get(`/daycare/classrooms/${id}/staff/`);
             return res.data;
         }
     });
@@ -32,26 +29,19 @@ const ClassroomTeachers = () => {
     const { data: availableEmployees } = useQuery({
         queryKey: ['available-employees'],
         queryFn: async () => {
-            const token = localStorage.getItem('access_token');
-            // Assuming this endpoint exists from Phase 1 or similar
-            const res = await axios.get(`http://localhost:8000/api/daycare/employees/`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            // Filter out suspended/inactive? Handled on backend, but we can filter here too
-            return res.data.filter((e: any) => e.status !== 'suspended' && e.status !== 'inactive');
+            const res = await api.get(`/daycare/employees/`);
+            const list = res.data?.results || res.data || [];
+            return list.filter((e: any) => e.status !== 'suspended' && e.status !== 'inactive');
         }
     });
 
     const assignMutation = useMutation({
         mutationFn: async ({ role, employee_id }: { role: string, employee_id: string }) => {
-            const token = localStorage.getItem('access_token');
             const endpoint = role === 'Primary' 
-                ? `/api/daycare/classrooms/${id}/primary-teacher/` 
-                : `/api/daycare/classrooms/${id}/assistants/`;
+                ? `/daycare/classrooms/${id}/primary-teacher/` 
+                : `/daycare/classrooms/${id}/assistants/`;
                 
-            return axios.post(`http://localhost:8000${endpoint}`, { employee_id }, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            return api.post(endpoint, { employee_id });
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['classroom-staff', id] });
@@ -66,10 +56,7 @@ const ClassroomTeachers = () => {
 
     const removeMutation = useMutation({
         mutationFn: async (assignmentId: string) => {
-            const token = localStorage.getItem('access_token');
-            return axios.delete(`http://localhost:8000/api/daycare/classroom-staff/${assignmentId}/`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            return api.delete(`/daycare/classroom-staff/${assignmentId}/`);
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['classroom-staff', id] });

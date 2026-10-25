@@ -16,14 +16,14 @@ Welcome to **KidSynq**! This is a modern full-stack web application built with a
 
 ### Backend
 - **Framework:** Django (Python)
-- **Database:** PostgreSQL (Configured via `settings.py`)
+- **Database:** MySQL (Configured via `settings.py` & `.env`)
 
 ## 🏃‍♂️ Getting Started
 
 ### Prerequisites
 - Node.js (v18+)
 - Python (3.10+)
-- PostgreSQL
+- MySQL Server (or XAMPP / WAMP / MySQL Workbench)
 
 ### Backend Setup
 1. Navigate to the backend directory:
@@ -33,14 +33,26 @@ Welcome to **KidSynq**! This is a modern full-stack web application built with a
 2. Create and activate a virtual environment:
    ```bash
    python -m venv venv
-   source venv/Scripts/activate  # On Windows
-   # or source venv/bin/activate # On macOS/Linux
+   source venv/Scripts/activate  # On Windows: venv\Scripts\activate
    ```
-3. Install dependencies:
+3. Install dependencies (including MySQL driver `pymysql` / `mysqlclient`):
    ```bash
    pip install -r requirements.txt
    ```
-4. Set up the PostgreSQL database (`kidsynq`) and run migrations:
+4. Create the MySQL database:
+   ```sql
+   CREATE DATABASE kidsynq CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+   ```
+5. Configure database credentials in `.env`:
+   ```env
+   DB_CONNECTION=mysql
+   DB_HOST=127.0.0.1
+   DB_PORT=3306
+   DB_DATABASE=kidsynq
+   DB_USERNAME=root
+   DB_PASSWORD=your_mysql_password
+   ```
+6. Run database migrations:
    ```bash
    python manage.py migrate
    ```

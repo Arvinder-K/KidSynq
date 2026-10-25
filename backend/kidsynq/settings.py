@@ -17,9 +17,9 @@ from dotenv import load_dotenv
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Load environment variables from root and backend
-load_dotenv(BASE_DIR.parent / '.env')
-load_dotenv(BASE_DIR / '.env')
+# Load environment variables from backend first (with override), then root
+load_dotenv(BASE_DIR / '.env', override=True)
+load_dotenv(BASE_DIR.parent / '.env', override=False)
 
 
 # Quick-start development settings - unsuitable for production
@@ -180,5 +180,21 @@ REST_FRAMEWORK = {
 
 # CORS
 CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = True
 
 AUTH_USER_MODEL = 'core.User'
+
+from datetime import timedelta
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'ROTATE_REFRESH_TOKENS': False,
+    'BLACKLIST_AFTER_ROTATION': False,
+    'UPDATE_LAST_LOGIN': True,
+    'ALGORITHM': 'HS256',
+    'SIGNING_KEY': SECRET_KEY,
+    'AUTH_HEADER_TYPES': ('Bearer',),
+    'USER_ID_FIELD': 'id',
+    'USER_ID_CLAIM': 'user_id',
+    'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
+}

@@ -39,7 +39,7 @@ const SystemAnnouncementTab: React.FC = () => {
   const fetchAnnouncements = async () => {
     try {
       setLoading(true);
-      const response = await api.get('http://localhost:8000/api/super-admin/announcements/');
+      const response = await api.get('/super-admin/announcements/');
       setAnnouncements(response.data.results || response.data);
     } catch (error) {
       console.error('Error fetching announcements:', error);
@@ -50,7 +50,7 @@ const SystemAnnouncementTab: React.FC = () => {
 
   const fetchDaycares = async () => {
     try {
-      const response = await api.get('http://localhost:8000/api/super-admin/daycares/');
+      const response = await api.get('/super-admin/daycares/');
       setDaycares(response.data.results || response.data);
     } catch (error) {
       console.error('Error fetching daycares:', error);
@@ -85,9 +85,9 @@ const SystemAnnouncementTab: React.FC = () => {
       };
 
       if (editingId) {
-        await api.put(`http://localhost:8000/api/super-admin/announcements/${editingId}/`, payload);
+        await api.put(`/super-admin/announcements/${editingId}/`, payload);
       } else {
-        await api.post('http://localhost:8000/api/super-admin/announcements/', payload);
+        await api.post('/super-admin/announcements/', payload);
       }
       
       setShowModal(false);
@@ -101,7 +101,7 @@ const SystemAnnouncementTab: React.FC = () => {
   const handleDelete = async (id: string) => {
     if (window.confirm('Are you sure you want to delete this announcement?')) {
       try {
-        await api.delete(`http://localhost:8000/api/super-admin/announcements/${id}/`);
+        await api.delete(`/super-admin/announcements/${id}/`);
         fetchAnnouncements();
       } catch (error) {
         console.error('Error deleting announcement:', error);

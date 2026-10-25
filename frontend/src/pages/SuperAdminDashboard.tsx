@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { 
     LayoutDashboard, Users, Building2, CreditCard, 
-    Plus, Edit2, CheckCircle2, ShieldCheck,
+    Plus, Edit2, Trash2, CheckCircle2, ShieldCheck,
     LogOut, UserCircle, XCircle, TrendingUp, Shield,
     FileText, MessageSquare, FileSpreadsheet, AlertCircle, Loader2
 } from 'lucide-react';
@@ -20,6 +20,7 @@ import AuditLogTab from '../components/AuditLogTab';
 import SystemAnnouncementTab from '../components/SystemAnnouncementTab';
 import SupportTicketTab from '../components/SupportTicketTab';
 import RatioRulesManagementTab from '../components/RatioRulesManagementTab';
+import ConfirmationDialog from '../components/ConfirmationDialog';
 import { Scale } from 'lucide-react';
 
 import {
@@ -75,6 +76,40 @@ export default function SuperAdminDashboard() {
     const [isOnboardingModalOpen, setIsOnboardingModalOpen] = useState(false);
 
     const [formData, setFormData] = useState<any>({});
+
+    const [confirmDialog, setConfirmDialog] = useState({
+        isOpen: false,
+        title: '',
+        message: '',
+        confirmText: 'Confirm',
+        confirmStyle: 'primary' as 'primary' | 'warning' | 'danger',
+        action: () => {}
+    });
+
+    const confirmDeleteUser = (targetUser: any) => {
+        if (targetUser.id === user?.id) {
+            alert('You cannot delete your own active platform admin account.');
+            return;
+        }
+
+        setConfirmDialog({
+            isOpen: true,
+            title: 'Delete Platform User',
+            message: `Are you sure you want to permanently delete platform user "${targetUser.username}" (${targetUser.first_name || ''} ${targetUser.last_name || ''})? This action cannot be undone.`,
+            confirmText: 'Delete User',
+            confirmStyle: 'danger',
+            action: async () => {
+                try {
+                    await api.delete(`/super-admin/users/${targetUser.id}/`);
+                    fetchData();
+                } catch (err: any) {
+                    alert(err.response?.data?.error || err.response?.data?.message || 'Failed to delete user.');
+                } finally {
+                    setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+                }
+            }
+        });
+    };
 
     const fetchData = () => {
         api.get('/super-admin/daycares/').then(res => {
@@ -326,7 +361,7 @@ export default function SuperAdminDashboard() {
                                                         <p className="text-xs text-gray-500 mt-1">{u.email}</p>
                                                     </div>
                                                 </div>
-                                                <div className="flex items-center gap-6">
+                                                <div className="flex items-center gap-3">
                                                     {u.is_superuser ? (
                                                         <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800 flex items-center">
                                                             <ShieldCheck className="w-3 h-3 mr-1" /> Platform Admin
@@ -336,9 +371,14 @@ export default function SuperAdminDashboard() {
                                                             Daycare: {daycares.find(d => d.id === u.daycare)?.name || 'Unknown'}
                                                         </span>
                                                     )}
-                                                    <button onClick={() => { setFormData(u); setIsUserModalOpen(true); }} className="text-slate-400 hover:text-indigo-600 p-2 hover:bg-indigo-50 rounded-lg transition-colors">
+                                                    <button onClick={() => { setFormData(u); setIsUserModalOpen(true); }} className="text-slate-400 hover:text-indigo-600 p-2 hover:bg-indigo-50 rounded-lg transition-colors" title="Edit User">
                                                         <Edit2 className="w-4 h-4" />
                                                     </button>
+                                                    {u.id !== user?.id && (
+                                                        <button onClick={() => confirmDeleteUser(u)} className="text-slate-400 hover:text-red-600 p-2 hover:bg-red-50 rounded-lg transition-colors" title="Delete User">
+                                                            <Trash2 className="w-4 h-4" />
+                                                        </button>
+                                                    )}
                                                 </div>
                                             </div>
                                         </li>
@@ -571,8 +611,22 @@ export default function SuperAdminDashboard() {
                                                 </select>
                                             </div>
                                         )}
-                                        <div className="pt-2">
-                                            <button type="submit" className="w-full py-2.5 bg-indigo-600 text-white rounded-lg font-semibold shadow hover:bg-indigo-700 transition-colors">Save User</button>
+                                        <div className="pt-3 flex justify-between items-center border-t border-gray-100 mt-2">
+                                            {formData.id && formData.id !== user?.id ? (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        const targetUser = { ...formData };
+                                                        setIsUserModalOpen(false);
+                                                        confirmDeleteUser(targetUser);
+                                                    }}
+                                                    className="px-3 py-2 text-red-600 hover:bg-red-50 hover:text-red-700 font-medium rounded-lg transition-colors flex items-center gap-1.5 text-sm border border-red-200"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                    Delete User
+                                                </button>
+                                            ) : <div />}
+                                            <button type="submit" className="py-2.5 px-6 bg-indigo-600 text-white rounded-lg font-semibold shadow hover:bg-indigo-700 transition-colors">Save User</button>
                                         </div>
                                     </form>
                                 )}
@@ -649,6 +703,16 @@ export default function SuperAdminDashboard() {
                 isOpen={isOnboardingModalOpen}
                 onClose={() => setIsOnboardingModalOpen(false)}
                 onComplete={() => { setIsOnboardingModalOpen(false); fetchData(); }}
+            />
+
+            <ConfirmationDialog 
+                isOpen={confirmDialog.isOpen}
+                title={confirmDialog.title}
+                message={confirmDialog.message}
+                confirmText={confirmDialog.confirmText}
+                confirmStyle={confirmDialog.confirmStyle}
+                onConfirm={confirmDialog.action}
+                onCancel={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
             />
         </div>
     );

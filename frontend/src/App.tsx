@@ -193,6 +193,8 @@ function AppRoutes() {
     return (
         <Routes>
             <Route path="/login" element={<Login type="daycare" />} />
+            <Route path="/daycare/login" element={<Login type="daycare" />} />
+            <Route path="/staff/login" element={<Login type="staff" />} />
             <Route path="/admin/login" element={<Login type="admin" />} />
             <Route path="/daycare/dashboard" element={<DaycareRoute><Dashboard /></DaycareRoute>} />
             <Route path="/dashboard" element={<DashboardRedirect />} />

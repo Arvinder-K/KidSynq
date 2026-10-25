@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, Edit2, Power, Plus, Shield, Key } from 'lucide-react';
+import { Search, Edit2, Power, Plus, Shield, Key, Trash2 } from 'lucide-react';
 import api from '../api';
 import DaycareAdminFormModal from './DaycareAdminFormModal';
 import ConfirmationDialog from './ConfirmationDialog';
@@ -17,7 +17,8 @@ export default function DaycareAdminManagementTab() {
         isOpen: false,
         title: '',
         message: '',
-        confirmStyle: 'primary' as any,
+        confirmText: 'Confirm',
+        confirmStyle: 'primary' as 'primary' | 'warning' | 'danger',
         action: () => {}
     });
 
@@ -47,12 +48,15 @@ export default function DaycareAdminManagementTab() {
     );
 
     const handleAction = (adminId: string, actionType: string, extraData?: any) => {
-        api.post(`/super-admin/daycare-admins/${adminId}/${actionType}/`, extraData)
-            .then(fetchAdmins)
-            .catch(err => alert(err.response?.data?.error || 'Action failed'));
+        const req = actionType === 'delete'
+            ? api.delete(`/super-admin/daycare-admins/${adminId}/`)
+            : api.post(`/super-admin/daycare-admins/${adminId}/${actionType}/`, extraData);
+
+        req.then(fetchAdmins)
+            .catch(err => alert(err.response?.data?.error || err.response?.data?.message || 'Action failed'));
     };
 
-    const confirmAction = (admin: any, actionType: 'suspend' | 'activate' | 'reset_password') => {
+    const confirmAction = (admin: any, actionType: 'suspend' | 'activate' | 'reset_password' | 'delete') => {
         if (actionType === 'reset_password') {
             const newPassword = prompt(`Enter new password for ${admin.username}:`);
             if (newPassword) {
@@ -61,20 +65,37 @@ export default function DaycareAdminManagementTab() {
             return;
         }
 
-        const title = actionType === 'suspend' ? 'Suspend Admin' : 'Activate Admin';
-        const message = actionType === 'suspend' 
-            ? `Are you sure you want to suspend ${admin.username}? They will no longer be able to log in.`
-            : `Are you sure you want to activate ${admin.username}?`;
-        const style = actionType === 'suspend' ? 'warning' : 'primary';
+        let title = '';
+        let message = '';
+        let style: 'primary' | 'warning' | 'danger' = 'primary';
+        let confirmText = 'Confirm';
+
+        if (actionType === 'delete') {
+            title = 'Delete Daycare Admin';
+            message = `Are you sure you want to permanently delete the admin account "${admin.username}" (${admin.first_name || ''} ${admin.last_name || ''})? This will immediately revoke their daycare management access.`;
+            style = 'danger';
+            confirmText = 'Delete Admin';
+        } else if (actionType === 'suspend') {
+            title = 'Suspend Admin';
+            message = `Are you sure you want to suspend ${admin.username}? They will no longer be able to log in.`;
+            style = 'warning';
+            confirmText = 'Suspend';
+        } else {
+            title = 'Activate Admin';
+            message = `Are you sure you want to activate ${admin.username}?`;
+            style = 'primary';
+            confirmText = 'Activate';
+        }
 
         setConfirmDialog({
             isOpen: true,
             title,
             message,
             confirmStyle: style,
+            confirmText,
             action: () => {
                 handleAction(admin.id, actionType);
-                setConfirmDialog({ ...confirmDialog, isOpen: false });
+                setConfirmDialog(prev => ({ ...prev, isOpen: false }));
             }
         });
     };
@@ -173,13 +194,17 @@ export default function DaycareAdminManagementTab() {
                                                         <Power className="w-4 h-4" />
                                                     </button>
                                                 )}
+
+                                                <button onClick={() => confirmAction(admin, 'delete')} className="text-slate-400 hover:text-red-600 p-1.5 hover:bg-red-50 rounded transition-colors" title="Delete Admin">
+                                                    <Trash2 className="w-4 h-4" />
+                                                </button>
                                             </div>
                                         </td>
                                     </tr>
                                 ))}
                                 {filteredAdmins.length === 0 && (
                                     <tr>
-                                        <td colSpan={4} className="px-6 py-8 text-center text-gray-500">
+                                        <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
                                             No daycare admins found.
                                         </td>
                                     </tr>
@@ -195,13 +220,18 @@ export default function DaycareAdminManagementTab() {
                 admin={selectedAdmin} 
                 daycares={daycares}
                 onClose={() => setIsFormOpen(false)} 
-                onSuccess={() => { setIsFormOpen(false); fetchAdmins(); }} 
+                onSuccess={() => { setIsFormOpen(false); fetchAdmins(); }}
+                onDeleteRequest={(adminToDelete) => {
+                    setIsFormOpen(false);
+                    confirmAction(adminToDelete, 'delete');
+                }}
             />
 
             <ConfirmationDialog 
                 isOpen={confirmDialog.isOpen}
                 title={confirmDialog.title}
                 message={confirmDialog.message}
+                confirmText={confirmDialog.confirmText}
                 confirmStyle={confirmDialog.confirmStyle}
                 onConfirm={confirmDialog.action}
                 onCancel={() => setConfirmDialog({ ...confirmDialog, isOpen: false })}

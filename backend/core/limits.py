@@ -11,13 +11,21 @@ def check_subscription_limit(daycare, limit_type, increment=1, extra_size_bytes=
     limit_type: 'students', 'staff', 'classrooms', 'storage'
     Returns a tuple (bool, str, str) -> (is_allowed, error_code, error_message)
     """
+    from django.utils import timezone
+    today = timezone.now().date()
+
     active_sub = DaycareSubscription.objects.filter(
         daycare=daycare, 
-        subscription_status__in=['active', 'trial']
+        subscription_status__in=['active', 'Active', 'trial', 'Trial']
     ).first()
 
     if not active_sub:
         return False, "NO_ACTIVE_SUBSCRIPTION", "No active subscription found for this daycare."
+
+    if active_sub.expiry_date and active_sub.expiry_date < today:
+        active_sub.subscription_status = 'expired'
+        active_sub.save(update_fields=['subscription_status'])
+        return False, "SUBSCRIPTION_EXPIRED", "Your daycare subscription has expired. Please renew your subscription to continue."
 
     plan = active_sub.subscription_plan
 
@@ -66,18 +74,26 @@ def require_feature(feature_code):
     def decorator(view_func):
         @wraps(view_func)
         def _wrapped_view(self, request, *args, **kwargs):
+            from django.utils import timezone
+            today = timezone.now().date()
+
             daycare = getattr(request.user, 'daycare', None)
             if not daycare:
                 return Response({"error": "UNAUTHORIZED_FEATURE", "message": "User is not assigned to a daycare."}, status=status.HTTP_403_FORBIDDEN)
             
             active_sub = DaycareSubscription.objects.filter(
                 daycare=daycare, 
-                subscription_status__in=['active', 'trial']
+                subscription_status__in=['active', 'Active', 'trial', 'Trial']
             ).first()
 
             if not active_sub:
                 return Response({"error": "NO_ACTIVE_SUBSCRIPTION", "message": "No active subscription found for this daycare."}, status=status.HTTP_403_FORBIDDEN)
             
+            if active_sub.expiry_date and active_sub.expiry_date < today:
+                active_sub.subscription_status = 'expired'
+                active_sub.save(update_fields=['subscription_status'])
+                return Response({"error": "SUBSCRIPTION_EXPIRED", "message": "Your daycare subscription has expired. Services are suspended until renewed."}, status=status.HTTP_403_FORBIDDEN)
+
             if not active_sub.subscription_plan.features.filter(code=feature_code).exists():
                 return Response({"error": "UNAUTHORIZED_FEATURE", "message": f"Your current subscription plan does not include the '{feature_code}' feature."}, status=status.HTTP_403_FORBIDDEN)
                 
