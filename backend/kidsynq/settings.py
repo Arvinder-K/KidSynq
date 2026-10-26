@@ -198,3 +198,13 @@ SIMPLE_JWT = {
     'USER_ID_CLAIM': 'user_id',
     'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
 }
+
+CORS_ALLOWED_ORIGINS = [
+    "https://kidsynq.com",
+    "https://www.kidsynq.com",
+]
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://kidsynq.com",
+    "https://www.kidsynq.com",
+]
