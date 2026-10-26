@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
+from datetime import timedelta
 import os
 from pathlib import Path
 from dotenv import load_dotenv
@@ -31,9 +32,21 @@ SECRET_KEY = 'django-insecure--h3p++9%1$#pi^ew^o)fj^_lio3@0eefcywk#_fgp^b$gg(4av
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'kidsynq-1.onrender.com']
+ALLOWED_HOSTS = ['localhost',
+                 '127.0.0.1',
+                 'kidsynq-1.onrender.com',
+                 'kidsynq.com',
+                 'www.kidsynq.com',
+                 'api.kidsynq.com']
+CORS_ALLOWED_ORIGINS = [
+    "https://kidsynq.com",
+    "https://www.kidsynq.com",
+]
 
-
+CSRF_TRUSTED_ORIGINS = [
+    "https://kidsynq.com",
+    "https://www.kidsynq.com",
+]
 # Application definition
 
 INSTALLED_APPS = [
@@ -91,7 +104,8 @@ AUTHENTICATION_BACKENDS = [
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
-DB_CONNECTION = os.getenv('DB_CONNECTION', os.getenv('DB_ENGINE', 'sqlite')).lower()
+DB_CONNECTION = os.getenv(
+    'DB_CONNECTION', os.getenv('DB_ENGINE', 'sqlite')).lower()
 
 if DB_CONNECTION in ('mysql', 'django.db.backends.mysql'):
     DATABASES = {
@@ -184,7 +198,6 @@ CORS_ALLOW_CREDENTIALS = True
 
 AUTH_USER_MODEL = 'core.User'
 
-from datetime import timedelta
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
