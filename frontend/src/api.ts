@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-export const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://127.0.0.1:8000';
-const API_BASE_URL = import.meta.env.VITE_API_URL || `${BACKEND_URL}/api/`;
+export const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || (import.meta.env.DEV ? '' : 'http://127.0.0.1:8000');
+const API_BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? '/api/' : `${BACKEND_URL}/api/`);
 
 const api = axios.create({
     baseURL: API_BASE_URL,

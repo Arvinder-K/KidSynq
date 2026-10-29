@@ -26,8 +26,8 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-export const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://127.0.0.1:8000';
-const API_BASE_URL = import.meta.env.VITE_API_URL || `${BACKEND_URL}/api/`;
+export const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || (import.meta.env.DEV ? '' : 'http://127.0.0.1:8000');
+const API_BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? '/api/' : `${BACKEND_URL}/api/`);
 
 interface LoginProps {
     type?: 'daycare' | 'staff' | 'admin' | 'family';
@@ -92,9 +92,14 @@ const Login: React.FC<LoginProps> = ({ type = 'daycare' }) => {
                 setIsLoading(false);
             }
         } catch (err: any) {
-            const errorMsg = err.response?.data?.detail || 
-                             err.response?.data?.message || 
-                             'Invalid username or password. Please verify your credentials.';
+            let errorMsg = 'Invalid username or password. Please verify your credentials.';
+            if (err.response?.data?.detail) {
+                errorMsg = err.response.data.detail;
+            } else if (err.response?.data?.message) {
+                errorMsg = err.response.data.message;
+            } else if (!err.response) {
+                errorMsg = `Connection failed (${err.message || 'Network Error'}). Unable to reach API server. Please ensure the backend is running.`;
+            }
             setError(errorMsg);
             setIsLoading(false);
         }
@@ -408,7 +413,13 @@ const Login: React.FC<LoginProps> = ({ type = 'daycare' }) => {
                             {/* Username or Email */}
                             <div className="space-y-1.5">
                                 <label className="block text-xs font-bold text-slate-700">
-                                    Staff Username or Email
+                                    {currentType === 'admin' 
+                                        ? 'Platform Super Admin Username or Email' 
+                                        : currentType === 'family' 
+                                            ? 'Guardian Email or Username' 
+                                            : currentType === 'staff' 
+                                                ? 'Educator Username or Email' 
+                                                : 'Daycare Admin Username or Email'}
                                 </label>
                                 <div className="relative group">
                                     <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-sky-600 transition-colors">
@@ -419,7 +430,15 @@ const Login: React.FC<LoginProps> = ({ type = 'daycare' }) => {
                                         required
                                         autoComplete="username"
                                         className="block w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-sky-500 focus:ring-4 focus:ring-sky-100 transition-all shadow-xs"
-                                        placeholder={currentType === 'staff' ? "staff or teacher@daycare.com" : "admin or user@daycare.com"}
+                                        placeholder={
+                                            currentType === 'admin' 
+                                                ? "admin or superadmin" 
+                                                : currentType === 'staff' 
+                                                    ? "staff or teacher@daycare.com" 
+                                                    : currentType === 'family'
+                                                        ? "guardian or parent@example.com"
+                                                        : "admin or director@daycare.com"
+                                        }
                                         value={username}
                                         onChange={(e) => setUsername(e.target.value)}
                                     />
@@ -510,38 +529,64 @@ const Login: React.FC<LoginProps> = ({ type = 'daycare' }) => {
                                             <span className="text-[10px] text-sky-600 font-bold">1-Click Fill</span>
                                         </div>
                                         <div className="grid grid-cols-1 gap-1.5">
-                                            <button
-                                                type="button"
-                                                onClick={() => handleFillDemo('admin', 'admin123')}
-                                                className="w-full text-left px-3 py-2 rounded-xl bg-white border border-teal-100 hover:border-teal-300 text-slate-800 flex items-center justify-between shadow-xs transition-all hover:bg-teal-50/50"
-                                            >
-                                                <span>🏢 <strong>admin</strong> (Daycare Admin)</span>
-                                                <span className="font-mono text-slate-500 text-[10px]">admin123</span>
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={() => handleFillDemo('admin', 'admin123')}
-                                                className="w-full text-left px-3 py-2 rounded-xl bg-white border border-sky-100 hover:border-sky-300 text-slate-800 flex items-center justify-between shadow-xs transition-all hover:bg-sky-50/50"
-                                            >
-                                                <span>👩‍🏫 <strong>staff / teacher</strong> (Educator)</span>
-                                                <span className="font-mono text-slate-500 text-[10px]">admin123</span>
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={() => handleFillDemo('guardian', 'guardian123')}
-                                                className="w-full text-left px-3 py-2 rounded-xl bg-white border border-rose-100 hover:border-rose-300 text-slate-800 flex items-center justify-between shadow-xs transition-all hover:bg-rose-50/50"
-                                            >
-                                                <span>👨‍👩‍👧 <strong>guardian</strong> (Family Portal)</span>
-                                                <span className="font-mono text-slate-500 text-[10px]">guardian123</span>
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={() => handleFillDemo('superadmin', 'superadmin123')}
-                                                className="w-full text-left px-3 py-2 rounded-xl bg-white border border-purple-100 hover:border-purple-300 text-slate-800 flex items-center justify-between shadow-xs transition-all hover:bg-purple-50/50"
-                                            >
-                                                <span>⚡ <strong>superadmin</strong> (Platform Admin)</span>
-                                                <span className="font-mono text-slate-500 text-[10px]">superadmin123</span>
-                                            </button>
+                                            {[
+                                                {
+                                                    key: 'admin',
+                                                    forPortal: 'admin',
+                                                    user: 'superadmin',
+                                                    pass: 'superadmin123',
+                                                    icon: '⚡',
+                                                    name: 'superadmin',
+                                                    badge: 'Platform Admin',
+                                                    activeRing: currentType === 'admin' ? 'ring-2 ring-purple-400 bg-purple-50/70' : 'bg-white',
+                                                    borderColor: 'border-purple-200 hover:border-purple-300',
+                                                },
+                                                {
+                                                    key: 'daycare',
+                                                    forPortal: 'daycare',
+                                                    user: 'admin',
+                                                    pass: 'admin123',
+                                                    icon: '🏢',
+                                                    name: 'admin',
+                                                    badge: 'Daycare Admin',
+                                                    activeRing: currentType === 'daycare' ? 'ring-2 ring-teal-400 bg-teal-50/70' : 'bg-white',
+                                                    borderColor: 'border-teal-200 hover:border-teal-300',
+                                                },
+                                                {
+                                                    key: 'staff',
+                                                    forPortal: 'staff',
+                                                    user: 'staff',
+                                                    pass: 'admin123',
+                                                    icon: '👩‍🏫',
+                                                    name: 'staff / teacher',
+                                                    badge: 'Educator',
+                                                    activeRing: currentType === 'staff' ? 'ring-2 ring-sky-400 bg-sky-50/70' : 'bg-white',
+                                                    borderColor: 'border-sky-200 hover:border-sky-300',
+                                                },
+                                                {
+                                                    key: 'family',
+                                                    forPortal: 'family',
+                                                    user: 'guardian',
+                                                    pass: 'guardian123',
+                                                    icon: '👨‍👩‍👧',
+                                                    name: 'guardian',
+                                                    badge: 'Family Portal',
+                                                    activeRing: currentType === 'family' ? 'ring-2 ring-rose-400 bg-rose-50/70' : 'bg-white',
+                                                    borderColor: 'border-rose-200 hover:border-rose-300',
+                                                },
+                                            ]
+                                                .sort((a, b) => (a.forPortal === currentType ? -1 : b.forPortal === currentType ? 1 : 0))
+                                                .map((item) => (
+                                                    <button
+                                                        key={item.key}
+                                                        type="button"
+                                                        onClick={() => handleFillDemo(item.user, item.pass)}
+                                                        className={`w-full text-left px-3 py-2 rounded-xl border ${item.borderColor} ${item.activeRing} text-slate-800 flex items-center justify-between shadow-xs transition-all hover:shadow-sm`}
+                                                    >
+                                                        <span>{item.icon} <strong>{item.name}</strong> ({item.badge})</span>
+                                                        <span className="font-mono text-slate-500 text-[10px]">{item.pass}</span>
+                                                    </button>
+                                                ))}
                                         </div>
                                     </motion.div>
                                 )}

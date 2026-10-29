@@ -32,7 +32,7 @@ SECRET_KEY = 'django-insecure--h3p++9%1$#pi^ew^o)fj^_lio3@0eefcywk#_fgp^b$gg(4av
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'kidsynq-1.onrender.com',
+ALLOWED_HOSTS = ['*'] if DEBUG else ['localhost', '127.0.0.1', 'kidsynq-1.onrender.com',
                  'kidsynq.com', 'www.kidsynq.com', 'api.kidsynq.com']
 # Application definition
 
