@@ -22,7 +22,7 @@ def run():
     # 2. Seed subscription features
     try:
         print("Seeding subscription features & plans...")
-        import seed_subscription_features
+        from superadmin.tasks import seed_subscription_features
         print("Subscription features & plans seeded.")
     except Exception as e:
         print(f"Seed features note: {e}")

@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand
-from clean_daycare_data import clean_all_daycare_data
+from daycare.tasks.clean_daycare_data import clean_all_daycare_data
 
 class Command(BaseCommand):
     help = 'Clean all operational/test daycare data (students, families, attendance, invoices, etc.)'
