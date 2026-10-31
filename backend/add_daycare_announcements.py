@@ -1,13 +1,17 @@
 import os
+from pathlib import Path
 
-filepath_views = r"c:\Arvinder\WebDevelopment\KidSynq\backend\daycare\views.py"
-filepath_urls = r"c:\Arvinder\WebDevelopment\KidSynq\backend\daycare\urls.py"
+# Dynamically resolve relative to this script so it works on both hosting and local
+BASE_DIR = Path(__file__).resolve().parent
+filepath_views = BASE_DIR / "daycare" / "views.py"
+filepath_urls = BASE_DIR / "daycare" / "urls.py"
 
-with open(filepath_views, "r", encoding="utf-8") as f:
-    views_content = f.read()
+if filepath_views.exists():
+    with open(filepath_views, "r", encoding="utf-8") as f:
+        views_content = f.read()
 
-# Add the view to views.py
-view_code = """
+    # Add the view to views.py
+    view_code = """
 from core.models import SystemAnnouncement
 from core.serializers import SystemAnnouncementSerializer
 from django.db.models import Q
@@ -30,20 +34,21 @@ class DaycareSystemAnnouncementListView(APIView):
         return Response(serializer.data)
 """
 
-if "class DaycareSystemAnnouncementListView" not in views_content:
-    views_content += "\n" + view_code
-    with open(filepath_views, "w", encoding="utf-8") as f:
-        f.write(views_content)
-    print("Added DaycareSystemAnnouncementListView to views.py")
+    if "class DaycareSystemAnnouncementListView" not in views_content:
+        views_content += "\n" + view_code
+        with open(filepath_views, "w", encoding="utf-8") as f:
+            f.write(views_content)
+        print("Added DaycareSystemAnnouncementListView to views.py")
 
-with open(filepath_urls, "r", encoding="utf-8") as f:
-    urls_content = f.read()
+if filepath_urls.exists():
+    with open(filepath_urls, "r", encoding="utf-8") as f:
+        urls_content = f.read()
 
-if "system-announcements" not in urls_content:
-    urls_content = urls_content.replace(
-        "path('health/dashboard/', views.HealthDashboardView.as_view(), name='health_dashboard'),",
-        "path('health/dashboard/', views.HealthDashboardView.as_view(), name='health_dashboard'),\n    path('system-announcements/', views.DaycareSystemAnnouncementListView.as_view(), name='daycare_system_announcements'),"
-    )
-    with open(filepath_urls, "w", encoding="utf-8") as f:
-        f.write(urls_content)
-    print("Added system-announcements route to urls.py")
+    if "system-announcements" not in urls_content:
+        urls_content = urls_content.replace(
+            "path('health/dashboard/', views.HealthDashboardView.as_view(), name='health_dashboard'),",
+            "path('health/dashboard/', views.HealthDashboardView.as_view(), name='health_dashboard'),\n    path('system-announcements/', views.DaycareSystemAnnouncementListView.as_view(), name='daycare_system_announcements'),"
+        )
+        with open(filepath_urls, "w", encoding="utf-8") as f:
+            f.write(urls_content)
+        print("Added system-announcements route to urls.py")

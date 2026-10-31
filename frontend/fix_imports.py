@@ -1,7 +1,13 @@
 import os
 import re
+from pathlib import Path
+
+# Dynamically resolve relative to this script so it works on both hosting and local
+BASE_DIR = Path(__file__).resolve().parent
 
 def remove_unused(filepath, to_remove):
+    if not os.path.exists(filepath):
+        return
     with open(filepath, "r", encoding="utf-8") as f:
         content = f.read()
     
@@ -21,22 +27,23 @@ def remove_unused(filepath, to_remove):
     with open(filepath, "w", encoding="utf-8") as f:
         f.write('\n'.join(new_lines))
 
-remove_unused(r"c:\Arvinder\WebDevelopment\KidSynq\frontend\src\components\AuditLogTab.tsx", ['FileText'])
-remove_unused(r"c:\Arvinder\WebDevelopment\KidSynq\frontend\src\components\SupportTicketTab.tsx", ['Filter', 'Clock', 'CheckCircle', 'AlertCircle', 'MoreVertical'])
+remove_unused(BASE_DIR / "src" / "components" / "AuditLogTab.tsx", ['FileText'])
+remove_unused(BASE_DIR / "src" / "components" / "SupportTicketTab.tsx", ['Filter', 'Clock', 'CheckCircle', 'AlertCircle', 'MoreVertical'])
 
 # For SuperAdminDashboard.tsx remove logs, tickets, invoices state
-filepath_sa = r"c:\Arvinder\WebDevelopment\KidSynq\frontend\src\pages\SuperAdminDashboard.tsx"
-with open(filepath_sa, "r", encoding="utf-8") as f:
-    content = f.read()
+filepath_sa = BASE_DIR / "src" / "pages" / "SuperAdminDashboard.tsx"
+if filepath_sa.exists():
+    with open(filepath_sa, "r", encoding="utf-8") as f:
+        content = f.read()
 
-content = re.sub(r"const \[logs, setLogs\] = useState<any\[\]>\(\[\]\);\n\s*", "", content)
-content = re.sub(r"const \[tickets, setTickets\] = useState<any\[\]>\(\[\]\);\n\s*", "", content)
-content = re.sub(r"const \[invoices, setInvoices\] = useState<any\[\]>\(\[\]\);\n\s*", "", content)
-content = re.sub(r"api.get\('/super-admin/audit-logs/'\).then\(res => setLogs\(res.data\)\).catch\(console.error\);\n\s*", "", content)
-content = re.sub(r"api.get\('/super-admin/support-tickets/'\).then\(res => setTickets\(res.data\)\).catch\(console.error\);\n\s*", "", content)
-content = re.sub(r"api.get\('/super-admin/invoices/'\).then\(res => setInvoices\(res.data\)\).catch\(console.error\);\n\s*", "", content)
+    content = re.sub(r"const \[logs, setLogs\] = useState<any\[\]>\(\[\]\);\n\s*", "", content)
+    content = re.sub(r"const \[tickets, setTickets\] = useState<any\[\]>\(\[\]\);\n\s*", "", content)
+    content = re.sub(r"const \[invoices, setInvoices\] = useState<any\[\]>\(\[\]\);\n\s*", "", content)
+    content = re.sub(r"api.get\('/super-admin/audit-logs/'\).then\(res => setLogs\(res.data\)\).catch\(console.error\);\n\s*", "", content)
+    content = re.sub(r"api.get\('/super-admin/support-tickets/'\).then\(res => setTickets\(res.data\)\).catch\(console.error\);\n\s*", "", content)
+    content = re.sub(r"api.get\('/super-admin/invoices/'\).then\(res => setInvoices\(res.data\)\).catch\(console.error\);\n\s*", "", content)
 
-with open(filepath_sa, "w", encoding="utf-8") as f:
-    f.write(content)
+    with open(filepath_sa, "w", encoding="utf-8") as f:
+        f.write(content)
 
 print("Fixed imports and state!")

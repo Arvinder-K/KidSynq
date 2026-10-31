@@ -1,8 +1,12 @@
 import os
 import glob
+from pathlib import Path
 
-directory = r"c:\Arvinder\WebDevelopment\KidSynq\frontend\src\components"
-for filepath in glob.glob(os.path.join(directory, "*.tsx")):
+# Dynamically resolve relative to this script so it works on both hosting and local
+BASE_DIR = Path(__file__).resolve().parent
+directory = BASE_DIR / "src" / "components"
+
+for filepath in glob.glob(os.path.join(str(directory), "*.tsx")):
     with open(filepath, "r", encoding="utf-8") as f:
         content = f.read()
     

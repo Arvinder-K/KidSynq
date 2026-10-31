@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Navigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { BACKEND_URL, API_BASE_URL } from '../api';
 import axios from 'axios';
 import { 
     Lock, 
@@ -26,8 +27,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-export const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || (import.meta.env.DEV ? '' : 'http://127.0.0.1:8000');
-const API_BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? '/api/' : `${BACKEND_URL}/api/`);
+export { BACKEND_URL };
 
 interface LoginProps {
     type?: 'daycare' | 'staff' | 'admin' | 'family';

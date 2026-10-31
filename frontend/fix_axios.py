@@ -1,10 +1,15 @@
 import os
+from pathlib import Path
 
-directory = r"c:\Arvinder\WebDevelopment\KidSynq\frontend\src\components"
+# Dynamically resolve relative to this script so it works on both hosting and local
+BASE_DIR = Path(__file__).resolve().parent
+directory = BASE_DIR / "src" / "components"
 files = ["SystemAnnouncementTab.tsx", "AuditLogTab.tsx", "SupportTicketTab.tsx"]
 
 for filename in files:
-    filepath = os.path.join(directory, filename)
+    filepath = directory / filename
+    if not filepath.exists():
+        continue
     with open(filepath, "r", encoding="utf-8") as f:
         content = f.read()
 
@@ -25,9 +30,6 @@ for filename in files:
     content = '\n'.join(new_lines)
     
     # Now we need to remove the headers object from the api calls.
-    # We can do this safely because they all look like:
-    # { headers: { Authorization: `Bearer ${token}` } }
-    # Or variations of it. 
     import re
     content = re.sub(r",\s*\{\s*headers:\s*\{\s*Authorization:\s*`Bearer \$\{token\}`\s*\}\s*\}", "", content)
 

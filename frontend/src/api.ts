@@ -1,7 +1,38 @@
 import axios from 'axios';
 
-export const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || (import.meta.env.DEV ? '' : 'http://127.0.0.1:8000');
-const API_BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? '/api/' : `${BACKEND_URL}/api/`);
+function determineBackendUrl(): string {
+    const envBackend = (import.meta.env.VITE_BACKEND_URL || '').trim();
+    // Ignore private Airo preview subdomains if mistakenly injected
+    if (envBackend && !envBackend.includes('airoapp.ai')) {
+        return envBackend.replace(/\/+$/, '');
+    }
+    // In production on kidsynq.com domain
+    if (typeof window !== 'undefined' && window.location.hostname.includes('kidsynq.com')) {
+        return 'https://api.kidsynq.com';
+    }
+    // Local dev (Vite dev server handles proxy to 127.0.0.1:8000)
+    if (import.meta.env.DEV) {
+        return '';
+    }
+    return 'https://api.kidsynq.com';
+}
+
+function determineApiBaseUrl(backendUrl: string): string {
+    const envApi = (import.meta.env.VITE_API_URL || '').trim();
+    if (envApi && !envApi.includes('airoapp.ai')) {
+        return envApi.endsWith('/') ? envApi : `${envApi}/`;
+    }
+    if (typeof window !== 'undefined' && window.location.hostname.includes('kidsynq.com')) {
+        return 'https://api.kidsynq.com/api/';
+    }
+    if (import.meta.env.DEV) {
+        return '/api/';
+    }
+    return backendUrl ? `${backendUrl.replace(/\/+$/, '')}/api/` : 'https://api.kidsynq.com/api/';
+}
+
+export const BACKEND_URL = determineBackendUrl();
+export const API_BASE_URL = determineApiBaseUrl(BACKEND_URL);
 
 const api = axios.create({
     baseURL: API_BASE_URL,
