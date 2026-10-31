@@ -5,3 +5,4 @@ Aggregates staff management, employee credentials, educator attendance, and task
 from daycare.views.staff import *
 from daycare.views.employees import *
 from daycare.views.staff_attendance import *
+from . import tasks
