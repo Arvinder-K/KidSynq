@@ -37,6 +37,8 @@ env/
 ENV/
 .venv/
 backend/venv/
+*.sqlite3
+*.db
 
 # Node
 frontend/node_modules/
