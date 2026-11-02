@@ -20,6 +20,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Load environment variables from backend first (with override), then root
 load_dotenv(BASE_DIR / '.env', override=True)
+load_dotenv(BASE_DIR / '.env.production', override=False)
 load_dotenv(BASE_DIR.parent / '.env', override=False)
 
 
@@ -95,8 +96,8 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': os.getenv('DB_DATABASE', os.getenv('DB_NAME', 'kidsynq')),
-        'USER': os.getenv('DB_USERNAME', os.getenv('DB_USER', 'root')),
-        'PASSWORD': os.getenv('DB_PASSWORD', 'root'),
+        'USER': os.getenv('DB_USERNAME', os.getenv('DB_USER', 'kidsynq_db')),
+        'PASSWORD': os.getenv('DB_PASSWORD', 'PopR8Tjg@edZCLzU'),
         'HOST': os.getenv('DB_HOST', '127.0.0.1'),
         'PORT': os.getenv('DB_PORT', '3306'),
         'OPTIONS': {
