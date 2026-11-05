@@ -193,9 +193,13 @@ SIMPLE_JWT = {
 CORS_ALLOWED_ORIGINS = [
     "https://kidsynq.com",
     "https://www.kidsynq.com",
+    "https://api.kidsynq.com",
 ]
 
 CSRF_TRUSTED_ORIGINS = [
     "https://kidsynq.com",
     "https://www.kidsynq.com",
+    "https://api.kidsynq.com",
 ]
+
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
