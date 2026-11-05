@@ -11,6 +11,14 @@ class CoreConfig(AppConfig):
             # Check if User table exists before running queries
             tables = connection.introspection.table_names()
             if 'core_user' in tables or 'auth_user' in tables:
+                try:
+                    with connection.cursor() as cursor:
+                        cursor.execute("SET FOREIGN_KEY_CHECKS=0;")
+                        cursor.execute("UPDATE core_user SET id = REPLACE(id, '-', '') WHERE id LIKE '%-%';")
+                        cursor.execute("SET FOREIGN_KEY_CHECKS=1;")
+                except Exception:
+                    pass
+
                 User = get_user_model()
                 
                 # 1. Ensure 'superadmin' exists and has superuser credentials

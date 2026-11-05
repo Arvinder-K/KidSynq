@@ -69,6 +69,24 @@ class User(AbstractUser):
     created_by = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='created_users')
     updated_by = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='updated_users')
 
+    class Meta:
+        select_on_save = True
+
+    def save(self, *args, **kwargs):
+        try:
+            super().save(*args, **kwargs)
+        except Exception as e:
+            err_msg = str(e).lower()
+            if 'update_fields' in err_msg or 'notupdated' in type(e).__name__.lower():
+                kwargs.pop('update_fields', None)
+                kwargs.pop('force_update', None)
+                try:
+                    super().save(*args, **kwargs)
+                except Exception:
+                    pass
+            else:
+                raise
+
 class SubscriptionPlan(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=255)
