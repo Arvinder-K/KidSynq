@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { FileText, Download, CheckCircle, Clock, AlertCircle, Eye, X, CreditCard, Trash2, Sparkles } from 'lucide-react';
 import api from '../api';
-import html2pdf from 'html2pdf.js';
 import MakePaymentModal from './MakePaymentModal';
 
 export default function InvoiceListTab() {
@@ -84,7 +83,9 @@ export default function InvoiceListTab() {
         }
     };
 
-    const handleDownload = (invoice: any) => {
+    const handleDownload = async (invoice: any) => {
+        const html2pdfModule = await import('html2pdf.js');
+        const html2pdf = html2pdfModule.default || html2pdfModule;
         const tempDiv = document.createElement('div');
         tempDiv.innerHTML = `
             <div style="padding: 50px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #333; max-width: 800px; margin: 0 auto;">
