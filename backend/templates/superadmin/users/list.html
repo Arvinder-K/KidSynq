@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block title %}Platform Users{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="h4 fw-bold text-slate-800 mb-1">Platform Users</h2>
+        <p class="text-muted small mb-0">Browse all registered accounts across roles and tenant organizations</p>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body p-3">
+        <form method="get" class="row g-2 align-items-center">
+            <div class="col-12 col-md-6">
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-search"></i></span>
+                    <input type="text" class="form-control border-start-0 ps-0" name="q" value="{{ q|default:'' }}" placeholder="Search username, name, email...">
+                </div>
+            </div>
+            <div class="col-12 col-md-3">
+                <select name="role" class="form-select">
+                    <option value="">All Roles</option>
+                    <option value="SuperAdmin" {% if role == 'SuperAdmin' %}selected{% endif %}>SuperAdmin</option>
+                    <option value="DaycareAdmin" {% if role == 'DaycareAdmin' %}selected{% endif %}>DaycareAdmin</option>
+                    <option value="Staff" {% if role == 'Staff' %}selected{% endif %}>Staff / Educator</option>
+                    <option value="Guardian" {% if role == 'Guardian' %}selected{% endif %}>Guardian</option>
+                </select>
+            </div>
+            <div class="col-12 col-md-3 d-flex gap-2">
+                <button type="submit" class="btn btn-primary flex-grow-1">Filter</button>
+                <a href="{% url 'superadmin_users' %}" class="btn btn-light border">Reset</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Tenant Organization</th>
+                    <th>Status</th>
+                    <th>Joined</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in page_obj %}
+                <tr>
+                    <td>
+                        <div class="fw-bold text-slate-800">{{ u.get_full_name|default:u.username }}</div>
+                        <div class="text-muted small font-monospace">@{{ u.username }}</div>
+                    </td>
+                    <td class="small">{{ u.email|default:"-" }}</td>
+                    <td>
+                        {% if u.is_superuser or u.role == 'SuperAdmin' %}
+                            <span class="badge badge-soft-danger">SuperAdmin</span>
+                        {% elif u.role == 'DaycareAdmin' %}
+                            <span class="badge badge-soft-primary">DaycareAdmin</span>
+                        {% elif u.role == 'Staff' %}
+                            <span class="badge badge-soft-info">Staff</span>
+                        {% elif u.role == 'Guardian' %}
+                            <span class="badge badge-soft-success">Guardian</span>
+                        {% else %}
+                            <span class="badge badge-soft-secondary">{{ u.role|default:"User" }}</span>
+                        {% endif %}
+                    </td>
+                    <td class="small">
+                        {% if u.daycare %}
+                            {{ u.daycare.name }}
+                        {% else %}
+                            <span class="text-muted">Global / System</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if u.is_active %}
+                            <span class="badge badge-soft-success">Active</span>
+                        {% else %}
+                            <span class="badge badge-soft-danger">Inactive</span>
+                        {% endif %}
+                    </td>
+                    <td class="small text-muted">{{ u.date_joined|date:"M d, Y" }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center py-5 text-muted">No users found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="card-footer bg-transparent py-3">
+        {% include "includes/pagination.html" %}
+    </div>
+</div>
+{% endblock %}
+

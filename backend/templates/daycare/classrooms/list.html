@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}Classrooms & Rooms{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="h4 fw-bold text-slate-800 mb-1">Classroom Tasks & Room Management</h2>
+        <p class="text-muted small mb-0">Manage daycare room capacities, programs, educator assignments, and student rosters</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{% url 'daycare_ratio_monitoring' %}" class="btn btn-outline-info d-inline-flex align-items-center gap-2">
+            <i class="bi bi-pie-chart"></i> Live Ratio Monitor
+        </a>
+        <a href="{% url 'daycare_programs' %}" class="btn btn-outline-secondary d-inline-flex align-items-center gap-2">
+            <i class="bi bi-book"></i> Curriculum Programs
+        </a>
+        <a href="{% url 'daycare_classroom_new' %}" class="btn btn-primary d-inline-flex align-items-center gap-2">
+            <i class="bi bi-plus-circle"></i> Add Classroom
+        </a>
+    </div>
+</div>
+
+<div class="row g-4">
+    {% for room in classrooms %}
+    <div class="col-12 col-md-6 col-xl-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body p-4 d-flex flex-column">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <h5 class="fw-bold text-slate-800 mb-0">{{ room.name }}</h5>
+                    <span class="badge badge-soft-primary">{{ room.program.name|default:"General Program" }}</span>
+                </div>
+
+                <div class="p-3 bg-light rounded-3 mb-4">
+                    <div class="d-flex justify-content-between text-muted small mb-1">
+                        <span>Max Capacity</span>
+                        <strong>{{ room.capacity }} children</strong>
+                    </div>
+                    <div class="d-flex justify-content-between text-muted small">
+                        <span>Assigned Program</span>
+                        <span>{{ room.program.name|default:"Standard" }}</span>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2 mt-auto">
+                    <a href="{% url 'daycare_classroom_detail' room.id %}" class="btn btn-outline-primary flex-grow-1">
+                        <i class="bi bi-door-open me-1"></i> View Room
+                    </a>
+                    <a href="{% url 'daycare_classroom_edit' room.id %}" class="btn btn-light border" title="Edit Classroom">
+                        <i class="bi bi-pencil"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12 text-center py-5 text-muted">
+        <i class="bi bi-door-open fs-1 d-block mb-2 text-muted"></i>
+        No classrooms added yet.
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
+

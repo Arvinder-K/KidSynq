@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block title %}Ticket #{{ ticket.id|slice:":8" }}{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <a href="{% url 'superadmin_tickets' %}" class="small text-muted text-decoration-none">
+        <i class="bi bi-arrow-left me-1"></i> Back to Tickets
+    </a>
+    <div class="d-flex justify-content-between align-items-center mt-2">
+        <div>
+            <h2 class="h4 fw-bold text-slate-800 mb-1">{{ ticket.subject }}</h2>
+            <div class="text-muted small">
+                Daycare: <strong>{{ ticket.daycare.name }}</strong> &bull;
+                Opened: {{ ticket.created_at|date:"F d, Y at H:i" }}
+            </div>
+        </div>
+        <span class="badge {% if ticket.status == 'open' %}badge-soft-danger{% elif ticket.status == 'in_progress' %}badge-soft-warning{% else %}badge-soft-success{% endif %} fs-6">
+            {{ ticket.status|title }}
+        </span>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-12 col-lg-8">
+        <!-- Message Thread -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-transparent fw-bold">Conversation History</div>
+            <div class="card-body p-4">
+                <div class="p-3 bg-light rounded-3 mb-4">
+                    <div class="fw-semibold small text-muted mb-1">{{ ticket.user.get_full_name|default:ticket.user.username }} wrote:</div>
+                    <p class="mb-0 text-slate-800">{{ ticket.description }}</p>
+                </div>
+
+                {% for msg in chat_messages %}
+                <div class="mb-3 p-3 rounded-3 {% if msg.sender.is_superuser or msg.sender.role == 'SuperAdmin' %}bg-primary bg-opacity-10 ms-5 border-start border-3 border-primary{% else %}bg-light me-5{% endif %}">
+                    <div class="d-flex justify-content-between small text-muted mb-1">
+                        <span class="fw-bold">{{ msg.sender.get_full_name|default:msg.sender.username }}</span>
+                        <span>{{ msg.created_at|date:"M d, H:i" }}</span>
+                    </div>
+                    <div class="text-slate-800">{{ msg.message }}</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Reply Form -->
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <h6 class="fw-bold text-slate-800 mb-3">Send Official Response</h6>
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <textarea name="message" class="form-control" rows="4" placeholder="Type your response to the daycare operator..." required></textarea>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center gap-2">
+                            <label class="small text-muted fw-semibold">Update Status:</label>
+                            <select name="status" class="form-select form-select-sm" style="width: auto;">
+                                <option value="in_progress" {% if ticket.status == 'in_progress' %}selected{% endif %}>In Progress</option>
+                                <option value="resolved" {% if ticket.status == 'resolved' %}selected{% endif %}>Resolved</option>
+                                <option value="closed" {% if ticket.status == 'closed' %}selected{% endif %}>Closed</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary fw-semibold px-4">Submit Reply</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ticket Sidebar Meta -->
+    <div class="col-12 col-lg-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-transparent fw-bold">Ticket Details</div>
+            <div class="card-body">
+                <dl class="mb-0 small">
+                    <dt class="text-muted">Ticket ID</dt>
+                    <dd class="font-monospace">{{ ticket.id }}</dd>
+
+                    <dt class="text-muted">Daycare Operator</dt>
+                    <dd>{{ ticket.daycare.name }}</dd>
+
+                    <dt class="text-muted">Submitted By</dt>
+                    <dd>{{ ticket.user.get_full_name|default:ticket.user.username }} ({{ ticket.user.email }})</dd>
+
+                    <dt class="text-muted">Priority</dt>
+                    <dd>{{ ticket.priority|title }}</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

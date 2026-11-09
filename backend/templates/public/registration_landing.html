@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}Child Care Registration - {{ daycare.name }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center py-5">
+    <div class="col-12 col-md-10 col-lg-8 text-center">
+        <div class="mb-4">
+            <div class="avatar-placeholder rounded-circle bg-primary bg-opacity-10 text-primary mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                <i class="bi bi-balloon-heart-fill fs-1"></i>
+            </div>
+            <h1 class="display-6 fw-bold text-slate-800 mb-2">Welcome to {{ daycare.name }}</h1>
+            <p class="lead text-muted">{{ daycare.city|default:"Early Learning & Child Care" }} &bull; Quality Child Care & Early Childhood Development</p>
+        </div>
+
+        <div class="card border-0 shadow-sm p-4 p-md-5 mb-5 text-start">
+            <h4 class="fw-bold text-slate-800 mb-3">Online Registration & Admissions</h4>
+            <p class="text-muted mb-4">
+                We are thrilled you are considering {{ daycare.name }} for your child's early education journey.
+                Please complete our online registration application to secure your spot or join our prioritized waitlist.
+            </p>
+
+            <div class="row g-3 mb-4">
+                <div class="col-12 col-md-4">
+                    <div class="p-3 border rounded">
+                        <i class="bi bi-clock-history text-primary fs-4 mb-2 d-block"></i>
+                        <h6 class="fw-bold mb-1">Fast & Simple</h6>
+                        <small class="text-muted">Takes less than 5 minutes to submit.</small>
+                    </div>
+                </div>
+                <div class="col-12 col-md-4">
+                    <div class="p-3 border rounded">
+                        <i class="bi bi-shield-lock text-success fs-4 mb-2 d-block"></i>
+                        <h6 class="fw-bold mb-1">Confidential & Secure</h6>
+                        <small class="text-muted">Your family data is encrypted and private.</small>
+                    </div>
+                </div>
+                <div class="col-12 col-md-4">
+                    <div class="p-3 border rounded">
+                        <i class="bi bi-chat-heart text-info fs-4 mb-2 d-block"></i>
+                        <h6 class="fw-bold mb-1">Direct Review</h6>
+                        <small class="text-muted">Our Director will follow up directly.</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center">
+                <a href="{% url 'registration_wizard' daycare_slug=daycare.id %}" class="btn btn-primary btn-lg px-5 py-3 fw-bold shadow-sm">
+                    Begin Child Enrollment Application <i class="bi bi-arrow-right ms-2"></i>
+                </a>
+            </div>
+        </div>
+
+        <div class="text-muted small">
+            Questions? Contact {{ daycare.name }} directly at {{ daycare.email }} or {{ daycare.phone }}.
+        </div>
+    </div>
+</div>
+{% endblock %}
+

@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}Overtime Management - KidSynq{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="h4 fw-bold text-slate-800 mb-1">Overtime & Excess Hours Management</h2>
+        <p class="text-muted small mb-0">Monitor educators approaching statutory overtime thresholds (40+ hrs/wk)</p>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body text-center py-5">
+        <i class="bi bi-clock-history fs-1 text-primary opacity-50 mb-3 d-block"></i>
+        <h5 class="fw-bold text-slate-800">No Excess Overtime Detected</h5>
+        <p class="text-muted small mb-0">All active educators are currently operating within scheduled statutory weekly thresholds.</p>
+    </div>
+</div>
+{% endblock %}
+

@@ -1,30 +1,23 @@
-*.log
-logs/
-.DS_Store
+# Environment files
 .env
 .env.*
 !.env.example
 .env.backup
 .env.production
-.phpactor.json
-.phpunit.result.cache
-/.fleet
-/.idea
-/.nova
-/.phpunit.cache
-/.vscode
-/.zed
-/auth.json
-/node_modules
-/public/build
-/public/hot
-/public/storage
-/storage/*.key
-/storage/pail
-/vendor
-Homestead.json
-Homestead.yaml
+
+# Logs
+*.log
+logs/
+
+# Operating System
+.DS_Store
 Thumbs.db
+
+# IDEs and Editors
+.idea/
+.vscode/
+*.swp
+*.swo
 
 # Python
 __pycache__/
@@ -37,8 +30,11 @@ env/
 ENV/
 .venv/
 backend/venv/
+backend/staticfiles/
+*.sqlite3
 
-# Node
+# Node.js
+node_modules/
 frontend/node_modules/
 frontend/dist/
-
+dist/

@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}Support Tickets{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="h4 fw-bold text-slate-800 mb-1">Customer Support Tickets</h2>
+        <p class="text-muted small mb-0">Respond to questions, billing inquiries, and issues submitted by daycare operators</p>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Ticket #</th>
+                    <th>Daycare</th>
+                    <th>Subject</th>
+                    <th>Priority</th>
+                    <th>Status</th>
+                    <th>Created</th>
+                    <th class="text-end">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for t in page_obj %}
+                <tr>
+                    <td class="font-monospace small fw-bold">#{{ t.id|slice:":8" }}</td>
+                    <td class="fw-semibold">{{ t.daycare.name|default:"-" }}</td>
+                    <td class="text-slate-800">{{ t.subject }}</td>
+                    <td>
+                        <span class="badge {% if t.priority == 'high' %}badge-soft-danger{% elif t.priority == 'medium' %}badge-soft-warning{% else %}badge-soft-secondary{% endif %}">
+                            {{ t.priority|title }}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="badge {% if t.status == 'open' %}badge-soft-danger{% elif t.status == 'in_progress' %}badge-soft-warning{% else %}badge-soft-success{% endif %}">
+                            {{ t.status|title }}
+                        </span>
+                    </td>
+                    <td class="small text-muted">{{ t.created_at|date:"M d, Y" }}</td>
+                    <td class="text-end">
+                        <a href="{% url 'superadmin_ticket_detail' t.id %}" class="btn btn-sm btn-outline-primary py-1 px-2">
+                            <i class="bi bi-chat-left-text me-1"></i> View & Reply
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="text-center py-5 text-muted">No support tickets found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="card-footer bg-transparent py-3">
+        {% include "includes/pagination.html" %}
+    </div>
+</div>
+{% endblock %}
+

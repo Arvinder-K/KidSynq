@@ -6,6 +6,10 @@ import sys
 
 def main():
     """Run administrative tasks."""
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    apps_dir = os.path.join(BASE_DIR, 'apps')
+    if apps_dir not in sys.path:
+        sys.path.insert(0, apps_dir)
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'kidsynq.settings')
     try:
         from django.core.management import execute_from_command_line

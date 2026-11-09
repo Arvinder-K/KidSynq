@@ -1,0 +1,385 @@
+<aside class="app-sidebar" id="appSidebar">
+    <!-- Brand / Daycare Header -->
+    <div class="sidebar-brand-header">
+        <a href="{% url 'dashboard_router' %}" class="d-flex align-items-center gap-2 text-decoration-none min-w-0">
+            {% if request.user.is_superuser or request.user.role == 'SuperAdmin' or request.user.role == 'Admin' or request.user.role == 'admin' %}
+            <div class="brand-logo-box" style="background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);">
+                K
+            </div>
+            <div class="min-w-0">
+                <div class="brand-text-title">
+                    <span>Kid<span style="color: #818cf8;">Synq</span></span>
+                </div>
+                <div class="brand-status-indicator" style="color: #a5b4fc;">
+                    <span class="pulse-dot" style="background-color: #818cf8;"></span> Platform Admin
+                </div>
+            </div>
+            {% elif request.user.role == 'Guardian' %}
+            <div class="brand-logo-box" style="background: linear-gradient(135deg, #f43f5e 0%, #ec4899 100%);">
+                F
+            </div>
+            <div class="min-w-0">
+                <div class="brand-text-title">
+                    <span>Kid<span style="color: #f472b6;">Family</span></span>
+                </div>
+                <div class="brand-status-indicator" style="color: #fbcfe8;">
+                    <span class="pulse-dot" style="background-color: #f472b6;"></span> Guardian Portal
+                </div>
+            </div>
+            {% elif request.user.daycare %}
+            <div class="brand-logo-box">
+                {{ request.user.daycare.name|make_list|first|upper|default:"K" }}
+            </div>
+            <div class="min-w-0">
+                <div class="brand-text-title text-truncate" style="max-width: 170px;"
+                    title="{{ request.user.daycare.name }}">
+                    {{ request.user.daycare.name }}
+                </div>
+                <div class="brand-status-indicator">
+                    <span class="pulse-dot"></span> Daycare Center
+                </div>
+            </div>
+            {% else %}
+            <div class="brand-logo-box">K</div>
+            <div class="min-w-0">
+                <div class="brand-text-title">Kid<span class="brand-gradient">Synq</span></div>
+                <div class="brand-status-indicator"><span class="pulse-dot"></span> Online</div>
+            </div>
+            {% endif %}
+        </a>
+    </div>
+
+    <!-- Sidebar Scrollable Menu -->
+    <div class="sidebar-menu">
+        {% if request.user.is_superuser or request.user.role == 'SuperAdmin' or request.user.role == 'Admin' or request.user.role == 'admin' %}
+        <!-- ================= PLATFORM ADMIN NAVIGATION ================= -->
+        <div class="sidebar-section-title">Platform</div>
+        <a href="{% url 'superadmin_dashboard' %}"
+            class="sidebar-link {% if request.resolver_match.url_name == 'superadmin_dashboard' %}active{% endif %}">
+            <i class="bi bi-speedometer2"></i> <span>Dashboard</span>
+        </a>
+
+        <div class="sidebar-section-title">Tenant Management</div>
+        <a href="{% url 'superadmin_daycares' %}"
+            class="sidebar-link {% if 'superadmin_daycare' in request.resolver_match.url_name %}active{% endif %}">
+            <i class="bi bi-buildings"></i> <span>Daycare Centers</span>
+        </a>
+        <a href="{% url 'superadmin_users' %}"
+            class="sidebar-link {% if 'superadmin_users' in request.resolver_match.url_name %}active{% endif %}">
+            <i class="bi bi-people"></i> <span>Platform Users</span>
+        </a>
+
+        <div class="sidebar-section-title">SaaS Subscriptions</div>
+        <a href="{% url 'superadmin_plans' %}"
+            class="sidebar-link {% if 'superadmin_plans' in request.resolver_match.url_name %}active{% endif %}">
+            <i class="bi bi-grid-1x2"></i> <span>Subscription Plans</span>
+        </a>
+        <a href="{% url 'superadmin_subscriptions' %}"
+            class="sidebar-link {% if 'superadmin_subscriptions' in request.resolver_match.url_name %}active{% endif %}">
+            <i class="bi bi-card-checklist"></i> <span>Assigned Subscriptions</span>
+        </a>
+        <a href="{% url 'superadmin_invoices' %}"
+            class="sidebar-link {% if 'superadmin_invoices' in request.resolver_match.url_name %}active{% endif %}">
+            <i class="bi bi-receipt"></i> <span>Platform Invoices</span>
+        </a>
+        <a href="{% url 'superadmin_payments' %}"
+            class="sidebar-link {% if 'superadmin_payments' in request.resolver_match.url_name %}active{% endif %}">
+            <i class="bi bi-credit-card"></i> <span>Payment History</span>
+        </a>
+
+        <div class="sidebar-section-title">Governance & Analytics</div>
+        <a href="{% url 'superadmin_analytics' %}"
+            class="sidebar-link {% if 'superadmin_analytics' in request.resolver_match.url_name %}active{% endif %}">
+            <i class="bi bi-graph-up-arrow"></i> <span>SaaS Analytics</span>
+        </a>
+        <a href="{% url 'superadmin_ratio_rules' %}"
+            class="sidebar-link {% if 'superadmin_ratio_rules' in request.resolver_match.url_name %}active{% endif %}">
+            <i class="bi bi-shield-check"></i> <span>Provincial Ratio Rules</span>
+        </a>
+        <a href="{% url 'superadmin_audit_logs' %}"
+            class="sidebar-link {% if 'superadmin_audit_logs' in request.resolver_match.url_name %}active{% endif %}">
+            <i class="bi bi-journal-text"></i> <span>Audit Logs</span>
+        </a>
+        <a href="{% url 'superadmin_announcements' %}"
+            class="sidebar-link {% if 'superadmin_announcements' in request.resolver_match.url_name %}active{% endif %}">
+            <i class="bi bi-megaphone"></i> <span>Announcements</span>
+        </a>
+        <a href="{% url 'superadmin_tickets' %}"
+            class="sidebar-link {% if 'superadmin_tickets' in request.resolver_match.url_name %}active{% endif %}">
+            <i class="bi bi-life-preserver"></i> <span>Support Tickets</span>
+        </a>
+
+        {% elif request.user.role == 'Guardian' %}
+        <!-- ================= GUARDIAN / FAMILY PORTAL ================= -->
+        <div class="sidebar-section-title">Home</div>
+        <a href="{% url 'family_dashboard' %}"
+            class="sidebar-link {% if request.resolver_match.url_name == 'family_dashboard' %}active{% endif %}">
+            <i class="bi bi-house-door"></i> <span>Dashboard</span>
+        </a>
+
+        <div class="sidebar-section-title">My Family</div>
+        <a href="{% url 'family_children' %}"
+            class="sidebar-link {% if 'family_children' in request.resolver_match.url_name %}active{% endif %}">
+            <i class="bi bi-emoji-smile"></i> <span>My Children</span>
+        </a>
+        <a href="{% url 'family_profile' %}"
+            class="sidebar-link {% if 'family_profile' in request.resolver_match.url_name %}active{% endif %}">
+            <i class="bi bi-person-lines-fill"></i> <span>Family Profile</span>
+        </a>
+        <a href="{% url 'family_guardians' %}"
+            class="sidebar-link {% if 'family_guardians' in request.resolver_match.url_name %}active{% endif %}">
+            <i class="bi bi-shield-check"></i> <span>Authorized Pickups</span>
+        </a>
+
+        <div class="sidebar-section-title">Daily Activities</div>
+        <a href="{% url 'family_daily_reports' %}"
+            class="sidebar-link {% if 'family_daily_reports' in request.resolver_match.url_name %}active{% endif %}">
+            <i class="bi bi-stars"></i> <span>Daily Reports & Photos</span>
+        </a>
+        <a href="{% url 'family_attendance' %}"
+            class="sidebar-link {% if 'family_attendance' in request.resolver_match.url_name %}active{% endif %}">
+            <i class="bi bi-calendar-check"></i> <span>Attendance Record</span>
+        </a>
+
+        <div class="sidebar-section-title">Billing & Records</div>
+        <a href="{% url 'family_billing' %}"
+            class="sidebar-link {% if 'family_billing' in request.resolver_match.url_name %}active{% endif %}">
+            <i class="bi bi-credit-card"></i> <span>Tuition & Invoices</span>
+        </a>
+        <a href="{% url 'family_documents' %}"
+            class="sidebar-link {% if 'family_documents' in request.resolver_match.url_name %}active{% endif %}">
+            <i class="bi bi-file-earmark-text"></i> <span>Tax Slips & Files</span>
+        </a>
+        <a href="{% url 'family_consents' %}"
+            class="sidebar-link {% if 'family_consents' in request.resolver_match.url_name %}active{% endif %}">
+            <i class="bi bi-pen"></i> <span>Digital Consent Forms</span>
+        </a>
+
+        {% else %}
+        <!-- ================= DAYCARE ADMIN & STAFF TASKS ================= -->
+        <div class="sidebar-section-title">Main</div>
+        <a href="{% url 'daycare_dashboard' %}"
+            class="sidebar-link {% if request.resolver_match.url_name == 'daycare_dashboard' %}active{% endif %}">
+            <i class="bi bi-speedometer2"></i> <span>Dashboard</span>
+        </a>
+
+        <!-- 1. STAFF & HR TASKS (Accordion) -->
+        <div class="sidebar-section-title">Human Resources</div>
+        <div class="sidebar-link sidebar-dropdown-toggle {% if 'employee' in request.resolver_match.url_name or 'scheduling' in request.resolver_match.url_name or 'timesheet' in request.resolver_match.url_name or 'leave' in request.resolver_match.url_name or 'credential' in request.resolver_match.url_name %}active{% endif %}"
+            data-bs-toggle="collapse" data-bs-target="#menuStaff" aria-expanded="false">
+            <i class="bi bi-briefcase"></i> <span>Staff & Educators</span>
+            <i class="bi bi-chevron-right chevron-icon"></i>
+        </div>
+        <div class="collapse sidebar-submenu" id="menuStaff">
+            <a href="{% url 'daycare_employees' %}"
+                class="sidebar-link {% if request.resolver_match.url_name == 'daycare_employees' or request.resolver_match.url_name == 'daycare_employee_detail' %}active{% endif %}">
+                <i class="bi bi-people"></i> <span>Staff Directory</span>
+            </a>
+            <a href="{% url 'daycare_employee_new' %}"
+                class="sidebar-link {% if request.resolver_match.url_name == 'daycare_employee_new' %}active{% endif %}">
+                <i class="bi bi-person-plus"></i> <span>Add New Staff</span>
+            </a>
+            <a href="{% url 'daycare_scheduling' %}"
+                class="sidebar-link {% if 'daycare_scheduling' in request.resolver_match.url_name %}active{% endif %}">
+                <i class="bi bi-calendar3"></i> <span>Shift Scheduling</span>
+            </a>
+            <a href="{% url 'daycare_staff_attendance' %}"
+                class="sidebar-link {% if 'daycare_staff_attendance' in request.resolver_match.url_name %}active{% endif %}">
+                <i class="bi bi-clock-history"></i> <span>Staff Time Clock</span>
+            </a>
+            <a href="{% url 'daycare_timesheets' %}"
+                class="sidebar-link {% if 'daycare_timesheets' in request.resolver_match.url_name %}active{% endif %}">
+                <i class="bi bi-clipboard-check"></i> <span>Timesheet Hours</span>
+            </a>
+            <a href="{% url 'daycare_leave' %}"
+                class="sidebar-link {% if 'daycare_leave' in request.resolver_match.url_name %}active{% endif %}">
+                <i class="bi bi-calendar-x"></i> <span>Leave Requests</span>
+            </a>
+            <a href="{% url 'daycare_credentials' %}"
+                class="sidebar-link {% if 'daycare_credentials' in request.resolver_match.url_name %}active{% endif %}">
+                <i class="bi bi-award"></i> <span>ECE Credentials</span>
+            </a>
+        </div>
+
+        <!-- 2. CHILDREN & FAMILIES (Accordion) -->
+        <div class="sidebar-section-title">Students & Families</div>
+        <div class="sidebar-link sidebar-dropdown-toggle {% if 'children' in request.resolver_match.url_name or 'child' in request.resolver_match.url_name or 'admission' in request.resolver_match.url_name or 'waitlist' in request.resolver_match.url_name or 'health' in request.resolver_match.url_name %}active{% endif %}"
+            data-bs-toggle="collapse" data-bs-target="#menuChildren" aria-expanded="false">
+            <i class="bi bi-mortarboard"></i> <span>Children & Families</span>
+            <i class="bi bi-chevron-right chevron-icon"></i>
+        </div>
+        <div class="collapse sidebar-submenu" id="menuChildren">
+            <a href="{% url 'daycare_children' %}"
+                class="sidebar-link {% if request.resolver_match.url_name == 'daycare_children' or request.resolver_match.url_name == 'daycare_child_detail' %}active{% endif %}">
+                <i class="bi bi-person-heart"></i> <span>Children Roster</span>
+            </a>
+            <a href="{% url 'daycare_child_new' %}"
+                class="sidebar-link {% if request.resolver_match.url_name == 'daycare_child_new' %}active{% endif %}">
+                <i class="bi bi-person-plus"></i> <span>Enroll New Child</span>
+            </a>
+            <a href="{% url 'daycare_admissions' %}"
+                class="sidebar-link {% if 'daycare_admissions' in request.resolver_match.url_name %}active{% endif %}">
+                <i class="bi bi-inbox"></i> <span>Admissions Inquiries</span>
+            </a>
+            <a href="{% url 'daycare_waitlist' %}"
+                class="sidebar-link {% if 'daycare_waitlist' in request.resolver_match.url_name %}active{% endif %}">
+                <i class="bi bi-hourglass-split"></i> <span>Waitlist Queue</span>
+            </a>
+            <a href="{% url 'daycare_health' %}"
+                class="sidebar-link {% if 'daycare_health' in request.resolver_match.url_name %}active{% endif %}">
+                <i class="bi bi-heart-pulse"></i> <span>Health & Allergies</span>
+            </a>
+        </div>
+
+        <!-- 3. CLASSROOMS & ROOMS (Accordion) -->
+        <div class="sidebar-section-title">Rooms & Learning</div>
+        <div class="sidebar-link sidebar-dropdown-toggle {% if 'classroom' in request.resolver_match.url_name or 'ratio' in request.resolver_match.url_name or 'program' in request.resolver_match.url_name %}active{% endif %}"
+            data-bs-toggle="collapse" data-bs-target="#menuClassrooms" aria-expanded="false">
+            <i class="bi bi-door-open"></i> <span>Classrooms & Ratio</span>
+            <i class="bi bi-chevron-right chevron-icon"></i>
+        </div>
+        <div class="collapse sidebar-submenu" id="menuClassrooms">
+            <a href="{% url 'daycare_classrooms' %}"
+                class="sidebar-link {% if request.resolver_match.url_name == 'daycare_classrooms' or request.resolver_match.url_name == 'daycare_classroom_detail' %}active{% endif %}">
+                <i class="bi bi-list-check"></i> <span>Classrooms Roster</span>
+            </a>
+            <a href="{% url 'daycare_classroom_new' %}"
+                class="sidebar-link {% if request.resolver_match.url_name == 'daycare_classroom_new' %}active{% endif %}">
+                <i class="bi bi-plus-square"></i> <span>Add Classroom</span>
+            </a>
+            <a href="{% url 'daycare_ratio_monitoring' %}"
+                class="sidebar-link {% if 'daycare_ratio' in request.resolver_match.url_name %}active{% endif %}">
+                <i class="bi bi-pie-chart"></i> <span>Live Ratio Monitor</span>
+            </a>
+            <a href="{% url 'daycare_programs' %}"
+                class="sidebar-link {% if 'daycare_programs' in request.resolver_match.url_name or 'age_groups' in request.resolver_match.url_name %}active{% endif %}">
+                <i class="bi bi-book"></i> <span>Programs & Curriculum</span>
+            </a>
+        </div>
+
+        <!-- 4. DAILY OPERATIONS (Accordion) -->
+        <div class="sidebar-section-title">Daily Operations</div>
+        <div class="sidebar-link sidebar-dropdown-toggle {% if 'attendance' in request.resolver_match.url_name or 'safe_arrival' in request.resolver_match.url_name or 'pickup' in request.resolver_match.url_name or 'daily_reports' in request.resolver_match.url_name %}active{% endif %}"
+            data-bs-toggle="collapse" data-bs-target="#menuDailyOps" aria-expanded="false">
+            <i class="bi bi-calendar-check"></i> <span>Attendance & Ops</span>
+            <i class="bi bi-chevron-right chevron-icon"></i>
+        </div>
+        <div class="collapse sidebar-submenu" id="menuDailyOps">
+            <a href="{% url 'daycare_attendance' %}"
+                class="sidebar-link {% if request.resolver_match.url_name == 'daycare_attendance' %}active{% endif %}">
+                <i class="bi bi-check2-circle"></i> <span>Daily Roll Call</span>
+            </a>
+            <a href="{% url 'daycare_attendance_command' %}"
+                class="sidebar-link {% if 'daycare_attendance_command' in request.resolver_match.url_name %}active{% endif %}">
+                <i class="bi bi-grid-3x3"></i> <span>Attendance Command</span>
+            </a>
+            <a href="{% url 'daycare_safe_arrival' %}"
+                class="sidebar-link {% if 'daycare_safe_arrival' in request.resolver_match.url_name %}active{% endif %}">
+                <i class="bi bi-shield-exclamation"></i> <span>Safe Arrival Hub</span>
+            </a>
+            <a href="{% url 'daycare_pickup_verification' %}"
+                class="sidebar-link {% if 'daycare_pickup_verification' in request.resolver_match.url_name %}active{% endif %}">
+                <i class="bi bi-qr-code-scan"></i> <span>Pickup Kiosk</span>
+            </a>
+            <a href="{% url 'daycare_daily_reports' %}"
+                class="sidebar-link {% if 'daycare_daily_reports' in request.resolver_match.url_name %}active{% endif %}">
+                <i class="bi bi-journal-check"></i> <span>Daily Activity Reports</span>
+            </a>
+        </div>
+
+        <!-- 5. BILLING & FINANCE (Accordion) -->
+        <div class="sidebar-section-title">Finance & Billing</div>
+        <div class="sidebar-link sidebar-dropdown-toggle {% if 'invoices' in request.resolver_match.url_name or 'payments' in request.resolver_match.url_name or 'subsidies' in request.resolver_match.url_name or 'tax_receipts' in request.resolver_match.url_name or 'fee_structures' in request.resolver_match.url_name or 'subscription' in request.resolver_match.url_name %}active{% endif %}"
+            data-bs-toggle="collapse" data-bs-target="#menuBilling" aria-expanded="false">
+            <i class="bi bi-credit-card"></i> <span>Finance & Invoicing</span>
+            <i class="bi bi-chevron-right chevron-icon"></i>
+        </div>
+        <div class="collapse sidebar-submenu" id="menuBilling">
+            <a href="{% url 'daycare_invoices' %}"
+                class="sidebar-link {% if 'daycare_invoices' in request.resolver_match.url_name %}active{% endif %}">
+                <i class="bi bi-receipt"></i> <span>Tuition Invoices</span>
+            </a>
+            <a href="{% url 'daycare_payments' %}"
+                class="sidebar-link {% if 'daycare_payments' in request.resolver_match.url_name %}active{% endif %}">
+                <i class="bi bi-cash-stack"></i> <span>Payments & Receipts</span>
+            </a>
+            <a href="{% url 'daycare_subsidies' %}"
+                class="sidebar-link {% if 'daycare_subsidies' in request.resolver_match.url_name %}active{% endif %}">
+                <i class="bi bi-bank"></i> <span>Subsidies & CWELCC</span>
+            </a>
+            <a href="{% url 'daycare_tax_receipts' %}"
+                class="sidebar-link {% if 'daycare_tax_receipts' in request.resolver_match.url_name %}active{% endif %}">
+                <i class="bi bi-file-earmark-text"></i> <span>Tax Statements (CRA)</span>
+            </a>
+            <a href="{% url 'daycare_fee_structures' %}"
+                class="sidebar-link {% if 'daycare_fee_structures' in request.resolver_match.url_name or 'daycare_discounts' in request.resolver_match.url_name %}active{% endif %}">
+                <i class="bi bi-tags"></i> <span>Fee Plans & Pricing</span>
+            </a>
+            <a href="{% url 'daycare_subscription' %}"
+                class="sidebar-link {% if 'daycare_subscription' in request.resolver_match.url_name %}active{% endif %}">
+                <i class="bi bi-cloud-check"></i> <span>Platform SaaS Plan</span>
+            </a>
+        </div>
+
+        <!-- 6. CENTER ADMIN & PROTOCOLS (Accordion) -->
+        <div class="sidebar-section-title">Administration</div>
+        <div class="sidebar-link sidebar-dropdown-toggle {% if 'settings' in request.resolver_match.url_name or 'emergency' in request.resolver_match.url_name or 'holidays' in request.resolver_match.url_name or 'compliance' in request.resolver_match.url_name or 'documents' in request.resolver_match.url_name or 'communication' in request.resolver_match.url_name or 'branches' in request.resolver_match.url_name %}active{% endif %}"
+            data-bs-toggle="collapse" data-bs-target="#menuAdmin" aria-expanded="false">
+            <i class="bi bi-gear"></i> <span>Center Settings</span>
+            <i class="bi bi-chevron-right chevron-icon"></i>
+        </div>
+        <div class="collapse sidebar-submenu" id="menuAdmin">
+            <a href="{% url 'daycare_settings' %}"
+                class="sidebar-link {% if 'daycare_settings' in request.resolver_match.url_name %}active{% endif %}">
+                <i class="bi bi-sliders"></i> <span>Center Settings</span>
+            </a>
+            <a href="{% url 'daycare_emergency_info' %}"
+                class="sidebar-link {% if 'daycare_emergency_info' in request.resolver_match.url_name %}active{% endif %}">
+                <i class="bi bi-shield-plus"></i> <span>Emergency Protocols</span>
+            </a>
+            <a href="{% url 'daycare_holidays' %}"
+                class="sidebar-link {% if 'daycare_holidays' in request.resolver_match.url_name %}active{% endif %}">
+                <i class="bi bi-calendar-event"></i> <span>Center Holidays</span>
+            </a>
+            <a href="{% url 'daycare_compliance' %}"
+                class="sidebar-link {% if 'daycare_compliance' in request.resolver_match.url_name %}active{% endif %}">
+                <i class="bi bi-patch-check"></i> <span>Compliance & Licensing</span>
+            </a>
+            <a href="{% url 'daycare_documents' %}"
+                class="sidebar-link {% if 'daycare_documents' in request.resolver_match.url_name %}active{% endif %}">
+                <i class="bi bi-folder2-open"></i> <span>Document Repository</span>
+            </a>
+            <a href="{% url 'daycare_communication' %}"
+                class="sidebar-link {% if 'daycare_communication' in request.resolver_match.url_name %}active{% endif %}">
+                <i class="bi bi-megaphone"></i> <span>Announcements</span>
+            </a>
+            <a href="{% url 'daycare_branches' %}"
+                class="sidebar-link {% if 'daycare_branches' in request.resolver_match.url_name %}active{% endif %}">
+                <i class="bi bi-geo-alt"></i> <span>Branches & Locations</span>
+            </a>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Sidebar User Footer -->
+    <div class="sidebar-user-footer">
+        <div class="sidebar-user-avatar">
+            {{ request.user.first_name|default:request.user.username|make_list|first|upper }}
+        </div>
+        <div class="flex-grow-1 min-w-0">
+            <div class="text-white fw-bold small text-truncate leading-tight">
+                {{ request.user.get_full_name|default:request.user.username }}
+            </div>
+            <div class="text-muted text-truncate" style="font-size: 0.72rem;">
+                {{ request.user.role|default:"User" }}
+            </div>
+        </div>
+        <form method="post" action="{% url 'logout' %}" class="m-0">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-sm btn-link text-slate-400 p-1 hover-text-danger" title="Sign Out">
+                <i class="bi bi-box-arrow-right fs-5 text-secondary"></i>
+            </button>
+        </form>
+    </div>
+</aside>
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>

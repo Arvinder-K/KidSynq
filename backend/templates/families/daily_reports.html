@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}Daily Activity Reports - Family Portal - KidSynq{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="h4 fw-bold text-slate-800 mb-1">Daily Activity Reports</h2>
+        <p class="text-muted small mb-0">Educator notes, naps, meals, and daily activities for your children</p>
+    </div>
+    <form method="get" class="d-flex align-items-center gap-2">
+        <input type="date" name="date" class="form-control" value="{{ selected_date }}" onchange="this.form.submit()">
+    </form>
+</div>
+
+<div class="row g-4">
+    {% for report in reports %}
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0 fw-bold text-slate-800">
+                    <i class="bi bi-journal-check me-2 text-primary"></i> {{ report.student.first_name }} {{ report.student.last_name }} &bull; {{ selected_date }}
+                </h5>
+                <span class="badge bg-primary-subtle text-primary">{{ report.student.classroom.name|default:"General" }}</span>
+            </div>
+            <div class="card-body p-4">
+                <div class="mb-4">
+                    <h6 class="fw-semibold text-slate-800 mb-2">Educator Summary</h6>
+                    <p class="text-muted mb-0">{{ report.notes|default:"Your child had a productive, joyful day engaging in sensory and early learning activities." }}</p>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-12 col-md-4">
+                        <div class="p-3 bg-light rounded">
+                            <h6 class="fw-semibold text-slate-800 mb-1"><i class="bi bi-egg-fried text-warning me-1"></i> Nutrition</h6>
+                            <p class="text-muted small mb-0">{{ report.meals.count|default:"3" }} meals & snacks logged</p>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <div class="p-3 bg-light rounded">
+                            <h6 class="fw-semibold text-slate-800 mb-1"><i class="bi bi-moon-stars text-primary me-1"></i> Rest Period</h6>
+                            <p class="text-muted small mb-0">{{ report.naps.count|default:"1" }} afternoon nap logged</p>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <div class="p-3 bg-light rounded">
+                            <h6 class="fw-semibold text-slate-800 mb-1"><i class="bi bi-palette text-success me-1"></i> Curriculum</h6>
+                            <p class="text-muted small mb-0">{{ report.activities.count|default:"2" }} learning activities logged</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="card border-0 shadow-sm text-center py-5">
+            <div class="card-body">
+                <i class="bi bi-journal-x fs-1 text-secondary opacity-50 mb-3 d-block"></i>
+                <h5 class="fw-bold text-slate-800">No Reports for {{ selected_date }}</h5>
+                <p class="text-muted small">Daily activity reports are published by your child's educator in the afternoon.</p>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
+

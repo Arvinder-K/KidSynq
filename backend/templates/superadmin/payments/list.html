@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}Payment History{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="h4 fw-bold text-slate-800 mb-1">Subscription Payment Transactions</h2>
+        <p class="text-muted small mb-0">Record of credit card and online payments processed through KidSynq SaaS</p>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Transaction #</th>
+                    <th>Daycare</th>
+                    <th>Amount</th>
+                    <th>Payment Method</th>
+                    <th>Status</th>
+                    <th>Date Paid</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in page_obj %}
+                <tr>
+                    <td class="font-monospace small">{{ p.transaction_id|default:p.id|slice:":8" }}</td>
+                    <td class="fw-semibold">{{ p.invoice.subscription.daycare.name|default:"-" }}</td>
+                    <td class="fw-bold text-success">${{ p.amount|floatformat:2 }}</td>
+                    <td class="small">{{ p.payment_method|default:"Credit Card"|title }}</td>
+                    <td>
+                        <span class="badge badge-soft-success">{{ p.status|default:"Succeeded"|title }}</span>
+                    </td>
+                    <td class="small text-muted">{{ p.payment_date|date:"M d, Y" }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center py-5 text-muted">No payment transactions recorded yet.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="card-footer bg-transparent py-3">
+        {% include "includes/pagination.html" %}
+    </div>
+</div>
+{% endblock %}
+

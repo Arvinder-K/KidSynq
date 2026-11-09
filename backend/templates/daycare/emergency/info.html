@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}Emergency Protocols - KidSynq{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="h4 fw-bold text-slate-800 mb-1">Center Emergency & Safety Protocols</h2>
+        <p class="text-muted small mb-0">Emergency contact procedures, evacuation routes, and critical medical contacts</p>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-12 col-lg-8">
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white border-bottom py-3">
+                <h5 class="card-title mb-0 fw-semibold">Emergency Contacts & Protocols</h5>
+            </div>
+            <div class="card-body p-4">
+                {% if emergency_info %}
+                <div class="mb-3">
+                    <label class="form-label text-muted small fw-semibold text-uppercase">Primary Emergency Contact</label>
+                    <p class="fs-5 fw-bold text-slate-800 mb-1">{{ emergency_info.primary_contact_name }}</p>
+                    <p class="text-muted mb-0"><i class="bi bi-telephone me-2"></i>{{ emergency_info.primary_contact_phone }}</p>
+                </div>
+                <hr>
+                <div class="mb-3">
+                    <label class="form-label text-muted small fw-semibold text-uppercase">Evacuation Location</label>
+                    <p class="fw-medium text-slate-800 mb-1">{{ emergency_info.evacuation_address|default:"Not specified" }}</p>
+                    <p class="text-muted small">{{ emergency_info.evacuation_instructions|default:"" }}</p>
+                </div>
+                <hr>
+                <div>
+                    <label class="form-label text-muted small fw-semibold text-uppercase">Hospital / Clinic Network</label>
+                    <p class="fw-medium text-slate-800 mb-1">{{ emergency_info.preferred_hospital|default:"Local General Hospital" }}</p>
+                    <p class="text-muted small">{{ emergency_info.preferred_hospital_phone|default:"911" }}</p>
+                </div>
+                {% else %}
+                <div class="text-center py-4 text-muted">
+                    <i class="bi bi-shield-exclamation fs-1 text-warning mb-2 d-block"></i>
+                    No specific emergency information configured yet.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-lg-4">
+        <div class="card border-0 shadow-sm bg-danger bg-opacity-10 border-danger border-opacity-25 mb-4">
+            <div class="card-body p-4">
+                <h6 class="fw-bold text-danger mb-2"><i class="bi bi-exclamation-triangle-fill me-2"></i>Emergency Hotline</h6>
+                <p class="small text-danger mb-3">For immediate life-threatening situations or fire emergency:</p>
+                <div class="fs-2 fw-bold text-danger text-center bg-white rounded p-3 shadow-sm border border-danger border-opacity-25">
+                    911
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

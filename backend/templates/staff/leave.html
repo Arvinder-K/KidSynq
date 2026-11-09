@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}Leave Requests - KidSynq{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="h4 fw-bold text-slate-800 mb-1">Leave Requests & Absences</h2>
+        <p class="text-muted small mb-0">Vacation, sick leave, personal emergencies and professional development requests</p>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4">Employee</th>
+                        <th>Leave Type</th>
+                        <th>Start Date</th>
+                        <th>End Date</th>
+                        <th>Reason / Notes</th>
+                        <th class="text-end pe-4">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for req in requests %}
+                    <tr>
+                        <td class="ps-4 fw-medium text-slate-800">
+                            {{ req.employee.first_name }} {{ req.employee.last_name }}
+                        </td>
+                        <td><span class="badge bg-light text-dark">{{ req.leave_type|title }}</span></td>
+                        <td>{{ req.start_date|date:"M d, Y" }}</td>
+                        <td>{{ req.end_date|date:"M d, Y" }}</td>
+                        <td class="text-muted small">{{ req.reason|default:"-" }}</td>
+                        <td class="text-end pe-4">
+                            {% if req.status == 'approved' %}
+                                <span class="badge bg-success-subtle text-success">Approved</span>
+                            {% elif req.status == 'rejected' %}
+                                <span class="badge bg-danger-subtle text-danger">Declined</span>
+                            {% else %}
+                                <span class="badge bg-warning-subtle text-warning">Pending</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5 text-muted">
+                            <i class="bi bi-calendar2-check fs-1 d-block mb-2 text-secondary opacity-50"></i>
+                            No leave requests currently logged.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

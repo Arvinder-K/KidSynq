@@ -1,0 +1,67 @@
+{% extends "base/base.html" %}
+
+{% block title %}Attendance Reports | KidSynq{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0 text-gray-800">Attendance Reports & Logs</h1>
+            <p class="text-muted small">Historical roll call logs, check-in and check-out timestamps</p>
+        </div>
+        <div>
+            <a href="{% url 'reports_hub' %}" class="btn btn-outline-secondary btn-sm me-2">
+                <i class="bi bi-arrow-left me-1"></i> Back to Hub
+            </a>
+            <button onclick="window.print()" class="btn btn-primary btn-sm">
+                <i class="bi bi-printer me-1"></i> Print / Export Report
+            </button>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-3">
+        <div class="card-header bg-white py-3 border-0">
+            <h6 class="mb-0 fw-semibold text-primary"><i class="bi bi-journal-text me-2"></i> Attendance Log History</h6>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Date</th>
+                            <th>Child Name</th>
+                            <th>Classroom</th>
+                            <th>Status</th>
+                            <th>Check-in</th>
+                            <th>Check-out</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for record in records %}
+                        <tr>
+                            <td>{{ record.date|date:"Y-m-d" }}</td>
+                            <td>
+                                <strong>{{ record.student.first_name }} {{ record.student.last_name }}</strong>
+                            </td>
+                            <td>{{ record.classroom.room_name|default:"Unassigned" }}</td>
+                            <td>
+                                <span class="badge {% if record.status == 'present' or record.status == 'checked_in' %}bg-success{% elif record.status == 'absent' %}bg-danger{% else %}bg-secondary{% endif %}">
+                                    {{ record.status|title }}
+                                </span>
+                            </td>
+                            <td>{{ record.check_in|time:"H:i"|default:"-" }}</td>
+                            <td>{{ record.check_out|time:"H:i"|default:"-" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center py-4 text-muted">No attendance log records found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

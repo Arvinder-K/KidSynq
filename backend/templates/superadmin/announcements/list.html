@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}System Announcements{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="h4 fw-bold text-slate-800 mb-1">System Announcements</h2>
+        <p class="text-muted small mb-0">Broadcast platform updates, scheduled maintenance, and alerts to daycare operators</p>
+    </div>
+    <button type="button" class="btn btn-primary d-inline-flex align-items-center gap-2" data-bs-toggle="collapse" data-bs-target="#newAnnouncementCollapse">
+        <i class="bi bi-megaphone"></i> Post Announcement
+    </button>
+</div>
+
+<!-- Collapsible New Announcement Form -->
+<div class="collapse mb-4" id="newAnnouncementCollapse">
+    <div class="card border-0 shadow-sm p-4">
+        <h5 class="fw-bold text-slate-800 mb-3">Compose Platform Announcement</h5>
+        <form method="post">
+            {% csrf_token %}
+            <div class="row g-3">
+                <div class="col-12 col-md-8">
+                    <label class="form-label small fw-semibold">Title</label>
+                    <input type="text" name="title" class="form-control" placeholder="e.g. Scheduled Maintenance Notice" required>
+                </div>
+                <div class="col-12 col-md-4">
+                    <label class="form-label small fw-semibold">Severity / Priority</label>
+                    <select name="priority" class="form-select">
+                        <option value="info">Informational</option>
+                        <option value="warning">Warning / Action Needed</option>
+                        <option value="critical">Critical / Urgent</option>
+                    </select>
+                </div>
+                <div class="col-12">
+                    <label class="form-label small fw-semibold">Message Content</label>
+                    <textarea name="message" class="form-control" rows="3" placeholder="Enter message text..." required></textarea>
+                </div>
+                <div class="col-12 d-flex justify-content-end gap-2">
+                    <button type="button" class="btn btn-light border" data-bs-toggle="collapse" data-bs-target="#newAnnouncementCollapse">Cancel</button>
+                    <button type="submit" class="btn btn-primary fw-semibold">Publish to Daycares</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="list-group list-group-flush">
+        {% for a in announcements %}
+        <div class="list-group-item p-4">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <h5 class="fw-bold mb-0 text-slate-800">{{ a.title }}</h5>
+                <span class="badge {% if a.priority == 'critical' %}badge-soft-danger{% elif a.priority == 'warning' %}badge-soft-warning{% else %}badge-soft-info{% endif %}">
+                    {{ a.priority|title }}
+                </span>
+            </div>
+            <p class="text-secondary small mb-2">{{ a.message }}</p>
+            <div class="text-muted" style="font-size: 0.75rem;">
+                <i class="bi bi-clock me-1"></i> Posted on {{ a.created_at|date:"F d, Y at H:i" }}
+            </div>
+        </div>
+        {% empty %}
+        <div class="text-center py-5 text-muted">
+            <i class="bi bi-megaphone fs-1 d-block mb-2 text-muted"></i>
+            No system announcements posted yet.
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+

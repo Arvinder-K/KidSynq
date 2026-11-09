@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}My Profile - KidSynq{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="h4 fw-bold text-slate-800 mb-1">User Profile</h2>
+        <p class="text-muted small mb-0">Manage your user account credentials and personal preferences</p>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-12 col-lg-8">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-bottom py-3">
+                <h5 class="card-title mb-0 fw-semibold">Personal Information</h5>
+            </div>
+            <div class="card-body p-4">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">First Name <span class="text-danger">*</span></label>
+                            <input type="text" name="first_name" class="form-control" value="{{ user.first_name }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">Last Name <span class="text-danger">*</span></label>
+                            <input type="text" name="last_name" class="form-control" value="{{ user.last_name }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">Email Address <span class="text-danger">*</span></label>
+                            <input type="email" name="email" class="form-control" value="{{ user.email }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">Assigned Role</label>
+                            <input type="text" class="form-control bg-light" value="{{ user.role|title }}" disabled>
+                        </div>
+                        <div class="col-12 mt-4">
+                            <h6 class="fw-semibold text-slate-800 border-bottom pb-2">Change Password</h6>
+                            <p class="text-muted small mb-2">Leave blank if you do not wish to update your password.</p>
+                            <label class="form-label fw-medium">New Password</label>
+                            <input type="password" name="new_password" class="form-control" placeholder="Minimum 8 characters">
+                        </div>
+                    </div>
+                    <hr class="my-4">
+                    <div class="d-flex justify-content-end gap-2">
+                        <button type="submit" class="btn btn-primary d-inline-flex align-items-center gap-2">
+                            <i class="bi bi-save"></i> Save Profile
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-lg-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center p-4">
+                <div class="avatar-placeholder rounded-circle bg-primary bg-opacity-10 text-primary mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 80px; height: 80px; font-size: 2rem;">
+                    {{ user.first_name|first|upper }}{{ user.last_name|first|upper }}
+                </div>
+                <h5 class="fw-bold mb-1">{{ user.get_full_name|default:user.email }}</h5>
+                <p class="text-muted small mb-2">{{ user.email }}</p>
+                <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 text-uppercase">{{ user.role }}</span>
+
+                <hr class="my-3">
+                <div class="text-start small text-muted">
+                    <div class="mb-2"><i class="bi bi-calendar3 me-2"></i> Joined: {{ user.date_joined|date:"M d, Y" }}</div>
+                    <div><i class="bi bi-clock-history me-2"></i> Last Login: {{ user.last_login|date:"M d, Y H:i"|default:"Never" }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
