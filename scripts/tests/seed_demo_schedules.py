@@ -3,8 +3,8 @@ import sys
 from datetime import datetime, time, timedelta
 import django
 
-sys.path.insert(0, os.path.abspath('backend'))
-sys.path.insert(0, os.path.abspath('backend/apps'))
+sys.path.insert(0, os.path.abspath('.'))
+sys.path.insert(0, os.path.abspath('apps'))
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'kidsynq.settings')
 django.setup()
 
