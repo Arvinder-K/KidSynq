@@ -21,7 +21,14 @@ class EmailOrUsernameModelBackend(ModelBackend):
             return None
             
         for user in users:
-            if user.check_password(password) and self.user_can_authenticate(user):
+            try:
+                is_valid = user.check_password(password)
+            except Exception as e:
+                # If password upgrade save fails (e.g. MySQL 0 affected rows), check directly without setter
+                from django.contrib.auth.hashers import check_password as direct_check_password
+                is_valid = direct_check_password(password, user.password)
+
+            if is_valid and self.user_can_authenticate(user):
                 return user
                 
         return None

@@ -159,6 +159,17 @@ if not database_url:
     db_host = os.environ.get('DB_HOST') or '127.0.0.1'
     db_port = os.environ.get('DB_PORT') or '3306'
 
+    mysql_options = {
+        'charset': 'utf8mb4',
+        'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+        'connect_timeout': 10,
+    }
+    try:
+        from pymysql.constants import CLIENT
+        mysql_options['client_flag'] = CLIENT.FOUND_ROWS
+    except Exception:
+        mysql_options['client_flag'] = 2
+
     DATABASES = {
         'default': {
             'ENGINE': db_engine,
@@ -167,11 +178,7 @@ if not database_url:
             'PASSWORD': db_password,
             'HOST': db_host,
             'PORT': db_port,
-            'OPTIONS': {
-                'charset': 'utf8mb4',
-                'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
-                'connect_timeout': 10,
-            },
+            'OPTIONS': mysql_options,
         }
     }
 

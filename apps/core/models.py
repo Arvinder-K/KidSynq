@@ -99,6 +99,60 @@ class User(AbstractUser):
     created_by = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='created_users')
     updated_by = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='updated_users')
 
+    def check_password(self, raw_password):
+        """
+        Verify password with fault-tolerant password hash upgrade.
+        If MySQL returns 0 affected rows during auto-upgrade, catch the
+        DatabaseError so legitimate logins are never blocked.
+        """
+        def setter(raw_pwd):
+            self.set_password(raw_pwd)
+            try:
+                self.save(update_fields=["password"])
+            except Exception as e:
+                import logging
+                logging.getLogger(__name__).warning("Password auto-upgrade save failed: %s", e)
+                try:
+                    from django.db import connection
+                    with connection.cursor() as cursor:
+                        pk_str = str(self.pk)
+                        pk_hex = self.pk.hex if hasattr(self.pk, 'hex') else pk_str.replace('-', '')
+                        cursor.execute(
+                            "UPDATE core_user SET password = %s WHERE id = %s OR id = %s",
+                            [self.password, pk_str, pk_hex]
+                        )
+                except Exception:
+                    pass
+
+        from django.contrib.auth.hashers import check_password as django_check_password
+        return django_check_password(raw_password, self.password, setter)
+
+    def save(self, *args, **kwargs):
+        """
+        Fault-tolerant save that falls back gracefully if MySQL returns 0
+        affected rows during save with update_fields.
+        """
+        try:
+            super().save(*args, **kwargs)
+        except Exception as e:
+            if "Save with update_fields did not affect any rows" in str(e):
+                import logging
+                logging.getLogger(__name__).warning(
+                    "Caught 'Save with update_fields did not affect any rows' on User %s; falling back to full save.",
+                    self.pk
+                )
+                if 'update_fields' in kwargs:
+                    kwargs.pop('update_fields')
+                    super().save(*args, **kwargs)
+                else:
+                    raise
+            else:
+                raise
+
+    class Meta:
+        db_table = 'core_user'
+        select_on_save = True
+
 class SubscriptionPlan(models.Model):
     @property
     def price(self):

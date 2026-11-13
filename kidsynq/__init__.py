@@ -30,9 +30,10 @@ def _db_uses_hyphenated_uuids(connection):
         with connection.cursor() as cursor:
             cursor.execute("SELECT id FROM core_user WHERE id LIKE '%-%' LIMIT 1")
             _DB_USES_HYPHENS = cursor.fetchone() is not None
+            return _DB_USES_HYPHENS
     except Exception:
-        _DB_USES_HYPHENS = False
-    return _DB_USES_HYPHENS
+        # Do not permanently cache failure if database is not yet connected during early bootstrap
+        return False
 
 
 try:
