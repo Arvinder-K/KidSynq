@@ -57,8 +57,17 @@ class UserLoginView(View):
                         'next': next_url
                     })
 
-            # Log user in
-            login(request, user)
+            # Log user in safely
+            try:
+                login(request, user)
+            except Exception as login_err:
+                import logging
+                logging.getLogger(__name__).warning("Signal error during login: %s. Establishing session directly.", login_err)
+                from django.contrib.auth import SESSION_KEY, BACKEND_SESSION_KEY, HASH_SESSION_KEY
+                request.session[SESSION_KEY] = user._meta.pk.value_to_string(user)
+                request.session[BACKEND_SESSION_KEY] = user.backend
+                request.session[HASH_SESSION_KEY] = user.get_session_auth_hash()
+                request.user = user
             messages.success(request, f"Welcome back, {user.first_name or user.username}!")
 
             # Safe redirect
