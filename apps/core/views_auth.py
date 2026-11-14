@@ -47,9 +47,21 @@ class UserLoginView(View):
                     'next': next_url
                 })
 
-            # Check Daycare Tenant Status
-            if user.daycare and not (user.is_superuser or user.role in ['SuperAdmin', 'Admin', 'admin']):
-                if hasattr(user.daycare, 'status') and user.daycare.status == 'suspended':
+            # Check Daycare Tenant Status safely
+            is_super = user.is_superuser
+            try:
+                role = user.role
+            except Exception:
+                role = 'SuperAdmin' if is_super else 'User'
+
+            daycare = None
+            try:
+                daycare = user.daycare
+            except Exception:
+                daycare = None
+
+            if daycare and not (is_super or role in ['SuperAdmin', 'Admin', 'admin']):
+                if hasattr(daycare, 'status') and daycare.status == 'suspended':
                     messages.error(request, "Your daycare organization account is currently suspended. Please contact platform support.")
                     return render(request, self.template_name, {
                         'username': username,

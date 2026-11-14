@@ -55,3 +55,23 @@ try:
     UUIDField.get_db_prep_value = _resilient_uuid_get_db_prep_value
 except Exception:
     pass
+
+# ==============================================================================
+# Resilient ForeignKey Handling for Nullable Relations (Prevents DoesNotExist on dangling IDs)
+# ==============================================================================
+try:
+    from django.db.models.fields.related_descriptors import ForwardManyToOneDescriptor
+
+    _orig_get_object = ForwardManyToOneDescriptor.get_object
+
+    def _safe_get_object(self, instance):
+        try:
+            return _orig_get_object(self, instance)
+        except self.field.remote_field.model.DoesNotExist:
+            if self.field.null:
+                return None
+            raise
+
+    ForwardManyToOneDescriptor.get_object = _safe_get_object
+except Exception:
+    pass

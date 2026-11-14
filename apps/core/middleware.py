@@ -10,7 +10,10 @@ class TenantContextMiddleware:
 
     def __call__(self, request):
         if hasattr(request, 'user') and request.user.is_authenticated:
-            request.daycare = getattr(request.user, 'daycare', None)
+            try:
+                request.daycare = request.user.daycare
+            except Exception:
+                request.daycare = None
         else:
             request.daycare = None
         return self.get_response(request)

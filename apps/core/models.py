@@ -76,12 +76,21 @@ class User(AbstractUser):
     def role(self):
         if self.is_superuser:
             return 'SuperAdmin'
-        if getattr(self, 'guardian_profile', None):
-            return 'Guardian'
-        if getattr(self, 'employee_profile', None):
-            return 'Staff'
-        if getattr(self, 'daycare', None):
-            return 'DaycareAdmin'
+        try:
+            if getattr(self, 'guardian_profile', None):
+                return 'Guardian'
+        except Exception:
+            pass
+        try:
+            if getattr(self, 'employee_profile', None):
+                return 'Staff'
+        except Exception:
+            pass
+        try:
+            if self.daycare_id and self.daycare:
+                return 'DaycareAdmin'
+        except Exception:
+            pass
         if self.is_staff:
             return 'Admin'
         return 'User'
