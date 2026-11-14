@@ -1,6 +1,6 @@
 # DO NOT REMOVE. CLOUDLINUX PASSENGER CONFIGURATION BEGIN
-PassengerAppRoot "/home/lqg1ons8pzm4/kidsynq_api"
+PassengerAppRoot "/home/k3ysumq2i3br/kidsynq_django"
 PassengerBaseURI "/"
-PassengerPython "/home/lqg1ons8pzm4/virtualenv/kidsynq_api/3.11/bin/python"
-PassengerAppLogFile "/home/lqg1ons8pzm4/logs/kidsynq_django.log"
+PassengerPython "/home/k3ysumq2i3br/virtualenv/kidsynq_django/3.11/bin/python"
+PassengerAppLogFile "/home/k3ysumq2i3br/logs/kidsynq_django.log"
 # DO NOT REMOVE. CLOUDLINUX PASSENGER CONFIGURATION END

@@ -1,13 +1,15 @@
 import os
 import sys
 
-# Current application directory (auto-detects location on GoDaddy host)
+# Application directory (auto-detects current deployment folder)
 APP_DIR = os.path.dirname(os.path.abspath(__file__))
 if not os.path.exists(os.path.join(APP_DIR, 'manage.py')):
-    APP_DIR = "/home/lqg1ons8pzm4/kidsynq_api"
+    APP_DIR = "/home/k3ysumq2i3br/kidsynq_django"
 
-# Virtual environment search paths for cPanel / GoDaddy hosting
+# Python virtualenv site-packages paths on cPanel / GoDaddy hosting
 possible_site_packages = [
+    "/home/k3ysumq2i3br/virtualenv/kidsynq_django/3.11/lib/python3.11/site-packages",
+    "/home/k3ysumq2i3br/virtualenv/kidsynq_django/3.11/lib64/python3.11/site-packages",
     "/home/lqg1ons8pzm4/virtualenv/kidsynq_api/3.11/lib/python3.11/site-packages",
     os.path.join(APP_DIR, "venv", "lib", "python3.11", "site-packages"),
     os.path.join(APP_DIR, "venv", "Lib", "site-packages"),
