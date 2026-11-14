@@ -32,3 +32,4 @@ with zipfile.ZipFile(ZIP_NAME, 'w', zipfile.ZIP_DEFLATED) as zipf:
 
 file_size_mb = os.path.getsize(ZIP_NAME) / (1024 * 1024)
 print(f"SUCCESS: Created {ZIP_NAME} ({file_size_mb:.2f} MB)")
+
