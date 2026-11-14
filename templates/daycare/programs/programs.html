@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}Educational Programs - KidSynq{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="h4 fw-bold text-slate-800 mb-1">Curriculum & Educational Programs</h2>
+        <p class="text-muted small mb-0">Early childhood education programs, age brackets, and pedagogical tracks</p>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4">Program Name</th>
+                        <th>Target Age Range</th>
+                        <th>Classrooms</th>
+                        <th>Description</th>
+                        <th class="text-end pe-4">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for program in programs %}
+                    <tr>
+                        <td class="ps-4 fw-medium text-slate-800">
+                            <i class="bi bi-book me-2 text-primary"></i> {{ program.name }}
+                        </td>
+                        <td><span class="badge bg-light text-dark">{{ program.min_age_months|default:"0" }} - {{ program.max_age_months|default:"72" }} mos</span></td>
+                        <td>{{ program.classrooms.count|default:"-" }}</td>
+                        <td class="text-muted small">{{ program.description|default:"Standard learning program" }}</td>
+                        <td class="text-end pe-4">
+                            <span class="badge bg-success-subtle text-success">Active</span>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center py-5 text-muted">
+                            <i class="bi bi-journal-bookmark fs-1 d-block mb-2 text-secondary opacity-50"></i>
+                            No specific curriculum programs registered yet.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

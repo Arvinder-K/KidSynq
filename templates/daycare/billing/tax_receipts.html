@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}Annual Tax Receipts - KidSynq{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="h4 fw-bold text-slate-800 mb-1">Annual Child Care Tax Receipts (CRA)</h2>
+        <p class="text-muted small mb-0">Official annual income tax child care expense receipts and CRA-compliant statements</p>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4">Tax Year</th>
+                        <th>Child Name</th>
+                        <th>Guardian Recipient</th>
+                        <th>Total Eligible Fees Paid</th>
+                        <th class="text-end pe-4">Receipt</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for rec in receipts %}
+                    <tr>
+                        <td class="ps-4 fw-bold text-slate-800">{{ rec.tax_year }}</td>
+                        <td>{{ rec.student.first_name }} {{ rec.student.last_name }}</td>
+                        <td>{{ rec.guardian_name }}</td>
+                        <td class="font-monospace fw-bold text-success">${{ rec.total_amount_paid|floatformat:2 }}</td>
+                        <td class="text-end pe-4">
+                            <button class="btn btn-sm btn-outline-primary" onclick="window.print()">
+                                <i class="bi bi-file-earmark-pdf"></i> View Receipt
+                            </button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center py-5 text-muted">
+                            <i class="bi bi-receipt-cutoff fs-1 d-block mb-2 text-secondary opacity-50"></i>
+                            No tax receipts generated for the current tax year.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}Enroll Child{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <a href="{% url 'daycare_children' %}" class="small text-muted text-decoration-none">
+        <i class="bi bi-arrow-left me-1"></i> Back to Roster
+    </a>
+    <h2 class="h4 fw-bold text-slate-800 mt-2 mb-1">New Child Admission</h2>
+    <p class="text-muted small">Enroll a student into the daycare center and assign initial room & medical notes</p>
+</div>
+
+<form method="post" class="card border-0 shadow-sm" style="max-width: 900px;">
+    {% csrf_token %}
+    <div class="card-body p-4 p-md-5">
+        
+        <h5 class="fw-bold text-primary mb-3"><i class="bi bi-person me-2"></i> Child Information</h5>
+        <div class="row g-3 mb-4">
+            <div class="col-12 col-md-6">
+                <label class="form-label small fw-semibold">First Name <span class="text-danger">*</span></label>
+                <input type="text" name="first_name" class="form-control" placeholder="e.g. Liam" required>
+            </div>
+            <div class="col-12 col-md-6">
+                <label class="form-label small fw-semibold">Last Name <span class="text-danger">*</span></label>
+                <input type="text" name="last_name" class="form-control" placeholder="e.g. Miller" required>
+            </div>
+            <div class="col-12 col-md-4">
+                <label class="form-label small fw-semibold">Date of Birth</label>
+                <input type="date" name="date_of_birth" class="form-control">
+            </div>
+            <div class="col-12 col-md-4">
+                <label class="form-label small fw-semibold">Gender</label>
+                <select name="gender" class="form-select">
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                    <option value="other">Other</option>
+                    <option value="unspecified" selected>Prefer not to say</option>
+                </select>
+            </div>
+            <div class="col-12 col-md-4">
+                <label class="form-label small fw-semibold">Enrollment Date</label>
+                <input type="date" name="enrollment_date" class="form-control" value="{{ 'now'|date:'Y-m-d' }}">
+            </div>
+        </div>
+
+        <hr class="my-4">
+
+        <h5 class="fw-bold text-primary mb-3"><i class="bi bi-door-open me-2"></i> Classroom & Program Assignment</h5>
+        <div class="row g-3 mb-4">
+            <div class="col-12 col-md-6">
+                <label class="form-label small fw-semibold">Assign Classroom</label>
+                <select name="classroom_id" class="form-select">
+                    <option value="">Unassigned (Assign Later)</option>
+                    {% for room in classrooms %}
+                    <option value="{{ room.id }}">{{ room.name }} (Capacity: {{ room.capacity }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <hr class="my-4">
+
+        <h5 class="fw-bold text-primary mb-3"><i class="bi bi-heart-pulse me-2"></i> Health & Dietary Information</h5>
+        <div class="row g-3 mb-4">
+            <div class="col-12 col-md-6">
+                <label class="form-label small fw-semibold">Medical / Allergy Notes</label>
+                <textarea name="medical_info" class="form-control" rows="3" placeholder="e.g. Peanut allergy (EpiPen in emergency kit)"></textarea>
+            </div>
+            <div class="col-12 col-md-6">
+                <label class="form-label small fw-semibold">Dietary Restrictions</label>
+                <textarea name="dietary_restrictions" class="form-control" rows="3" placeholder="e.g. Vegetarian, Lactose intolerance"></textarea>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-end gap-2 pt-3">
+            <a href="{% url 'daycare_children' %}" class="btn btn-light border px-4">Cancel</a>
+            <button type="submit" class="btn btn-primary px-4 fw-semibold">Complete Enrollment</button>
+        </div>
+    </div>
+</form>
+{% endblock %}
+

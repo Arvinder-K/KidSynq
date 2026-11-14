@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}Master Attendance Command - KidSynq{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="h4 fw-bold text-slate-800 mb-1">Master Attendance Command Center</h2>
+        <p class="text-muted small mb-0">Live attendance status across all classrooms &bull; {{ today|date:"l, F d, Y" }}</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{% url 'daycare_attendance' %}" class="btn btn-primary d-inline-flex align-items-center gap-2">
+            <i class="bi bi-calendar-check"></i> Roll Call
+        </a>
+        <a href="{% url 'daycare_safe_arrival' %}" class="btn btn-outline-danger d-inline-flex align-items-center gap-2">
+            <i class="bi bi-bell"></i> Safe Arrival
+        </a>
+    </div>
+</div>
+
+<div class="row g-4">
+    {% for room in classrooms %}
+    <div class="col-12 col-md-6 col-xl-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                <h6 class="card-title mb-0 fw-bold text-slate-800">{{ room.name }}</h6>
+                <span class="badge bg-light text-muted">Cap: {{ room.capacity }}</span>
+            </div>
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="text-muted small">Assigned Program</span>
+                    <span class="fw-semibold text-slate-800">{{ room.program.name|default:"General Program" }}</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="text-muted small">Active Children</span>
+                    <span class="badge bg-primary-subtle text-primary">{{ room.students.count }} Enrolled</span>
+                </div>
+                <div class="d-grid mt-4">
+                    <a href="{% url 'daycare_attendance' %}?classroom_id={{ room.id }}" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-check2-square me-1"></i> Open Room Roll Call
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="card border-0 shadow-sm text-center py-5">
+            <div class="card-body">
+                <i class="bi bi-door-closed fs-1 text-secondary opacity-50 mb-3 d-block"></i>
+                <h5 class="fw-bold text-slate-800">No Classrooms Found</h5>
+                <p class="text-muted small">Configure classrooms first to monitor daily attendance by room.</p>
+                <a href="{% url 'daycare_classroom_new' %}" class="btn btn-primary btn-sm">Add Classroom</a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
+

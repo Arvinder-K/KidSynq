@@ -1,0 +1,449 @@
+{% extends "base.html" %}
+
+{% block title %}{{ daycare.name }} &mdash; Tenant Details{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <a href="{% url 'superadmin_daycares' %}" class="small text-muted text-decoration-none">
+        <i class="bi bi-arrow-left me-1"></i> Back to Daycares
+    </a>
+    <div class="d-flex justify-content-between align-items-center mt-2 flex-wrap gap-2">
+        <div>
+            <h2 class="h4 fw-bold text-slate-800 mb-1">{{ daycare.name }}</h2>
+            <div class="d-flex align-items-center gap-2">
+                <span class="text-muted small font-monospace">UUID: {{ daycare.id }}</span>
+                {% if daycare.status|lower == 'active' %}
+                    <span class="badge badge-soft-success">Active</span>
+                {% elif daycare.status|lower == 'suspended' %}
+                    <span class="badge badge-soft-danger">Suspended</span>
+                {% else %}
+                    <span class="badge badge-soft-secondary">{{ daycare.status|title }}</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Quick Status Change Form -->
+        <form method="post" class="d-flex gap-2">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="toggle_status">
+            {% if daycare.status|lower == 'active' %}
+                <input type="hidden" name="status" value="suspended">
+                <button type="submit" class="btn btn-outline-danger btn-sm d-inline-flex align-items-center gap-1" onclick="return confirm('Suspend this daycare organization?')">
+                    <i class="bi bi-pause-circle"></i> Suspend Daycare
+                </button>
+            {% else %}
+                <input type="hidden" name="status" value="active">
+                <button type="submit" class="btn btn-outline-success btn-sm d-inline-flex align-items-center gap-1">
+                    <i class="bi bi-play-circle"></i> Activate Daycare
+                </button>
+            {% endif %}
+        </form>
+    </div>
+</div>
+
+<!-- Tenant Usage & Capacity Metrics -->
+<div class="row g-3 mb-4">
+    <div class="col-12 col-sm-4">
+        <div class="kpi-card kpi-emerald h-100">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="small fw-bold text-uppercase text-muted" style="font-size: 0.72rem; letter-spacing: 0.05em;">Enrolled Children</span>
+                <div class="kpi-icon-box emerald" style="width: 36px; height: 36px; font-size: 1.1rem;">
+                    <i class="bi bi-people-fill"></i>
+                </div>
+            </div>
+            <div class="d-flex align-items-baseline gap-2">
+                <div class="fs-2 fw-bold font-display text-slate-900">{{ student_count }}</div>
+                <span class="small text-muted fw-semibold">/ {{ subscription.max_students|default:"&infin;" }} max capacity</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-sm-4">
+        <div class="kpi-card kpi-cyan h-100">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="small fw-bold text-uppercase text-muted" style="font-size: 0.72rem; letter-spacing: 0.05em;">Active Staff</span>
+                <div class="kpi-icon-box cyan" style="width: 36px; height: 36px; font-size: 1.1rem;">
+                    <i class="bi bi-person-badge-fill"></i>
+                </div>
+            </div>
+            <div class="d-flex align-items-baseline gap-2">
+                <div class="fs-2 fw-bold font-display text-slate-900">{{ employee_count }}</div>
+                <span class="small text-muted fw-semibold">/ {{ subscription.max_staff|default:"&infin;" }} max staff</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-sm-4">
+        <div class="kpi-card kpi-purple h-100">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="small fw-bold text-uppercase text-muted" style="font-size: 0.72rem; letter-spacing: 0.05em;">Licensed Classrooms</span>
+                <div class="kpi-icon-box purple" style="width: 36px; height: 36px; font-size: 1.1rem;">
+                    <i class="bi bi-door-open-fill"></i>
+                </div>
+            </div>
+            <div class="d-flex align-items-baseline gap-2">
+                <div class="fs-2 fw-bold font-display text-slate-900">{{ classroom_count }}</div>
+                <span class="small text-muted fw-semibold">/ {{ subscription.max_classrooms|default:"&infin;" }} max rooms</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <!-- Daycare Profile Details -->
+    <div class="col-12 col-lg-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-transparent fw-bold">Contact & Location Info</div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-4 text-muted small">Contact Email</dt>
+                    <dd class="col-sm-8 small fw-semibold">{{ daycare.email|default:"-" }}</dd>
+
+                    <dt class="col-sm-4 text-muted small">Phone Number</dt>
+                    <dd class="col-sm-8 small">{{ daycare.phone|default:"-" }}</dd>
+
+                    <dt class="col-sm-4 text-muted small">Address</dt>
+                    <dd class="col-sm-8 small">{{ daycare.address|default:"-" }}</dd>
+
+                    <dt class="col-sm-4 text-muted small">City & State</dt>
+                    <dd class="col-sm-8 small">{{ daycare.city|default:"-" }}{% if daycare.state %}, {{ daycare.state }}{% endif %}</dd>
+
+                    <dt class="col-sm-4 text-muted small">Postal Code</dt>
+                    <dd class="col-sm-8 small">{{ daycare.zip_code|default:"-" }}</dd>
+
+                    <dt class="col-sm-4 text-muted small">Onboarded Date</dt>
+                    <dd class="col-sm-8 small">{{ daycare.created_at|date:"F d, Y" }}</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+
+    <!-- Subscription Plan Information -->
+    <div class="col-12 col-lg-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-transparent fw-bold d-flex justify-content-between align-items-center">
+                <span>Active Subscription Plan</span>
+                {% if subscription %}
+                    <span class="badge badge-soft-success">{{ subscription.subscription_status|title }}</span>
+                {% else %}
+                    <span class="badge badge-soft-warning">No Plan</span>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                {% if subscription %}
+                    <h5 class="fw-bold text-slate-800 mb-1">{{ subscription.subscription_plan.name }}</h5>
+                    <div class="text-primary fw-bold fs-5 mb-3">${{ subscription.amount|floatformat:2|default:subscription.subscription_plan.price }} / {{ subscription.billing_cycle|default:subscription.subscription_plan.billing_frequency|title }}</div>
+                    
+                    <ul class="list-unstyled small mb-4">
+                        <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i> Max Students: <strong>{{ subscription.max_students|default:subscription.subscription_plan.max_students|default:"Unlimited" }}</strong></li>
+                        <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i> Max Staff: <strong>{{ subscription.max_staff|default:subscription.subscription_plan.max_staff|default:"Unlimited" }}</strong></li>
+                        <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i> Max Classrooms: <strong>{{ subscription.max_classrooms|default:subscription.subscription_plan.max_classrooms|default:"Unlimited" }}</strong></li>
+                        <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i> Storage Quota: <strong>{{ subscription.max_storage_gb|default:subscription.subscription_plan.max_storage_gb|default:"5" }} GB</strong></li>
+                        <li><i class="bi bi-calendar-event text-muted me-2"></i> Renewal Date: <strong>{{ subscription.end_date|date:"M d, Y"|default:"Continuous" }}</strong></li>
+                    </ul>
+                {% else %}
+                    <p class="text-muted small">This daycare currently has no active subscription plan assigned.</p>
+                {% endif %}
+
+                <!-- Assign or Change Plan Form -->
+                <form method="post" class="border-top pt-3">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="assign_plan">
+                    <label class="form-label small fw-semibold">Switch / Assign Plan</label>
+                    <div class="input-group">
+                        <select name="plan_id" class="form-select form-select-sm" required>
+                            {% for p in plans %}
+                            <option value="{{ p.id }}" {% if subscription.subscription_plan.id == p.id %}selected{% endif %}>
+                                {{ p.name }} (${{ p.price|floatformat:2 }}/{{ p.billing_frequency }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <button type="submit" class="btn btn-sm btn-primary">Update Plan</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Subscription Invoices & Billing History -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-transparent fw-bold d-flex justify-content-between align-items-center py-3">
+        <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-receipt text-primary fs-5"></i>
+            <span class="fs-6">Subscription Invoices & Billing History</span>
+            <span class="badge bg-secondary rounded-pill">{{ invoices|length }}</span>
+        </div>
+        <button type="button" class="btn btn-sm btn-primary d-inline-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#generateInvoiceModal">
+            <i class="bi bi-plus-circle"></i> Generate New Invoice
+        </button>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light text-muted small text-uppercase">
+                <tr>
+                    <th>Invoice #</th>
+                    <th>Plan / Description</th>
+                    <th>Amount</th>
+                    <th>Issue Date</th>
+                    <th>Due Date</th>
+                    <th>Status</th>
+                    <th>Payment Date</th>
+                    <th class="text-end pe-3">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for inv in invoices %}
+                <tr>
+                    <td>
+                        <span class="font-monospace fw-bold text-dark">{{ inv.invoice_number }}</span>
+                    </td>
+                    <td>
+                        <div class="fw-semibold text-slate-800">
+                            {{ inv.subscription.subscription_plan.name|default:"SaaS Plan Subscription" }}
+                        </div>
+                        <small class="text-muted">{{ inv.subscription.billing_cycle|default:"Monthly"|title }} cycle</small>
+                    </td>
+                    <td class="fw-bold fs-6">${{ inv.amount|floatformat:2 }}</td>
+                    <td class="small text-muted">{{ inv.issue_date|date:"M d, Y" }}</td>
+                    <td class="small">{{ inv.due_date|date:"M d, Y" }}</td>
+                    <td>
+                        {% if inv.status|lower == 'paid' %}
+                            <span class="badge badge-soft-success"><i class="bi bi-check2-circle me-1"></i>Paid</span>
+                        {% elif inv.status|lower == 'unpaid' %}
+                            <span class="badge badge-soft-warning"><i class="bi bi-clock me-1"></i>Unpaid</span>
+                        {% elif inv.status|lower == 'overdue' %}
+                            <span class="badge badge-soft-danger"><i class="bi bi-exclamation-triangle me-1"></i>Overdue</span>
+                        {% else %}
+                            <span class="badge badge-soft-secondary">{{ inv.status|title }}</span>
+                        {% endif %}
+                    </td>
+                    <td class="small text-muted">
+                        {% if inv.payment_date %}
+                            {{ inv.payment_date|date:"M d, Y" }}
+                        {% else %}
+                            <span class="text-muted italic">-</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end pe-3">
+                        <div class="d-inline-flex gap-1">
+                            {% if inv.status|lower != 'paid' %}
+                            <form method="post" class="d-inline">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="mark_invoice_paid">
+                                <input type="hidden" name="invoice_id" value="{{ inv.id }}">
+                                <button type="submit" class="btn btn-sm btn-outline-success py-1 px-2" title="Mark as Paid">
+                                    <i class="bi bi-check-lg"></i> Mark Paid
+                                </button>
+                            </form>
+                            {% endif %}
+                            <button type="button" class="btn btn-sm btn-outline-secondary py-1 px-2" onclick="alert('Invoice #{{ inv.invoice_number }}\nAmount: ${{ inv.amount|floatformat:2 }}\nStatus: {{ inv.status|title }}\nIssued: {{ inv.issue_date }}')" title="View Details">
+                                <i class="bi bi-eye"></i> View
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" class="text-center py-5">
+                        <div class="text-muted mb-2">
+                            <i class="bi bi-receipt-cutoff fs-2 text-secondary"></i>
+                        </div>
+                        <div class="fw-semibold text-slate-700">No Invoices Generated Yet</div>
+                        <p class="text-muted small mb-3">No billing statements have been issued for this daycare organization.</p>
+                        <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#generateInvoiceModal">
+                            <i class="bi bi-plus-circle me-1"></i> Generate Initial Invoice
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal: Generate Invoice -->
+<div class="modal fade" id="generateInvoiceModal" tabindex="-1" aria-labelledby="generateInvoiceModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="generate_invoice">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold" id="generateInvoiceModalLabel">
+                        <i class="bi bi-receipt me-1 text-primary"></i> Generate Subscription Invoice
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Daycare Organization</label>
+                        <input type="text" class="form-control form-control-sm" value="{{ daycare.name }}" readonly disabled>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Active Plan</label>
+                        <input type="text" class="form-control form-control-sm" value="{{ subscription.subscription_plan.name|default:'Custom Plan' }} (Default: ${{ subscription.amount|floatformat:2|default:subscription.subscription_plan.price }})" readonly disabled>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold">Invoice Amount ($)</label>
+                            <input type="number" step="0.01" name="amount" class="form-control form-control-sm" value="{{ subscription.amount|default:subscription.subscription_plan.price }}" required>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold">Initial Status</label>
+                            <select name="status" class="form-select form-select-sm">
+                                <option value="paid" selected>Paid (Completed)</option>
+                                <option value="unpaid">Unpaid (Pending)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold">Issue Date</label>
+                            <input type="date" name="issue_date" class="form-control form-control-sm" value="{% now 'Y-m-d' %}">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold">Due Date</label>
+                            <input type="date" name="due_date" class="form-control form-control-sm" value="{% now 'Y-m-d' %}">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-sm btn-primary">Generate Invoice</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Daycare Administrators -->
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-transparent fw-bold d-flex justify-content-between align-items-center">
+        <span>Daycare Administrators</span>
+        <span class="badge bg-light text-muted border">{{ admins|length }} Admin{% if admins|length != 1 %}s{% endif %}</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Username</th>
+                    <th>Full Name</th>
+                    <th>Email Address</th>
+                    <th>Status</th>
+                    <th>Joined</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for admin in admins %}
+                <tr>
+                    <td class="fw-semibold">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="d-inline-flex align-items-center justify-content-center bg-primary bg-opacity-10 text-primary rounded-circle fw-bold" style="width: 32px; height: 32px; font-size: 0.8rem;">
+                                {{ admin.username|slice:":1"|upper }}
+                            </span>
+                            <span>{{ admin.username }}</span>
+                        </div>
+                    </td>
+                    <td>{{ admin.get_full_name|default:"-" }}</td>
+                    <td class="small">{{ admin.email|default:"-" }}</td>
+                    <td>
+                        {% if admin.is_active %}
+                            <span class="badge badge-soft-success">Active</span>
+                        {% else %}
+                            <span class="badge badge-soft-danger">Deactivated</span>
+                        {% endif %}
+                    </td>
+                    <td class="small text-muted">{{ admin.date_joined|date:"M d, Y" }}</td>
+                    <td class="text-end">
+                        <button type="button" class="btn btn-sm btn-outline-warning text-dark d-inline-flex align-items-center gap-1 shadow-sm" data-bs-toggle="modal" data-bs-target="#resetPasswordModal{{ admin.id }}">
+                            <i class="bi bi-key-fill text-warning"></i>
+                            <span>Reset Password</span>
+                        </button>
+                    </td>
+                </tr>
+
+                <!-- Reset Password Modal for {{ admin.username }} -->
+                <div class="modal fade" id="resetPasswordModal{{ admin.id }}" tabindex="-1" aria-labelledby="resetPasswordLabel{{ admin.id }}" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content border-0 shadow-lg" style="border-radius: 1rem;">
+                            <form method="post">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="reset_admin_password">
+                                <input type="hidden" name="user_id" value="{{ admin.id }}">
+                                <div class="modal-header border-bottom-0 pb-0">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="bg-warning bg-opacity-10 text-warning rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                            <i class="bi bi-key-fill fs-5"></i>
+                                        </div>
+                                        <div>
+                                            <h5 class="modal-title fw-bold text-slate-800" id="resetPasswordLabel{{ admin.id }}">Reset Admin Password</h5>
+                                            <p class="text-muted small mb-0">Set a new password for <strong>{{ admin.username }}</strong></p>
+                                        </div>
+                                    </div>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body pt-3">
+                                    <div class="p-3 bg-light rounded-3 mb-3 border">
+                                        <div class="row g-2 small">
+                                            <div class="col-6">
+                                                <span class="text-muted d-block">Username:</span>
+                                                <span class="fw-bold font-monospace text-slate-800">@{{ admin.username }}</span>
+                                            </div>
+                                            <div class="col-6">
+                                                <span class="text-muted d-block">Full Name:</span>
+                                                <span class="fw-semibold text-slate-800">{{ admin.get_full_name|default:admin.username }}</span>
+                                            </div>
+                                            <div class="col-12">
+                                                <span class="text-muted d-block">Email:</span>
+                                                <span class="text-slate-700">{{ admin.email|default:"No email set" }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-semibold text-slate-700">New Password <span class="text-danger">*</span></label>
+                                        <div class="input-group">
+                                            <input type="text" name="new_password" id="adminPwdInput{{ admin.id }}" class="form-control font-monospace" placeholder="Enter new password" required minlength="6">
+                                            <button type="button" class="btn btn-outline-secondary" onclick="generatePassword('adminPwdInput{{ admin.id }}')" title="Generate random secure password">
+                                                <i class="bi bi-shuffle me-1"></i> Generate
+                                            </button>
+                                        </div>
+                                        <div class="form-text small text-muted">Must be at least 6 characters. Click <strong>Generate</strong> for a secure password.</div>
+                                    </div>
+                                </div>
+                                <div class="modal-footer border-top-0 pt-0">
+                                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                                    <button type="submit" class="btn btn-warning text-dark fw-bold">
+                                        <i class="bi bi-check2-circle me-1"></i> Update Password
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center py-4 text-muted">No administrator users assigned yet.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+function generatePassword(targetId) {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%';
+    let pwd = '';
+    for (let i = 0; i < 10; i++) {
+        pwd += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    const input = document.getElementById(targetId);
+    if (input) {
+        input.value = pwd;
+        input.focus();
+        input.select();
+    }
+}
+</script>
+{% endblock %}

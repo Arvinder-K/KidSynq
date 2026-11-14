@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block title %}Onboard Daycare{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <a href="{% url 'superadmin_daycares' %}" class="small text-muted text-decoration-none">
+        <i class="bi bi-arrow-left me-1"></i> Back to Daycares
+    </a>
+    <h2 class="h4 fw-bold text-slate-800 mt-2 mb-1">Onboard New Daycare Center</h2>
+    <p class="text-muted small">Provision a new daycare tenant, create initial administrator credentials, and assign a SaaS plan.</p>
+</div>
+
+<form method="post" class="card border-0 shadow-sm">
+    {% csrf_token %}
+    <div class="card-body p-4 p-md-5">
+        
+        <!-- Step 1: Center Information -->
+        <h5 class="fw-bold text-primary mb-3"><i class="bi bi-building me-2"></i> 1. Daycare Center Information</h5>
+        <div class="row g-3 mb-4">
+            <div class="col-12 col-md-6">
+                <label class="form-label small fw-semibold">Daycare Center Name <span class="text-danger">*</span></label>
+                <input type="text" name="name" class="form-control" placeholder="e.g. Sunshine Academy" required>
+            </div>
+            <div class="col-12 col-md-6">
+                <label class="form-label small fw-semibold">Contact Email <span class="text-danger">*</span></label>
+                <input type="email" name="email" class="form-control" placeholder="admin@sunshineacademy.com" required>
+            </div>
+            <div class="col-12 col-md-6">
+                <label class="form-label small fw-semibold">Phone Number</label>
+                <input type="text" name="phone" class="form-control" placeholder="(555) 123-4567">
+            </div>
+            <div class="col-12 col-md-6">
+                <label class="form-label small fw-semibold">Street Address</label>
+                <input type="text" name="address" class="form-control" placeholder="123 Main Street">
+            </div>
+            <div class="col-12 col-md-4">
+                <label class="form-label small fw-semibold">City</label>
+                <input type="text" name="city" class="form-control" placeholder="Toronto">
+            </div>
+            <div class="col-12 col-md-4">
+                <label class="form-label small fw-semibold">Province / State</label>
+                <input type="text" name="state" class="form-control" placeholder="Ontario">
+            </div>
+            <div class="col-12 col-md-4">
+                <label class="form-label small fw-semibold">Postal / Zip Code</label>
+                <input type="text" name="zip_code" class="form-control" placeholder="M5V 2T6">
+            </div>
+        </div>
+
+        <hr class="my-4">
+
+        <!-- Step 2: Primary Administrator User -->
+        <h5 class="fw-bold text-primary mb-3"><i class="bi bi-person-badge me-2"></i> 2. Daycare Administrator Account</h5>
+        <div class="row g-3 mb-4">
+            <div class="col-12 col-md-6">
+                <label class="form-label small fw-semibold">Administrator Username <span class="text-danger">*</span></label>
+                <input type="text" name="admin_username" class="form-control" placeholder="sunshine_admin" required>
+            </div>
+            <div class="col-12 col-md-6">
+                <label class="form-label small fw-semibold">Temporary Password <span class="text-danger">*</span></label>
+                <input type="password" name="admin_password" class="form-control" placeholder="••••••••" required minlength="8">
+            </div>
+            <div class="col-12 col-md-4">
+                <label class="form-label small fw-semibold">First Name</label>
+                <input type="text" name="admin_first_name" class="form-control" placeholder="Jane">
+            </div>
+            <div class="col-12 col-md-4">
+                <label class="form-label small fw-semibold">Last Name</label>
+                <input type="text" name="admin_last_name" class="form-control" placeholder="Doe">
+            </div>
+            <div class="col-12 col-md-4">
+                <label class="form-label small fw-semibold">Admin Email (if different)</label>
+                <input type="email" name="admin_email" class="form-control" placeholder="jane@sunshineacademy.com">
+            </div>
+        </div>
+
+        <hr class="my-4">
+
+        <!-- Step 3: Subscription Plan -->
+        <h5 class="fw-bold text-primary mb-3"><i class="bi bi-credit-card me-2"></i> 3. Platform Subscription Plan</h5>
+        <div class="row g-3 mb-4">
+            <div class="col-12 col-md-6">
+                <label class="form-label small fw-semibold">Assign Initial Plan</label>
+                <select name="plan_id" class="form-select">
+                    <option value="">No Plan (Evaluation Mode)</option>
+                    {% for p in plans %}
+                    <option value="{{ p.id }}">{{ p.name }} &mdash; ${{ p.price }}/{{ p.billing_frequency }} (Max {{ p.max_students }} children, {{ p.max_staff }} staff)</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-end gap-2 pt-3">
+            <a href="{% url 'superadmin_daycares' %}" class="btn btn-light border px-4">Cancel</a>
+            <button type="submit" class="btn btn-primary px-4 fw-semibold">Provision & Complete Onboarding</button>
+        </div>
+    </div>
+</form>
+{% endblock %}
+

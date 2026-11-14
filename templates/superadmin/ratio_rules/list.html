@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}Provincial Baseline Ratio Rules{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="h4 fw-bold text-slate-800 mb-1">Provincial Baseline Ratio Rules</h2>
+        <p class="text-muted small mb-0">Statutory educator-to-child ratio benchmarks across Canadian provinces and jurisdictions</p>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Province / Territory</th>
+                    <th>Age Category</th>
+                    <th>Age Range (Months)</th>
+                    <th>Staff-to-Child Ratio</th>
+                    <th>Max Group Size</th>
+                    <th>Type</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for rule in rules %}
+                <tr>
+                    <td class="fw-bold">{{ rule.province|default:"Ontario" }}</td>
+                    <td class="fw-semibold text-primary">{{ rule.age_group_name }}</td>
+                    <td class="small">{{ rule.min_age_months|default:0 }} &ndash; {{ rule.max_age_months|default:"+" }} mos</td>
+                    <td>
+                        <span class="badge bg-light text-dark border fw-bold fs-6">1 : {{ rule.staff_ratio }}</span>
+                    </td>
+                    <td>
+                        <span class="badge badge-soft-info">{{ rule.max_group_size }} children</span>
+                    </td>
+                    <td><span class="badge badge-soft-success">System Standard</span></td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center py-5 text-muted">No provincial ratio rules configured.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+

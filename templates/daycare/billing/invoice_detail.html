@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% block title %}Invoice {{ invoice.invoice_number|default:invoice.id|stringformat:".8s" }} - KidSynq{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="h4 fw-bold text-slate-800 mb-1">Invoice {{ invoice.invoice_number|default:invoice.id|stringformat:".8s" }}</h2>
+        <p class="text-muted small mb-0">Issued {{ invoice.issue_date|date:"F d, Y" }} &bull; Due {{ invoice.due_date|date:"F d, Y" }}</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{% url 'daycare_invoices' %}" class="btn btn-outline-secondary d-inline-flex align-items-center gap-2">
+            <i class="bi bi-arrow-left"></i> All Invoices
+        </a>
+        <button class="btn btn-outline-primary d-inline-flex align-items-center gap-2" onclick="window.print()">
+            <i class="bi bi-printer"></i> Print Statement
+        </button>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-12 col-lg-8">
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white border-bottom py-3">
+                <h5 class="card-title mb-0 fw-semibold">Billed Line Items</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-4">Item Description</th>
+                                <th>Quantity</th>
+                                <th>Rate</th>
+                                <th class="text-end pe-4">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in items %}
+                            <tr>
+                                <td class="ps-4 fw-medium text-slate-800">{{ item.description }}</td>
+                                <td>{{ item.quantity|default:"1" }}</td>
+                                <td>${{ item.unit_price|floatformat:2 }}</td>
+                                <td class="text-end pe-4 font-monospace">${{ item.amount|floatformat:2 }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td class="ps-4 fw-medium text-slate-800">Tuition & Child Care Services</td>
+                                <td>1</td>
+                                <td>${{ invoice.total_amount|floatformat:2 }}</td>
+                                <td class="text-end pe-4 font-monospace">${{ invoice.total_amount|floatformat:2 }}</td>
+                            </tr>
+                            {% endfor %}
+                            <tr class="table-light fw-bold">
+                                <td colspan="3" class="text-end">Total Due:</td>
+                                <td class="text-end pe-4 font-monospace fs-5 text-primary">${{ invoice.total_amount|floatformat:2 }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payments Logged -->
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-bottom py-3">
+                <h5 class="card-title mb-0 fw-semibold">Recorded Payments & Credits</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-4">Payment Date</th>
+                                <th>Method</th>
+                                <th>Transaction Ref</th>
+                                <th class="text-end pe-4">Amount Paid</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for pay in payments %}
+                            <tr>
+                                <td class="ps-4">{{ pay.payment_date|date:"M d, Y" }}</td>
+                                <td><span class="badge bg-light text-dark">{{ pay.payment_method|title }}</span></td>
+                                <td class="font-monospace small text-muted">{{ pay.transaction_id|default:"-" }}</td>
+                                <td class="text-end pe-4 font-monospace fw-bold text-success">${{ pay.amount|floatformat:2 }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center py-4 text-muted small">No payments recorded against this invoice yet.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-lg-4">
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white border-bottom py-3">
+                <h5 class="card-title mb-0 fw-semibold">Invoice Overview</h5>
+            </div>
+            <div class="card-body p-4">
+                <div class="mb-3">
+                    <label class="form-label text-muted small fw-semibold text-uppercase">Billed To Child</label>
+                    <p class="fs-5 fw-bold text-slate-800 mb-0">{{ invoice.student.first_name }} {{ invoice.student.last_name }}</p>
+                    <small class="text-muted">Room: {{ invoice.student.classroom.name|default:"General" }}</small>
+                </div>
+                <hr>
+                <div class="mb-3">
+                    <label class="form-label text-muted small fw-semibold text-uppercase">Payment Status</label>
+                    <div>
+                        {% if invoice.status == 'paid' %}
+                            <span class="badge bg-success text-white px-3 py-2">Paid in Full</span>
+                        {% elif invoice.status == 'overdue' %}
+                            <span class="badge bg-danger text-white px-3 py-2">Past Due</span>
+                        {% else %}
+                            <span class="badge bg-warning text-dark px-3 py-2">Awaiting Payment</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <hr>
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="text-muted small">Outstanding Balance</span>
+                    <span class="fs-5 fw-bold text-danger font-monospace">${{ invoice.balance_due|floatformat:2 }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

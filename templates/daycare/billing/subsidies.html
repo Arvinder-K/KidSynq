@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}Subsidies & CWELCC Management - KidSynq{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="h4 fw-bold text-slate-800 mb-1">Government Subsidies & CWELCC</h2>
+        <p class="text-muted small mb-0">Canada-Wide Early Learning and Child Care (CWELCC) fee reductions and municipal subsidy claims</p>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4">Child Name</th>
+                        <th>Subsidy Agency</th>
+                        <th>Case / File #</th>
+                        <th>Approved Coverage</th>
+                        <th>Effective Period</th>
+                        <th class="text-end pe-4">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sub in subsidies %}
+                    <tr>
+                        <td class="ps-4 fw-medium text-slate-800">
+                            {{ sub.student.first_name }} {{ sub.student.last_name }}
+                        </td>
+                        <td>{{ sub.agency_name|default:"Regional Children's Services" }}</td>
+                        <td class="font-monospace small">{{ sub.case_number|default:"-" }}</td>
+                        <td class="fw-bold text-success">{{ sub.coverage_percentage|default:"100" }}% (${{ sub.daily_subsidy_amount|floatformat:2 }}/day)</td>
+                        <td>{{ sub.start_date|date:"M d, Y" }} &ndash; {{ sub.end_date|date:"M d, Y"|default:"Ongoing" }}</td>
+                        <td class="text-end pe-4">
+                            <span class="badge bg-success-subtle text-success">Active</span>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5 text-muted">
+                            <i class="bi bi-bank fs-1 d-block mb-2 text-secondary opacity-50"></i>
+                            No municipal subsidy profiles on file.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

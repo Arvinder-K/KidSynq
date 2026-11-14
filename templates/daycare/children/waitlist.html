@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}Child Waitlist - KidSynq{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="h4 fw-bold text-slate-800 mb-1">Waitlist Management</h2>
+        <p class="text-muted small mb-0">Prioritized waitlist queue for prospective families awaiting spot vacancy</p>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4">Priority #</th>
+                        <th>Child Name</th>
+                        <th>Date of Birth</th>
+                        <th>Desired Start Date</th>
+                        <th>Parent Contact</th>
+                        <th class="text-end pe-4">Waitlist Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for entry in waitlist %}
+                    <tr>
+                        <td class="ps-4 fw-bold text-primary">#{{ entry.priority|default:forloop.counter }}</td>
+                        <td class="fw-medium text-slate-800">{{ entry.child_first_name }} {{ entry.child_last_name }}</td>
+                        <td>{{ entry.date_of_birth|date:"M d, Y"|default:"-" }}</td>
+                        <td>{{ entry.desired_start_date|date:"M d, Y"|default:"Immediate" }}</td>
+                        <td>
+                            <div>{{ entry.parent_name|default:"-" }}</div>
+                            <small class="text-muted">{{ entry.parent_email|default:"" }}</small>
+                        </td>
+                        <td class="text-end pe-4">
+                            <span class="badge bg-warning-subtle text-warning">Waiting</span>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5 text-muted">
+                            <i class="bi bi-hourglass-split fs-1 d-block mb-2 text-secondary opacity-50"></i>
+                            The waitlist is currently empty.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

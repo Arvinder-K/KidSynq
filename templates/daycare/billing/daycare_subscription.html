@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}Daycare Subscription - KidSynq{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="h4 fw-bold text-slate-800 mb-1">Center KidSynq SaaS Subscription</h2>
+        <p class="text-muted small mb-0">Platform license, capacity limits, active modules, and renewal schedule</p>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-12 col-lg-8">
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white border-bottom py-3">
+                <h5 class="card-title mb-0 fw-semibold">Current Plan Details</h5>
+            </div>
+            <div class="card-body p-4">
+                {% if subscription %}
+                <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
+                    <div>
+                        <span class="badge bg-primary text-uppercase px-3 py-2 mb-2">{{ subscription.subscription_plan.name }} Plan</span>
+                        <h4 class="fw-bold text-slate-800 mb-1">${{ subscription.subscription_plan.monthly_price|floatformat:2 }} <span class="fs-6 fw-normal text-muted">/ month</span></h4>
+                        <div class="text-muted small">Billing Cycle: {{ subscription.billing_cycle|title|default:"Monthly" }}</div>
+                    </div>
+                    <div>
+                        {% if subscription.status == 'active' %}
+                            <span class="badge bg-success-subtle text-success px-3 py-2 fs-6">Active License</span>
+                        {% else %}
+                            <span class="badge bg-warning-subtle text-warning px-3 py-2 fs-6">{{ subscription.status|title }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-6 col-md-3">
+                        <div class="text-muted small">Child Limit</div>
+                        <div class="fs-5 fw-bold text-slate-800">{{ subscription.subscription_plan.max_students|default:"Unlimited" }}</div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="text-muted small">Staff Limit</div>
+                        <div class="fs-5 fw-bold text-slate-800">{{ subscription.subscription_plan.max_staff|default:"Unlimited" }}</div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="text-muted small">Classrooms</div>
+                        <div class="fs-5 fw-bold text-slate-800">{{ subscription.subscription_plan.max_classrooms|default:"Unlimited" }}</div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="text-muted small">Renewal Date</div>
+                        <div class="fs-5 fw-bold text-slate-800">{{ subscription.end_date|date:"M d, Y"|default:"Auto-renews" }}</div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="bi bi-box-seam fs-1 text-primary opacity-50 mb-2 d-block"></i>
+                    <h5 class="fw-bold text-slate-800">Growth Enterprise Plan (Active)</h5>
+                    <p class="text-muted small mb-0">Unlimited enrolled students, educator scheduling, parent mobile feed, and compliance reporting enabled.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-lg-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-bottom py-3">
+                <h5 class="card-title mb-0 fw-semibold">Subscription Support</h5>
+            </div>
+            <div class="card-body p-4">
+                <p class="text-muted small mb-3">Need to increase classroom capacity, add additional branch locations, or request custom features?</p>
+                <div class="d-grid gap-2">
+                    <a href="mailto:support@kidsynq.com" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-envelope me-1"></i> Contact Enterprise Support
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

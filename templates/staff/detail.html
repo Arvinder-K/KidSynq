@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block title %}{{ employee.first_name }} {{ employee.last_name }} &mdash; Staff Profile{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <a href="{% url 'daycare_employees' %}" class="small text-muted text-decoration-none">
+        <i class="bi bi-arrow-left me-1"></i> Back to Staff Roster
+    </a>
+
+    <!-- Staff Header Card -->
+    <div class="card border-0 shadow-sm mt-2">
+        <div class="card-body p-4 d-flex align-items-center gap-3">
+            <div class="rounded-circle bg-info bg-opacity-10 text-info d-flex align-items-center justify-content-center fw-bold fs-3" style="width: 64px; height: 64px;">
+                {{ employee.first_name|make_list|first }}{{ employee.last_name|make_list|first }}
+            </div>
+            <div>
+                <h2 class="h4 fw-bold text-slate-800 mb-1">{{ employee.first_name }} {{ employee.last_name }}</h2>
+                <div class="d-flex align-items-center gap-2 small text-muted">
+                    <span class="badge badge-soft-primary">{{ employee.employee_type.name|default:"Educator" }}</span>
+                    <span><i class="bi bi-calendar-event me-1"></i> Hired: {{ employee.hire_date|date:"M d, Y"|default:"-" }}</span>
+                    <span><i class="bi bi-envelope me-1"></i> {{ employee.email|default:"-" }}</span>
+                    <span><i class="bi bi-telephone me-1"></i> {{ employee.phone_number|default:"-" }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- ECE Credentials & Certifications -->
+    <div class="col-12 col-lg-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-transparent fw-bold d-flex justify-content-between align-items-center">
+                <span>ECE Credentials & Compliance</span>
+                <span class="badge badge-soft-info">{{ credentials|length }} Recorded</span>
+            </div>
+            <div class="list-group list-group-flush">
+                {% for cred in credentials %}
+                <div class="list-group-item py-3">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="fw-bold text-slate-800">{{ cred.credential_type.name|default:"ECE Certificate" }}</div>
+                            <div class="text-muted small">Number: {{ cred.license_number|default:"-" }}</div>
+                        </div>
+                        <span class="badge badge-soft-success">Verified</span>
+                    </div>
+                    <div class="text-muted small mt-2">
+                        Expires: <strong>{{ cred.expiry_date|date:"M d, Y" }}</strong>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="p-4 text-center text-muted">No credentials recorded for this employee.</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Shifts & Scheduling -->
+    <div class="col-12 col-lg-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-transparent fw-bold">Recent Assigned Shifts</div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0 small">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Shift Hours</th>
+                            <th>Classroom</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for s in schedules %}
+                        <tr>
+                            <td class="fw-semibold">{{ s.shift_date|date:"M d, Y" }}</td>
+                            <td>{{ s.start_time|time:"H:i" }} &ndash; {{ s.end_time|time:"H:i" }}</td>
+                            <td>{{ s.classroom.name|default:"All Rooms" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="3" class="text-center py-4 text-muted">No upcoming shifts scheduled.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

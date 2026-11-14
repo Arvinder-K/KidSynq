@@ -1,0 +1,117 @@
+<header class="app-navbar">
+    <div class="d-flex align-items-center gap-2 gap-sm-3">
+        <button class="btn btn-sm btn-light border d-lg-none" id="sidebarToggle" type="button" aria-label="Toggle navigation">
+            <i class="bi bi-list fs-5"></i>
+        </button>
+
+        {% if request.user.is_superuser or request.user.role == 'SuperAdmin' or request.user.role == 'Admin' %}
+            <span class="navbar-brand-pill" style="background-color: #eef2ff; color: #4338ca; border-color: #c7d2fe;">
+                <i class="bi bi-shield-check text-indigo"></i> Super Admin Console
+            </span>
+            <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 rounded-pill px-2 py-1 small d-none d-md-inline-flex align-items-center gap-1">
+                <span class="pulse-dot"></span> System Live
+            </span>
+        {% elif request.user.role == 'Guardian' %}
+            <span class="navbar-brand-pill" style="background-color: #fff1f2; color: #be123c; border-color: #fecdd3;">
+                <i class="bi bi-heart-fill text-danger"></i> Family & Guardian Portal
+            </span>
+        {% elif request.user.daycare %}
+            <div class="d-flex align-items-center gap-2">
+                <span class="navbar-brand-pill">
+                    <i class="bi bi-building text-primary"></i> {{ request.user.daycare.name }}
+                </span>
+                <button type="button" class="copy-link-pill d-none d-md-inline-flex"
+                        onclick="copyToClipboard('{{ request.scheme }}://{{ request.get_host }}/register/{{ request.user.daycare.id }}/', this)"
+                        title="Copy Parent Registration Portal Link">
+                    <i class="bi bi-link-45deg fs-6"></i>
+                    <span>Copy Parent Link</span>
+                </button>
+            </div>
+        {% else %}
+            <span class="navbar-brand-pill">
+                <i class="bi bi-cloud-check text-primary"></i> KidSynq
+            </span>
+        {% endif %}
+    </div>
+
+    <div class="d-flex align-items-center gap-2 gap-sm-3">
+        {% if request.user.daycare and not request.user.is_superuser and request.user.role != 'Guardian' %}
+            <!-- Fast Workflow Shortcuts -->
+            <div class="d-none d-lg-flex align-items-center gap-2">
+                <a href="{% url 'daycare_child_new' %}" class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1 shadow-xs">
+                    <i class="bi bi-person-plus"></i> <span>Enroll Child</span>
+                </a>
+                <a href="{% url 'daycare_attendance' %}" class="btn btn-sm btn-primary d-inline-flex align-items-center gap-1 shadow-xs">
+                    <i class="bi bi-check2-circle"></i> <span>Roll Call</span>
+                </a>
+            </div>
+        {% endif %}
+
+        <!-- Notification Bell -->
+        <div class="dropdown">
+            <button class="btn btn-sm btn-light border rounded-circle p-2 d-flex align-items-center justify-content-center text-muted position-relative"
+                    type="button" id="notifDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="width: 38px; height: 38px;" title="Notifications">
+                <i class="bi bi-bell fs-6"></i>
+                <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle">
+                    <span class="visually-hidden">New alerts</span>
+                </span>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end shadow border-0 py-2" aria-labelledby="notifDropdown" style="min-width: 280px;">
+                <li class="px-3 py-2 border-bottom d-flex justify-content-between align-items-center">
+                    <span class="fw-bold small text-slate-800">Notifications</span>
+                    <span class="badge bg-primary rounded-pill">System</span>
+                </li>
+                <li class="px-3 py-3 text-muted small text-center">
+                    <i class="bi bi-check-circle fs-3 text-success d-block mb-1"></i>
+                    All daycare services and real-time operations running normally.
+                </li>
+            </ul>
+        </div>
+
+        <!-- User Profile Dropdown -->
+        <div class="dropdown">
+            <button class="btn btn-sm btn-light rounded-pill border d-flex align-items-center gap-2 px-2.5 py-1" type="button" id="userMenuDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                <div class="rounded-circle text-white d-flex align-items-center justify-content-center fw-bold shadow-xs" 
+                     style="width: 30px; height: 30px; font-size: 0.82rem; background: linear-gradient(135deg, #0d9488 0%, #0284c7 100%);">
+                    {{ request.user.first_name|default:request.user.username|make_list|first|upper }}
+                </div>
+                <div class="text-start d-none d-sm-block pe-1">
+                    <div class="fw-bold text-slate-800 text-truncate" style="font-size: 0.84rem; max-width: 130px;">
+                        {{ request.user.get_full_name|default:request.user.username }}
+                    </div>
+                    <div class="text-muted text-truncate" style="font-size: 0.7rem; line-height: 1;">
+                        {{ request.user.role|default:"User" }}
+                    </div>
+                </div>
+                <i class="bi bi-chevron-down small text-muted"></i>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end shadow border-0 py-2 mt-2" aria-labelledby="userMenuDropdown" style="min-width: 230px; border-radius: 0.85rem;">
+                <li class="px-3 py-2.5 border-bottom mb-1 bg-light">
+                    <div class="fw-bold small text-slate-900">{{ request.user.get_full_name|default:request.user.username }}</div>
+                    <div class="text-muted small text-truncate">{{ request.user.email|default:"No email configured" }}</div>
+                </li>
+                {% if request.user.role != 'SuperAdmin' and not request.user.is_superuser and request.user.role != 'Guardian' %}
+                <li>
+                    <a class="dropdown-item py-2 d-flex align-items-center gap-2 text-slate-700" href="{% url 'daycare_profile' %}">
+                        <i class="bi bi-person-circle text-primary"></i> <span>My Profile & Settings</span>
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item py-2 d-flex align-items-center gap-2 text-slate-700" href="{% url 'daycare_settings' %}">
+                        <i class="bi bi-sliders text-muted"></i> <span>Center Settings</span>
+                    </a>
+                </li>
+                <li><hr class="dropdown-divider my-1"></li>
+                {% endif %}
+                <li>
+                    <form method="post" action="{% url 'logout' %}" class="d-inline w-100">
+                        {% csrf_token %}
+                        <button type="submit" class="dropdown-item py-2 text-danger d-flex align-items-center gap-2 fw-semibold">
+                            <i class="bi bi-box-arrow-right"></i> <span>Sign Out</span>
+                        </button>
+                    </form>
+                </li>
+            </ul>
+        </div>
+    </div>
+</header>
