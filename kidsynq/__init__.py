@@ -47,8 +47,8 @@ try:
 
     _orig_do_update = Model._do_update
 
-    def _resilient_do_update(self, base_qs, using, pk_val, values, update_fields, forced_update, returning_fields, *args, **kwargs):
-        results = _orig_do_update(self, base_qs, using, pk_val, values, update_fields, forced_update, returning_fields, *args, **kwargs)
+    def _resilient_do_update(self, base_qs, using, pk_val, values, update_fields, forced_update, *args, **kwargs):
+        results = _orig_do_update(self, base_qs, using, pk_val, values, update_fields, forced_update, *args, **kwargs)
         if not results and update_fields:
             # If UPDATE returned 0 affected rows (e.g. unchanged values in MySQL or driver lacking CLIENT_FOUND_ROWS),
             # verify whether the record exists. If it exists, the update is considered successful.
