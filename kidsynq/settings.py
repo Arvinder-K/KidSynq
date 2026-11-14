@@ -281,6 +281,9 @@ else:
         "https://kidsynq.com",
         "https://www.kidsynq.com",
         "https://api.kidsynq.com",
+        "http://kidsynq.com",
+        "http://www.kidsynq.com",
+        "http://api.kidsynq.com",
     ]
 
 csrf_origins_env = os.environ.get('CSRF_TRUSTED_ORIGINS', '')
@@ -292,6 +295,9 @@ else:
         "https://kidsynq.com",
         "https://www.kidsynq.com",
         "https://api.kidsynq.com",
+        "http://kidsynq.com",
+        "http://www.kidsynq.com",
+        "http://api.kidsynq.com",
         "http://localhost:8000",
         "http://127.0.0.1:8000",
     ]

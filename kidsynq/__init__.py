@@ -39,29 +39,6 @@ try:
 except Exception:
     pass
 
-# ==============================================================================
-# Resilient UPDATE handling (Prevents "Save with update_fields did not affect any rows")
-# ==============================================================================
-try:
-    from django.db.models import Model
-
-    _orig_do_update = Model._do_update
-
-    def _resilient_do_update(self, base_qs, using, pk_val, values, update_fields, forced_update, *args, **kwargs):
-        results = _orig_do_update(self, base_qs, using, pk_val, values, update_fields, forced_update, *args, **kwargs)
-        if not results and update_fields:
-            # If UPDATE returned 0 affected rows (e.g. unchanged values in MySQL or driver lacking CLIENT_FOUND_ROWS),
-            # verify whether the record exists. If it exists, the update is considered successful.
-            try:
-                if base_qs.filter(pk=pk_val).exists():
-                    return [()]
-            except Exception:
-                pass
-        return results
-
-    Model._do_update = _resilient_do_update
-except Exception:
-    pass
 
 # ==============================================================================
 # Resilient ForeignKey Handling for Nullable Relations (Prevents DoesNotExist on dangling IDs)
