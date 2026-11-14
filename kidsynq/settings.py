@@ -141,6 +141,11 @@ if database_url:
         DATABASES['default']['OPTIONS'].setdefault('charset', 'utf8mb4')
         DATABASES['default']['OPTIONS'].setdefault(
             'init_command', "SET sql_mode='STRICT_TRANS_TABLES'")
+        try:
+            from pymysql.constants import CLIENT
+            DATABASES['default']['OPTIONS'].setdefault('client_flag', CLIENT.FOUND_ROWS)
+        except Exception:
+            DATABASES['default']['OPTIONS'].setdefault('client_flag', 2)
     except Exception:
         database_url = None
 

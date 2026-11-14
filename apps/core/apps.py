@@ -37,11 +37,10 @@ class CoreConfig(AppConfig):
                 try:
                     from django.db import connection
                     with connection.cursor() as cursor:
-                        pk_str = str(user.pk)
-                        pk_hex = user.pk.hex if hasattr(user.pk, 'hex') else pk_str.replace('-', '')
+                        pk_hex = user.pk.hex if hasattr(user.pk, 'hex') else str(user.pk).replace('-', '')
                         cursor.execute(
-                            "UPDATE core_user SET last_login = %s WHERE id = %s OR id = %s",
-                            [now, pk_str, pk_hex]
+                            "UPDATE core_user SET last_login = %s WHERE id = %s",
+                            [now, pk_hex]
                         )
                 except Exception as inner_exc:
                     logger.error("Fallback update_last_login also failed for user %s: %s", user.pk, inner_exc)

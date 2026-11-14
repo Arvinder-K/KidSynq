@@ -13,29 +13,6 @@ except ImportError:
 # ==============================================================================
 # Resilient UUID handling for MySQL / MariaDB (GoDaddy & local compatibility)
 # ==============================================================================
-_DB_USES_HYPHENS = None
-
-
-def _db_uses_hyphenated_uuids(connection):
-    global _DB_USES_HYPHENS
-    if _DB_USES_HYPHENS is not None:
-        return _DB_USES_HYPHENS
-
-    env_setting = os.environ.get('DB_UUID_HYPHENS')
-    if env_setting is not None:
-        _DB_USES_HYPHENS = env_setting.lower() in ('true', '1', 'yes')
-        return _DB_USES_HYPHENS
-
-    try:
-        with connection.cursor() as cursor:
-            cursor.execute("SELECT id FROM core_user WHERE id LIKE '%-%' LIMIT 1")
-            _DB_USES_HYPHENS = cursor.fetchone() is not None
-            return _DB_USES_HYPHENS
-    except Exception:
-        # Do not permanently cache failure if database is not yet connected during early bootstrap
-        return False
-
-
 try:
     from django.db.models import UUIDField
 
@@ -45,14 +22,44 @@ try:
         if value is None:
             return None
         if not isinstance(value, uuid.UUID):
-            value = self.to_python(value)
-        if connection.features.has_native_uuid_field:
+            try:
+                value = self.to_python(value)
+            except Exception:
+                val_str = str(value)
+                if len(val_str) == 36 and '-' in val_str:
+                    return val_str.replace('-', '')
+                return val_str
+        if getattr(connection, 'vendor', None) == 'postgresql':
             return value
-        if _db_uses_hyphenated_uuids(connection):
-            return str(value)
+        # In MySQL, MariaDB, and SQLite, UUIDField columns are CHAR(32).
+        # ALWAYS return 32-character hex to prevent (1406, "Data too long for column 'id'").
         return value.hex
 
     UUIDField.get_db_prep_value = _resilient_uuid_get_db_prep_value
+except Exception:
+    pass
+
+# ==============================================================================
+# Resilient UPDATE handling (Prevents "Save with update_fields did not affect any rows")
+# ==============================================================================
+try:
+    from django.db.models import Model
+
+    _orig_do_update = Model._do_update
+
+    def _resilient_do_update(self, base_qs, using, pk_val, values, update_fields, forced_update, returning_fields, *args, **kwargs):
+        results = _orig_do_update(self, base_qs, using, pk_val, values, update_fields, forced_update, returning_fields, *args, **kwargs)
+        if not results and update_fields:
+            # If UPDATE returned 0 affected rows (e.g. unchanged values in MySQL or driver lacking CLIENT_FOUND_ROWS),
+            # verify whether the record exists. If it exists, the update is considered successful.
+            try:
+                if base_qs.filter(pk=pk_val).exists():
+                    return [()]
+            except Exception:
+                pass
+        return results
+
+    Model._do_update = _resilient_do_update
 except Exception:
     pass
 

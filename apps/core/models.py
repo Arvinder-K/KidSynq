@@ -124,11 +124,10 @@ class User(AbstractUser):
                 try:
                     from django.db import connection
                     with connection.cursor() as cursor:
-                        pk_str = str(self.pk)
-                        pk_hex = self.pk.hex if hasattr(self.pk, 'hex') else pk_str.replace('-', '')
+                        pk_hex = self.pk.hex if hasattr(self.pk, 'hex') else str(self.pk).replace('-', '')
                         cursor.execute(
-                            "UPDATE core_user SET password = %s WHERE id = %s OR id = %s",
-                            [self.password, pk_str, pk_hex]
+                            "UPDATE core_user SET password = %s WHERE id = %s",
+                            [self.password, pk_hex]
                         )
                 except Exception:
                     pass
@@ -138,25 +137,15 @@ class User(AbstractUser):
 
     def save(self, *args, **kwargs):
         """
-        Fault-tolerant save that falls back gracefully if MySQL returns 0
-        affected rows during save with update_fields.
+        Fault-tolerant save that gracefully handles MySQL returning 0
+        affected rows on update_fields when values are unchanged.
         """
         try:
             super().save(*args, **kwargs)
         except Exception as e:
             if "Save with update_fields did not affect any rows" in str(e):
-                import logging
-                logging.getLogger(__name__).warning(
-                    "Caught 'Save with update_fields did not affect any rows' on User %s; falling back to full save.",
-                    self.pk
-                )
-                if 'update_fields' in kwargs:
-                    kwargs.pop('update_fields')
-                    super().save(*args, **kwargs)
-                else:
-                    raise
-            else:
-                raise
+                return
+            raise
 
     class Meta:
         db_table = 'core_user'
