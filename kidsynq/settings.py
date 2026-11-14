@@ -42,7 +42,8 @@ DEBUG = os.environ.get('DEBUG', 'True').lower() in ('true', '1', 'yes')
 # Allowed Hosts - supports environment variable list or sensible defaults
 env_allowed_hosts = os.environ.get('ALLOWED_HOSTS', '')
 if env_allowed_hosts:
-    ALLOWED_HOSTS = [h.strip() for h in env_allowed_hosts.split(',') if h.strip()]
+    ALLOWED_HOSTS = [h.strip()
+                     for h in env_allowed_hosts.split(',') if h.strip()]
 elif DEBUG:
     ALLOWED_HOSTS = ['*']
 else:
@@ -138,7 +139,8 @@ if database_url:
         }
         DATABASES['default'].setdefault('OPTIONS', {})
         DATABASES['default']['OPTIONS'].setdefault('charset', 'utf8mb4')
-        DATABASES['default']['OPTIONS'].setdefault('init_command', "SET sql_mode='STRICT_TRANS_TABLES'")
+        DATABASES['default']['OPTIONS'].setdefault(
+            'init_command', "SET sql_mode='STRICT_TRANS_TABLES'")
     except Exception:
         database_url = None
 
@@ -153,9 +155,12 @@ if not database_url:
     else:
         db_engine = raw_engine
 
-    db_name = os.environ.get('DB_DATABASE') or os.environ.get('DB_NAME') or 'kidsynq'
-    db_user = os.environ.get('DB_USERNAME') or os.environ.get('DB_USER') or 'root'
-    db_password = os.environ.get('DB_PASSWORD') if os.environ.get('DB_PASSWORD') is not None else os.environ.get('DB_PASS', '')
+    db_name = os.environ.get('DB_DATABASE') or os.environ.get(
+        'DB_NAME') or 'kidsynq'
+    db_user = os.environ.get(
+        'DB_USERNAME') or os.environ.get('DB_USER') or 'root'
+    db_password = os.environ.get('DB_PASSWORD') if os.environ.get(
+        'DB_PASSWORD') is not None else os.environ.get('DB_PASS', '')
     db_host = os.environ.get('DB_HOST') or '127.0.0.1'
     db_port = os.environ.get('DB_PORT') or '3306'
 
@@ -207,7 +212,8 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-STATICFILES_DIRS = [BASE_DIR / 'static'] if (BASE_DIR / 'static').exists() else []
+STATICFILES_DIRS = [BASE_DIR /
+                    'static'] if (BASE_DIR / 'static').exists() else []
 
 # WhiteNoise storage configuration for cPanel/Passenger
 STORAGES = {
@@ -263,7 +269,8 @@ SIMPLE_JWT = {
 
 cors_origins_env = os.environ.get('CORS_ALLOWED_ORIGINS', '')
 if cors_origins_env:
-    CORS_ALLOWED_ORIGINS = [o.strip() for o in cors_origins_env.split(',') if o.strip()]
+    CORS_ALLOWED_ORIGINS = [o.strip()
+                            for o in cors_origins_env.split(',') if o.strip()]
 else:
     CORS_ALLOWED_ORIGINS = [
         "https://kidsynq.com",
@@ -273,7 +280,8 @@ else:
 
 csrf_origins_env = os.environ.get('CSRF_TRUSTED_ORIGINS', '')
 if csrf_origins_env:
-    CSRF_TRUSTED_ORIGINS = [o.strip() for o in csrf_origins_env.split(',') if o.strip()]
+    CSRF_TRUSTED_ORIGINS = [o.strip()
+                            for o in csrf_origins_env.split(',') if o.strip()]
 else:
     CSRF_TRUSTED_ORIGINS = [
         "https://kidsynq.com",
@@ -289,8 +297,10 @@ SESSION_COOKIE_HTTPONLY = True
 CSRF_COOKIE_HTTPONLY = False
 
 if not DEBUG:
-    SESSION_COOKIE_SECURE = os.environ.get('SESSION_COOKIE_SECURE', 'True').lower() in ('true', '1')
-    CSRF_COOKIE_SECURE = os.environ.get('CSRF_COOKIE_SECURE', 'True').lower() in ('true', '1')
+    SESSION_COOKIE_SECURE = os.environ.get(
+        'SESSION_COOKIE_SECURE', 'True').lower() in ('true', '1')
+    CSRF_COOKIE_SECURE = os.environ.get(
+        'CSRF_COOKIE_SECURE', 'True').lower() in ('true', '1')
     SECURE_BROWSER_XSS_FILTER = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
     X_FRAME_OPTIONS = 'SAMEORIGIN'
@@ -340,11 +350,15 @@ LOGGING = {
 }
 
 # Email settings
-EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
+EMAIL_BACKEND = os.environ.get(
+    'EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
 EMAIL_HOST = os.environ.get('EMAIL_HOST', 'localhost')
 EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 25) or 25)
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
-EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'False').lower() in ('true', '1')
-EMAIL_USE_SSL = os.environ.get('EMAIL_USE_SSL', 'False').lower() in ('true', '1')
-DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'noreply@kidsynq.com')
+EMAIL_USE_TLS = os.environ.get(
+    'EMAIL_USE_TLS', 'False').lower() in ('true', '1')
+EMAIL_USE_SSL = os.environ.get(
+    'EMAIL_USE_SSL', 'False').lower() in ('true', '1')
+DEFAULT_FROM_EMAIL = os.environ.get(
+    'DEFAULT_FROM_EMAIL', 'noreply@kidsynq.com')
