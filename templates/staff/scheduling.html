@@ -28,6 +28,12 @@
             </a>
         </div>
 
+        <!-- Jump to Date Picker -->
+        <div class="d-none d-sm-inline-flex align-items-center bg-white border rounded shadow-sm px-2 py-1">
+            <i class="bi bi-calendar-event text-primary me-2"></i>
+            <input type="date" value="{{ current_date_str }}" class="form-control form-control-sm border-0 p-0 text-slate-700 fw-medium" style="width: 125px; font-size: 0.85rem;" onchange="window.location.href='?date=' + this.value + '{% if selected_emp %}&employee_id={{ selected_emp }}{% endif %}{% if selected_room %}&classroom_id={{ selected_room }}{% endif %}{% if selected_type %}&shift_type={{ selected_type }}{% endif %}'" title="Select date to jump to week">
+        </div>
+
         <!-- Action Buttons -->
         {% if total_shifts_count > 0 %}
         <button type="button" class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1 shadow-sm" data-bs-toggle="modal" data-bs-target="#copyWeekModal">
@@ -144,74 +150,202 @@
     </div>
 </div>
 
+<style>
+/* Weekly Calendar Grid Layout */
+.calendar-week-container {
+    overflow-x: auto;
+    padding-bottom: 0.75rem;
+    -webkit-overflow-scrolling: touch;
+}
+.calendar-week-grid {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(150px, 1fr));
+    gap: 0.85rem;
+    min-width: 1050px;
+}
+@media (min-width: 1400px) {
+    .calendar-week-grid {
+        grid-template-columns: repeat(7, 1fr);
+        min-width: 100%;
+    }
+}
+.calendar-day-col {
+    display: flex;
+    flex-direction: column;
+    min-height: 580px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.85rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    transition: all 0.2s ease-in-out;
+}
+.calendar-day-col:hover {
+    border-color: #cbd5e1;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
+}
+.calendar-day-col.is-today {
+    border: 2px solid #2563eb;
+    box-shadow: 0 6px 20px rgba(37, 99, 235, 0.15);
+}
+.calendar-day-header {
+    padding: 0.75rem 0.85rem;
+    border-bottom: 1px solid #e2e8f0;
+    border-radius: 0.75rem 0.75rem 0 0;
+    background: #f8fafc;
+}
+.calendar-day-col.is-today .calendar-day-header {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    color: #ffffff;
+    border-bottom: none;
+}
+.calendar-day-name {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #64748b;
+}
+.calendar-day-col.is-today .calendar-day-name {
+    color: rgba(255, 255, 255, 0.85);
+}
+.calendar-day-number {
+    font-size: 1.35rem;
+    font-weight: 800;
+    line-height: 1.1;
+    color: #1e293b;
+}
+.calendar-day-col.is-today .calendar-day-number {
+    color: #ffffff;
+}
+.calendar-day-body {
+    flex: 1 1 auto;
+    padding: 0.65rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    background: #fafbfc;
+}
+.calendar-day-col.is-today .calendar-day-body {
+    background: #f8faff;
+}
+.shift-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-left: 3.5px solid #2563eb;
+    border-radius: 0.55rem;
+    padding: 0.6rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.shift-card:hover {
+    transform: translateY(-1.5px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+}
+.shift-card.shift-opening {
+    border-left-color: #f59e0b;
+}
+.shift-card.shift-regular {
+    border-left-color: #10b981;
+}
+.shift-card.shift-closing {
+    border-left-color: #3b82f6;
+}
+.shift-card.shift-custom {
+    border-left-color: #8b5cf6;
+}
+.empty-day-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 0.5rem;
+    margin: auto 0;
+    color: #94a3b8;
+    text-align: center;
+}
+</style>
+
 <!-- Tab Content: Grid View & List View -->
 <div class="tab-content" id="scheduleTabContent">
-    <!-- TAB 1: WEEKLY CALENDAR GRID (Mon - Sun) -->
+    <!-- TAB 1: WEEKLY CALENDAR GRID (Mon - Sun 7 Columns) -->
     <div class="tab-pane fade show active" id="grid-view" role="tabpanel">
-        <div class="row g-2 row-cols-1 row-cols-md-7">
-            {% for day in week_days %}
-            <div class="col">
-                <div class="card h-100 border-0 shadow-sm {% if day.is_today %}border border-2 border-primary{% endif %}" style="min-height: 480px; border-radius: 0.85rem;">
+        <div class="calendar-week-container">
+            <div class="calendar-week-grid">
+                {% for day in week_days %}
+                <div class="calendar-day-col {% if day.is_today %}is-today{% endif %}">
                     <!-- Day Header -->
-                    <div class="card-header py-2 px-3 {% if day.is_today %}bg-primary text-white{% else %}bg-light text-slate-800 border-bottom{% endif %}" style="border-radius: 0.85rem 0.85rem 0 0;">
+                    <div class="calendar-day-header">
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
-                                <div class="fw-bold small {% if day.is_today %}text-white{% else %}text-slate-800{% endif %}">
+                                <div class="calendar-day-name">
                                     {{ day.name|slice:":3" }}
                                 </div>
-                                <div class="small {% if day.is_today %}text-white-50{% else %}text-muted{% endif %}" style="font-size: 0.75rem;">
-                                    {{ day.date|date:"M d" }}
+                                <div class="calendar-day-number">
+                                    {{ day.date|date:"j" }}
+                                    <span class="small fw-normal opacity-75" style="font-size: 0.75rem;">{{ day.date|date:"M" }}</span>
                                 </div>
                             </div>
-                            {% if day.is_today %}
-                                <span class="badge bg-white text-primary fw-bold" style="font-size: 0.65rem;">TODAY</span>
-                            {% elif day.count > 0 %}
-                                <span class="badge bg-secondary-subtle text-dark" style="font-size: 0.65rem;">{{ day.count }}</span>
-                            {% endif %}
+                            <div class="text-end">
+                                {% if day.is_today %}
+                                    <span class="badge bg-white text-primary fw-bold px-2 py-1 shadow-xs" style="font-size: 0.65rem; letter-spacing: 0.05em;">TODAY</span>
+                                {% elif day.count > 0 %}
+                                    <span class="badge bg-primary-subtle text-primary fw-semibold" style="font-size: 0.7rem;">{{ day.count }} shift{% if day.count != 1 %}s{% endif %}</span>
+                                {% else %}
+                                    <span class="text-muted" style="font-size: 0.7rem;">0</span>
+                                {% endif %}
+                            </div>
                         </div>
                     </div>
 
                     <!-- Day Shift Cards Container -->
-                    <div class="card-body p-2 d-flex flex-column gap-2" style="background-color: {% if day.is_today %}#f8faff{% else %}#fafafa{% endif %};">
+                    <div class="calendar-day-body">
                         {% for shift in day.schedules %}
-                        <div class="card border border-slate-200 shadow-xs p-2 bg-white rounded-2 position-relative">
+                        <div class="shift-card shift-{{ shift.shift_type }} position-relative">
                             <div class="d-flex align-items-center justify-content-between mb-1">
                                 <div class="d-flex align-items-center gap-1 min-w-0">
-                                    <span class="d-inline-flex align-items-center justify-content-center bg-primary bg-opacity-10 text-primary rounded-circle fw-bold" style="width: 22px; height: 22px; font-size: 0.65rem;">
+                                    <span class="d-inline-flex align-items-center justify-content-center bg-primary bg-opacity-10 text-primary rounded-circle fw-bold" style="width: 24px; height: 24px; font-size: 0.7rem;">
                                         {{ shift.employee.first_name|slice:":1"|upper }}
                                     </span>
-                                    <span class="fw-semibold text-slate-800 small text-truncate" style="font-size: 0.8rem;" title="{{ shift.employee.first_name }} {{ shift.employee.last_name }}">
+                                    <span class="fw-bold text-slate-800 small text-truncate" style="font-size: 0.82rem;" title="{{ shift.employee.first_name }} {{ shift.employee.last_name }}">
                                         {{ shift.employee.first_name }} {{ shift.employee.last_name|slice:":1" }}.
                                     </span>
                                 </div>
-                                <button type="button" class="btn btn-sm btn-link text-danger p-0 ms-1" title="Remove Shift" data-bs-toggle="modal" data-bs-target="#deleteShiftModal{{ shift.id }}">
-                                    <i class="bi bi-x-circle"></i>
+                                <button type="button" class="btn btn-sm btn-link text-danger p-0 ms-1 opacity-75 hover-opacity-100" title="Remove Shift" data-bs-toggle="modal" data-bs-target="#deleteShiftModal{{ shift.id }}">
+                                    <i class="bi bi-x-circle-fill"></i>
                                 </button>
                             </div>
 
                             <!-- Time Window -->
                             <div class="d-flex align-items-center gap-1 mb-1">
-                                <span class="badge bg-light text-dark font-monospace border" style="font-size: 0.7rem;">
-                                    <i class="bi bi-clock me-1 text-muted"></i>{{ shift.shift_start|time:"g:i A" }} - {{ shift.shift_end|time:"g:i A" }}
+                                <span class="badge bg-light text-dark font-monospace border w-100 text-start py-1 px-2" style="font-size: 0.7rem;">
+                                    <i class="bi bi-clock me-1 text-primary"></i>{{ shift.shift_start|time:"g:i A" }} &ndash; {{ shift.shift_end|time:"g:i A" }}
                                 </span>
                             </div>
 
                             <!-- Shift Type & Classroom Badges -->
                             <div class="d-flex flex-wrap gap-1">
                                 {% if shift.shift_type == 'opening' %}
-                                    <span class="badge badge-soft-warning" style="font-size: 0.65rem;">Opening</span>
+                                    <span class="badge bg-warning bg-opacity-10 text-warning-emphasis border border-warning-subtle" style="font-size: 0.65rem;">
+                                        <i class="bi bi-sun me-1"></i>Opening
+                                    </span>
                                 {% elif shift.shift_type == 'closing' %}
-                                    <span class="badge badge-soft-primary" style="font-size: 0.65rem;">Closing</span>
+                                    <span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle" style="font-size: 0.65rem;">
+                                        <i class="bi bi-moon me-1"></i>Closing
+                                    </span>
                                 {% else %}
-                                    <span class="badge badge-soft-success" style="font-size: 0.65rem;">Regular</span>
+                                    <span class="badge bg-success bg-opacity-10 text-success border border-success-subtle" style="font-size: 0.65rem;">
+                                        <i class="bi bi-check-circle me-1"></i>Regular
+                                    </span>
                                 {% endif %}
 
                                 {% if shift.classroom %}
-                                    <span class="badge bg-light text-muted border text-truncate" style="font-size: 0.65rem; max-width: 100px;">
-                                        {{ shift.classroom.room_name }}
+                                    <span class="badge bg-light text-slate-700 border text-truncate" style="font-size: 0.65rem; max-width: 110px;" title="{{ shift.classroom.room_name }}">
+                                        <i class="bi bi-door-closed me-1"></i>{{ shift.classroom.room_name }}
                                     </span>
                                 {% else %}
-                                    <span class="badge bg-light text-muted border" style="font-size: 0.65rem;">Floating</span>
+                                    <span class="badge bg-light text-muted border" style="font-size: 0.65rem;">
+                                        <i class="bi bi-shuffle me-1"></i>Floating
+                                    </span>
                                 {% endif %}
                             </div>
                         </div>
@@ -243,20 +377,20 @@
                             </div>
                         </div>
                         {% empty %}
-                        <div class="text-center py-4 my-auto text-muted">
-                            <i class="bi bi-calendar-dash opacity-40 fs-4 d-block mb-1"></i>
+                        <div class="empty-day-placeholder">
+                            <i class="bi bi-calendar-event opacity-25 fs-3 mb-1"></i>
                             <span style="font-size: 0.75rem;">No shifts</span>
                         </div>
                         {% endfor %}
 
                         <!-- Quick Add Shift on this Day Button -->
-                        <button type="button" class="btn btn-sm btn-light border border-dashed text-primary w-100 mt-auto py-1 d-flex align-items-center justify-content-center gap-1" style="font-size: 0.75rem;" data-bs-toggle="modal" data-bs-target="#addShiftModal" onclick="openShiftModalForDate('{{ day.date_str }}')">
-                            <i class="bi bi-plus"></i> Add
+                        <button type="button" class="btn btn-sm btn-white border border-dashed text-primary w-100 mt-auto py-1 d-flex align-items-center justify-content-center gap-1 shadow-2xs hover-shadow-sm fw-semibold" style="font-size: 0.75rem;" data-bs-toggle="modal" data-bs-target="#addShiftModal" onclick="openShiftModalForDate('{{ day.date_str }}')">
+                            <i class="bi bi-plus-lg"></i> Add Shift
                         </button>
                     </div>
                 </div>
+                {% endfor %}
             </div>
-            {% endfor %}
         </div>
     </div>
 
