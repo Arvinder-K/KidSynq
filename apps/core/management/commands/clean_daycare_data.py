@@ -1,5 +1,16 @@
+import sys
+import os
 from django.core.management.base import BaseCommand
-from clean_daycare_data import clean_all_daycare_data
+
+# Ensure scripts directory is available for import
+scripts_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../../scripts/maintenance'))
+if scripts_dir not in sys.path:
+    sys.path.insert(0, scripts_dir)
+
+try:
+    from clean_daycare_data import clean_all_daycare_data
+except ImportError:
+    from scripts.maintenance.clean_daycare_data import clean_all_daycare_data
 
 class Command(BaseCommand):
     help = 'Clean all operational/test daycare data (students, families, attendance, invoices, etc.)'
