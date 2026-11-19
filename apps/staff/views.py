@@ -175,6 +175,29 @@ class StaffSchedulingView(StaffRequiredMixin, View):
         employees = Employee.objects.filter(daycare=daycare, status__iexact='active').order_by('first_name', 'last_name')
         classrooms = Classroom.objects.filter(daycare=daycare, deleted_at__isnull=True).order_by('room_name')
 
+        # Calculate total scheduled hours for the week
+        total_scheduled_hours = round(sum(getattr(s, 'total_shift_hours', 0.0) for s in schedules), 1)
+
+        # Build staff timeline matrix for modern roster view
+        staff_timeline = []
+        for emp in employees:
+            emp_days = []
+            for i in range(7):
+                c_date = start_week + timedelta(days=i)
+                day_emp_shifts = [s for s in schedules if s.employee_id == emp.id and s.date == c_date]
+                emp_days.append({
+                    'date': c_date,
+                    'is_today': c_date == today,
+                    'shifts': day_emp_shifts,
+                })
+            emp_total_hrs = round(sum(getattr(s, 'total_shift_hours', 0.0) for s in schedules if s.employee_id == emp.id), 1)
+            staff_timeline.append({
+                'employee': emp,
+                'days': emp_days,
+                'total_hours': emp_total_hrs,
+                'shifts_count': sum(len(d['shifts']) for d in emp_days),
+            })
+
         return render(request, self.template_name, {
             'schedules': schedules,
             'week_days': week_days,
@@ -190,6 +213,8 @@ class StaffSchedulingView(StaffRequiredMixin, View):
             'selected_room': room_filter,
             'selected_type': type_filter,
             'total_shifts_count': len(schedules),
+            'total_scheduled_hours': total_scheduled_hours,
+            'staff_timeline': staff_timeline,
         })
 
     def post(self, request):
