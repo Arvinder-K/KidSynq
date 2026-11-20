@@ -1,19 +1,57 @@
-<footer class="app-footer">
+<footer class="app-footer bg-white border-top py-3 px-3 px-md-4 mt-auto" style="border-top: 1px solid #e2e8f0 !important; background-color: #ffffff !important; box-shadow: 0 -1px 3px rgba(0,0,0,0.02);">
     <div class="container-fluid px-0">
         <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-2">
-            <div class="footer-copy text-center text-md-start">
-                <span>&copy; {% now "Y" %} <strong class="text-dark">KidSynq</strong> &mdash; Modern Daycare Management Platform. All rights reserved.</span>
-            </div>
-            <div class="footer-meta d-flex flex-wrap align-items-center justify-content-center justify-content-md-end gap-2 gap-md-3">
-                <span class="footer-status">
-                    <span class="status-dot"></span>
-                    <span>Systems Operational</span>
+            <!-- Left Side: Brand Copyright -->
+            <div class="footer-left d-flex align-items-center gap-2 text-center text-md-start">
+                <span class="d-inline-flex align-items-center justify-content-center text-white rounded-circle shadow-xs" style="width: 22px; height: 22px; background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%); font-size: 0.7rem; flex-shrink: 0;">
+                    <i class="bi bi-shield-check"></i>
                 </span>
-                <span class="footer-divider text-muted">&bull;</span>
-                <a href="mailto:support@kidsynq.com" class="footer-link">Support</a>
-                <span class="footer-divider text-muted">&bull;</span>
-                <a href="https://kidsynq.com" target="_blank" rel="noopener noreferrer" class="footer-link">Portal Home</a>
+                <span class="text-secondary small">
+                    &copy; {% now "Y" %} <strong class="text-dark fw-semibold">KidSynq</strong> &bull; Modern Daycare Management Platform. All rights reserved.
+                </span>
+            </div>
+
+            <!-- Right Side: Status Badge & Quick Links -->
+            <div class="footer-right d-flex flex-wrap align-items-center justify-content-center justify-content-md-end gap-3 small">
+                <!-- System Status Pill -->
+                <div class="footer-status-pill d-inline-flex align-items-center gap-2 px-2 py-1 rounded-pill" style="background-color: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.01em;">
+                    <span class="pulse-indicator" style="width: 7px; height: 7px; background-color: #10b981; border-radius: 50%; display: inline-block; box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.25);"></span>
+                    <span>Systems Operational</span>
+                </div>
+
+                <span class="text-muted opacity-25">&bull;</span>
+                <a href="mailto:support@kidsynq.com" class="footer-link text-decoration-none" style="color: #64748b; font-weight: 500; font-size: 0.8125rem;">Support</a>
+
+                <span class="text-muted opacity-25">&bull;</span>
+                <a href="https://kidsynq.com" target="_blank" rel="noopener noreferrer" class="footer-link text-decoration-none" style="color: #64748b; font-weight: 500; font-size: 0.8125rem;">Portal Home</a>
+
+                <span class="text-muted opacity-25">&bull;</span>
+                <span class="badge bg-light text-secondary border px-2 py-1" style="font-size: 0.7rem; font-weight: 500; border-color: #e2e8f0 !important;">v2.4</span>
             </div>
         </div>
     </div>
 </footer>
+
+<style>
+.app-footer .footer-link {
+    color: #64748b !important;
+    transition: color 0.15s ease-in-out;
+}
+.app-footer .footer-link:hover {
+    color: #0d9488 !important;
+    text-decoration: underline !important;
+}
+.app-footer .pulse-indicator {
+    animation: ksFooterPulse 2.5s infinite;
+}
+@keyframes ksFooterPulse {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.55;
+        transform: scale(0.85);
+    }
+}
+</style>
