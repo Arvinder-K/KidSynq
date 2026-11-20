@@ -1,10 +1,19 @@
-<footer class="app-footer text-center text-md-start d-flex flex-column flex-md-row justify-content-between align-items-center">
-    <div class="mb-2 mb-md-0">
-        &copy; 2026 <strong>KidSynq</strong> &mdash; Modern SaaS Daycare Management Platform. All rights reserved.
-    </div>
-    <div class="text-muted small">
-        <span class="badge bg-light text-secondary border me-2">GoDaddy cPanel Ready</span>
-        <span>Version 2.0 (Django MTV)</span>
+<footer class="app-footer">
+    <div class="container-fluid px-0">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-2">
+            <div class="footer-copy text-center text-md-start">
+                <span>&copy; {% now "Y" %} <strong class="text-dark">KidSynq</strong> &mdash; Modern Daycare Management Platform. All rights reserved.</span>
+            </div>
+            <div class="footer-meta d-flex flex-wrap align-items-center justify-content-center justify-content-md-end gap-2 gap-md-3">
+                <span class="footer-status">
+                    <span class="status-dot"></span>
+                    <span>Systems Operational</span>
+                </span>
+                <span class="footer-divider text-muted">&bull;</span>
+                <a href="mailto:support@kidsynq.com" class="footer-link">Support</a>
+                <span class="footer-divider text-muted">&bull;</span>
+                <a href="https://kidsynq.com" target="_blank" rel="noopener noreferrer" class="footer-link">Portal Home</a>
+            </div>
+        </div>
     </div>
 </footer>
-

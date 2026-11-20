@@ -360,6 +360,74 @@ h1, h2, h3, h4, h5, h6, .font-display {
     padding: 1.75rem;
 }
 
+/* App Footer */
+.app-footer {
+    background-color: #ffffff;
+    border-top: 1px solid var(--ks-border-color);
+    padding: 1rem 1.75rem;
+    color: var(--ks-slate-500);
+    font-size: 0.8125rem;
+    margin-top: auto;
+    box-shadow: 0 -1px 3px rgba(0, 0, 0, 0.02);
+}
+
+.app-footer .footer-copy {
+    color: var(--ks-slate-600);
+    font-size: 0.8125rem;
+}
+
+.app-footer .footer-link {
+    color: var(--ks-slate-500);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.15s ease-in-out;
+}
+
+.app-footer .footer-link:hover {
+    color: var(--ks-primary);
+    text-decoration: underline;
+}
+
+.app-footer .footer-divider {
+    opacity: 0.35;
+    font-size: 0.7rem;
+}
+
+.app-footer .footer-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #047857;
+    background-color: #ecfdf5;
+    border: 1px solid #a7f3d0;
+    padding: 0.2rem 0.65rem;
+    border-radius: 9999px;
+    letter-spacing: 0.01em;
+}
+
+.app-footer .status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: #10b981;
+    display: inline-block;
+    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.25);
+    animation: ksStatusPulse 2.5s infinite;
+}
+
+@keyframes ksStatusPulse {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.65;
+        transform: scale(0.9);
+    }
+}
+
 /* Modern Card Styling */
 .card {
     background-color: var(--ks-card-bg);
