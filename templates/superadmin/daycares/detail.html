@@ -53,7 +53,7 @@
             </div>
             <div class="d-flex align-items-baseline gap-2">
                 <div class="fs-2 fw-bold font-display text-slate-900">{{ student_count }}</div>
-                <span class="small text-muted fw-semibold">/ {{ subscription.max_students|default:"&infin;" }} max capacity</span>
+                <span class="small text-muted fw-semibold">/ {% if subscription and subscription.subscription_plan %}{{ subscription.subscription_plan.max_students }}{% else %}&infin;{% endif %} max capacity</span>
             </div>
         </div>
     </div>
@@ -67,7 +67,7 @@
             </div>
             <div class="d-flex align-items-baseline gap-2">
                 <div class="fs-2 fw-bold font-display text-slate-900">{{ employee_count }}</div>
-                <span class="small text-muted fw-semibold">/ {{ subscription.max_staff|default:"&infin;" }} max staff</span>
+                <span class="small text-muted fw-semibold">/ {% if subscription and subscription.subscription_plan %}{{ subscription.subscription_plan.max_staff }}{% else %}&infin;{% endif %} max staff</span>
             </div>
         </div>
     </div>
@@ -81,7 +81,7 @@
             </div>
             <div class="d-flex align-items-baseline gap-2">
                 <div class="fs-2 fw-bold font-display text-slate-900">{{ classroom_count }}</div>
-                <span class="small text-muted fw-semibold">/ {{ subscription.max_classrooms|default:"&infin;" }} max rooms</span>
+                <span class="small text-muted fw-semibold">/ {% if subscription and subscription.subscription_plan %}{{ subscription.subscription_plan.max_classrooms }}{% else %}&infin;{% endif %} max rooms</span>
             </div>
         </div>
     </div>
@@ -128,35 +128,47 @@
                 {% endif %}
             </div>
             <div class="card-body">
-                {% if subscription %}
+                {% if subscription and subscription.subscription_plan %}
                     <h5 class="fw-bold text-slate-800 mb-1">{{ subscription.subscription_plan.name }}</h5>
-                    <div class="text-primary fw-bold fs-5 mb-3">${{ subscription.amount|floatformat:2|default:subscription.subscription_plan.price }} / {{ subscription.billing_cycle|default:subscription.subscription_plan.billing_frequency|title }}</div>
+                    <div class="text-primary fw-bold fs-5 mb-3">${{ subscription.amount|floatformat:2 }} / {{ subscription.billing_cycle|default:"Monthly"|title }}</div>
                     
                     <ul class="list-unstyled small mb-4">
-                        <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i> Max Students: <strong>{{ subscription.max_students|default:subscription.subscription_plan.max_students|default:"Unlimited" }}</strong></li>
-                        <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i> Max Staff: <strong>{{ subscription.max_staff|default:subscription.subscription_plan.max_staff|default:"Unlimited" }}</strong></li>
-                        <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i> Max Classrooms: <strong>{{ subscription.max_classrooms|default:subscription.subscription_plan.max_classrooms|default:"Unlimited" }}</strong></li>
-                        <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i> Storage Quota: <strong>{{ subscription.max_storage_gb|default:subscription.subscription_plan.max_storage_gb|default:"5" }} GB</strong></li>
+                        <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i> Max Students: <strong>{{ subscription.subscription_plan.max_students|default:"Unlimited" }}</strong></li>
+                        <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i> Max Staff: <strong>{{ subscription.subscription_plan.max_staff|default:"Unlimited" }}</strong></li>
+                        <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i> Max Classrooms: <strong>{{ subscription.subscription_plan.max_classrooms|default:"Unlimited" }}</strong></li>
+                        <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i> Storage Quota: <strong>{{ subscription.subscription_plan.max_storage_gb|default:"5" }} GB</strong></li>
+                        <li><i class="bi bi-calendar-event text-muted me-2"></i> Renewal Date: <strong>{{ subscription.end_date|date:"M d, Y"|default:"Continuous" }}</strong></li>
+                    </ul>
+                {% elif subscription %}
+                    <h5 class="fw-bold text-slate-800 mb-1">Custom Plan</h5>
+                    <div class="text-primary fw-bold fs-5 mb-3">${{ subscription.amount|floatformat:2 }} / {{ subscription.billing_cycle|default:"Monthly"|title }}</div>
+                    <ul class="list-unstyled small mb-4 text-muted">
+                        <li class="mb-2"><i class="bi bi-info-circle me-2"></i> Plan Template: <em>Unlinked Custom Configuration</em></li>
                         <li><i class="bi bi-calendar-event text-muted me-2"></i> Renewal Date: <strong>{{ subscription.end_date|date:"M d, Y"|default:"Continuous" }}</strong></li>
                     </ul>
                 {% else %}
-                    <p class="text-muted small">This daycare currently has no active subscription plan assigned.</p>
+                    <div class="p-4 bg-light rounded-3 mb-4 text-center border">
+                        <i class="bi bi-shield-exclamation text-warning fs-1 d-block mb-2"></i>
+                        <h6 class="fw-bold text-slate-800 mb-1">No Active Subscription Plan</h6>
+                        <p class="text-muted small mb-0">This daycare organization currently has no subscription plan assigned. Select a plan below to activate their subscription and generate billing.</p>
+                    </div>
                 {% endif %}
 
                 <!-- Assign or Change Plan Form -->
                 <form method="post" class="border-top pt-3">
                     {% csrf_token %}
                     <input type="hidden" name="action" value="assign_plan">
-                    <label class="form-label small fw-semibold">Switch / Assign Plan</label>
+                    <label class="form-label small fw-semibold">{% if subscription %}Switch / Update Plan{% else %}Assign Initial Plan{% endif %}</label>
                     <div class="input-group">
                         <select name="plan_id" class="form-select form-select-sm" required>
+                            <option value="" disabled {% if not subscription %}selected{% endif %}>Choose a subscription plan...</option>
                             {% for p in plans %}
-                            <option value="{{ p.id }}" {% if subscription.subscription_plan.id == p.id %}selected{% endif %}>
-                                {{ p.name }} (${{ p.price|floatformat:2 }}/{{ p.billing_frequency }})
+                            <option value="{{ p.id }}" {% if subscription and subscription.subscription_plan_id == p.id %}selected{% endif %}>
+                                {{ p.name }} (${{ p.monthly_price|floatformat:2 }}/month)
                             </option>
                             {% endfor %}
                         </select>
-                        <button type="submit" class="btn btn-sm btn-primary">Update Plan</button>
+                        <button type="submit" class="btn btn-sm btn-primary">{% if subscription %}Update Plan{% else %}Assign Plan{% endif %}</button>
                     </div>
                 </form>
             </div>
@@ -198,9 +210,15 @@
                     </td>
                     <td>
                         <div class="fw-semibold text-slate-800">
-                            {{ inv.subscription.subscription_plan.name|default:"SaaS Plan Subscription" }}
+                            {% if inv.subscription and inv.subscription.subscription_plan %}
+                                {{ inv.subscription.subscription_plan.name }}
+                            {% elif inv.subscription %}
+                                {{ inv.subscription.billing_cycle|title }} Subscription
+                            {% else %}
+                                SaaS Plan Subscription
+                            {% endif %}
                         </div>
-                        <small class="text-muted">{{ inv.subscription.billing_cycle|default:"Monthly"|title }} cycle</small>
+                        <small class="text-muted">{% if inv.subscription %}{{ inv.subscription.billing_cycle|title }} cycle{% else %}Platform Invoice{% endif %}</small>
                     </td>
                     <td class="fw-bold fs-6">${{ inv.amount|floatformat:2 }}</td>
                     <td class="small text-muted">{{ inv.issue_date|date:"M d, Y" }}</td>
@@ -280,12 +298,12 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label small fw-semibold">Active Plan</label>
-                        <input type="text" class="form-control form-control-sm" value="{{ subscription.subscription_plan.name|default:'Custom Plan' }} (Default: ${{ subscription.amount|floatformat:2|default:subscription.subscription_plan.price }})" readonly disabled>
+                        <input type="text" class="form-control form-control-sm" value="{% if subscription and subscription.subscription_plan %}{{ subscription.subscription_plan.name }} (Default: ${{ subscription.amount|floatformat:2 }}){% elif subscription %}Custom Plan (${{ subscription.amount|floatformat:2 }}){% else %}No Active Plan{% endif %}" readonly disabled>
                     </div>
                     <div class="row g-2 mb-3">
                         <div class="col-6">
                             <label class="form-label small fw-semibold">Invoice Amount ($)</label>
-                            <input type="number" step="0.01" name="amount" class="form-control form-control-sm" value="{{ subscription.amount|default:subscription.subscription_plan.price }}" required>
+                            <input type="number" step="0.01" name="amount" class="form-control form-control-sm" value="{% if subscription %}{{ subscription.amount|floatformat:2 }}{% else %}0.00{% endif %}" required>
                         </div>
                         <div class="col-6">
                             <label class="form-label small fw-semibold">Initial Status</label>

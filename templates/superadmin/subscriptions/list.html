@@ -31,8 +31,8 @@
                             {{ sub.daycare.name }}
                         </a>
                     </td>
-                    <td><span class="fw-semibold text-primary">{{ sub.subscription_plan.name }}</span></td>
-                    <td class="small">${{ sub.subscription_plan.price }} / {{ sub.subscription_plan.billing_frequency }}</td>
+                    <td><span class="fw-semibold text-primary">{% if sub.subscription_plan %}{{ sub.subscription_plan.name }}{% else %}Custom / No Plan{% endif %}</span></td>
+                    <td class="small">${{ sub.amount|floatformat:2 }} / {{ sub.billing_cycle|default:"Monthly"|title }}</td>
                     <td>
                         {% if sub.subscription_status == 'active' %}
                             <span class="badge badge-soft-success">Active</span>
