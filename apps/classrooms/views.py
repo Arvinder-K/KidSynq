@@ -67,7 +67,7 @@ class ClassroomDetailView(StaffRequiredMixin, View):
     def get(self, request, pk):
         daycare = get_user_daycare(request.user)
         room = get_object_or_404(Classroom, pk=pk, daycare=daycare)
-        students = Student.objects.filter(classroom=room, status='active', deleted_at__isnull=True)
+        students = Student.objects.filter(classroom_enrollments__classroom=room, classroom_enrollments__status='Active', deleted_at__isnull=True)
         teachers = ClassroomTeacherAssignment.objects.filter(classroom=room).select_related('employee')
 
         return render(request, self.template_name, {

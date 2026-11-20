@@ -110,8 +110,8 @@ class ChildDetailView(StaffRequiredMixin, View):
 
         emergency_contacts = StudentEmergencyContact.objects.filter(student=child)
         pickups = StudentPickup.objects.filter(student=child)
-        recent_attendance = StudentAttendance.objects.filter(student=child).order_by('-date')[:15]
-        recent_reports = DailyReport.objects.filter(student=child).order_by('-date')[:7]
+        recent_attendance = StudentAttendance.objects.filter(student=child).order_by('-attendance_date')[:15]
+        recent_reports = DailyReport.objects.filter(student=child).order_by('-report_date')[:7]
         classrooms = Classroom.objects.filter(daycare=daycare, deleted_at__isnull=True).order_by('room_name')
 
         return render(request, self.template_name, {

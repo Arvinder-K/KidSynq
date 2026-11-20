@@ -58,11 +58,11 @@ class DailyAttendanceRollCallView(StaffRequiredMixin, View):
             attendance_date=date_str,
             defaults={'classroom': student.classroom}
         )
-        att.status = new_status
-        if new_status in ['present', 'checked_in'] and not att.check_in:
-            att.check_in = timezone.now().time()
-        elif new_status == 'checked_out' and not att.check_out:
-            att.check_out = timezone.now().time()
+        att.attendance_status = new_status
+        if new_status in ['present', 'checked_in', 'PRESENT', 'CHECKED_IN'] and not att.check_in_time:
+            att.check_in_time = timezone.now().time()
+        elif new_status in ['checked_out', 'CHECKED_OUT'] and not att.check_out_time:
+            att.check_out_time = timezone.now().time()
         att.save()
 
         messages.success(request, f"Updated attendance for {student.first_name} to {new_status}.")
@@ -113,7 +113,7 @@ class DailyChildReportDetailView(StaffRequiredMixin, View):
 
     def get(self, request, child_id, date):
         child = get_object_or_404(Student, pk=child_id)
-        report, _ = DailyReport.objects.get_or_create(student=child, date=date)
+        report, _ = DailyReport.objects.get_or_create(student=child, report_date=date, defaults={'daycare': child.daycare})
         meals = MealRecord.objects.filter(daily_report=report)
         naps = NapRecord.objects.filter(daily_report=report)
         activities = ActivityRecord.objects.filter(daily_report=report)

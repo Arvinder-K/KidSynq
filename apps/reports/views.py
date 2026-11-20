@@ -22,10 +22,10 @@ class ReportsHubView(StaffRequiredMixin, View):
         
         # Attendance stats
         present_count = StudentAttendance.objects.filter(
-            student__daycare=daycare, date=today, status='present'
+            daycare=daycare, attendance_date=today, attendance_status__in=['PRESENT', 'present', 'checked_in', 'CHECKED_IN']
         ).count()
         absent_count = StudentAttendance.objects.filter(
-            student__daycare=daycare, date=today, status='absent'
+            daycare=daycare, attendance_date=today, attendance_status__in=['ABSENT', 'absent']
         ).count()
 
         # Billing stats
@@ -51,8 +51,8 @@ class AttendanceReportView(StaffRequiredMixin, View):
     def get(self, request):
         daycare = get_user_daycare(request.user)
         records = StudentAttendance.objects.filter(
-            student__daycare=daycare
-        ).select_related('student', 'classroom').order_by('-date')[:100]
+            daycare=daycare
+        ).select_related('student', 'classroom').order_by('-attendance_date')[:100]
         return render(request, self.template_name, {'daycare': daycare, 'records': records})
 
 class FinancialReportView(StaffRequiredMixin, View):
