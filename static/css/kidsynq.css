@@ -92,7 +92,7 @@ h1, h2, h3, h4, h5, h6, .font-display {
 /* App Sidebar */
 .app-sidebar {
     width: var(--ks-sidebar-width);
-    background-color: var(--ks-sidebar-bg);
+    background-color: #ffffff;
     color: var(--ks-sidebar-text);
     flex-shrink: 0;
     display: flex;
