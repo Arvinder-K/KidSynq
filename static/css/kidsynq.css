@@ -41,12 +41,12 @@
     --ks-slate-100: #f1f5f9;
     --ks-slate-50: #f8fafc;
 
-    /* Sidebar Dark Theme */
-    --ks-sidebar-bg: #0b1120;
-    --ks-sidebar-header-bg: #070d19;
-    --ks-sidebar-text: #94a3b8;
-    --ks-sidebar-hover-bg: #172033;
-    --ks-sidebar-border: #1e293b;
+    /* Sidebar Light Theme */
+    --ks-sidebar-bg: #ffffff;
+    --ks-sidebar-header-bg: #ffffff;
+    --ks-sidebar-text: #475569;
+    --ks-sidebar-hover-bg: #f8fafc;
+    --ks-sidebar-border: #e2e8f0;
     --ks-sidebar-active-bg: #0d9488;
     --ks-sidebar-active-text: #ffffff;
     --ks-sidebar-width: 268px;
@@ -137,7 +137,7 @@ h1, h2, h3, h4, h5, h6, .font-display {
     font-family: var(--ks-font-display);
     font-weight: 800;
     font-size: 1.05rem;
-    color: #ffffff;
+    color: var(--ks-slate-900);
     line-height: 1.2;
     display: flex;
     align-items: center;
@@ -145,7 +145,7 @@ h1, h2, h3, h4, h5, h6, .font-display {
 }
 
 .brand-text-title .brand-gradient {
-    background: linear-gradient(135deg, #2dd4bf 0%, #38bdf8 100%);
+    background: linear-gradient(135deg, #0d9488 0%, #0284c7 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
@@ -153,7 +153,7 @@ h1, h2, h3, h4, h5, h6, .font-display {
 .brand-status-indicator {
     font-size: 0.68rem;
     font-weight: 700;
-    color: #2dd4bf;
+    color: #0d9488;
     letter-spacing: 0.06em;
     text-transform: uppercase;
     display: flex;
@@ -187,7 +187,7 @@ h1, h2, h3, h4, h5, h6, .font-display {
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.08em;
-    color: #475569;
+    color: #94a3b8;
     padding: 0.85rem 0.75rem 0.35rem 0.75rem;
 }
 
@@ -210,16 +210,17 @@ h1, h2, h3, h4, h5, h6, .font-display {
     font-size: 1.15rem;
     width: 1.25rem;
     text-align: center;
+    color: #64748b;
     transition: transform 0.15s ease, color 0.15s ease;
 }
 
 .sidebar-link:hover {
-    color: #ffffff;
+    color: #0f172a;
     background-color: var(--ks-sidebar-hover-bg);
 }
 
 .sidebar-link:hover i {
-    color: #2dd4bf;
+    color: #0d9488;
     transform: scale(1.08);
 }
 
@@ -227,7 +228,7 @@ h1, h2, h3, h4, h5, h6, .font-display {
     color: #ffffff;
     background: var(--ks-primary-gradient);
     font-weight: 700;
-    box-shadow: 0 3px 10px rgba(13, 148, 136, 0.3);
+    box-shadow: 0 4px 12px rgba(13, 148, 136, 0.28);
 }
 
 .sidebar-link.active i {
@@ -252,7 +253,7 @@ h1, h2, h3, h4, h5, h6, .font-display {
 .sidebar-submenu {
     padding-left: 1.15rem;
     margin-left: 0.85rem;
-    border-left: 2px solid #1e293b;
+    border-left: 2px solid #e2e8f0;
     margin-top: 0.2rem;
     margin-bottom: 0.4rem;
 }
@@ -261,21 +262,32 @@ h1, h2, h3, h4, h5, h6, .font-display {
     padding: 0.42rem 0.65rem;
     font-size: 0.82rem;
     font-weight: 500;
+    color: #64748b;
     border-radius: 0.5rem;
 }
 
+.sidebar-submenu .sidebar-link:hover {
+    color: #0d9488;
+    background-color: #f8fafc;
+}
+
 .sidebar-submenu .sidebar-link.active {
-    background: rgba(13, 148, 136, 0.2);
-    color: #2dd4bf;
-    border-left: 3px solid #2dd4bf;
+    background: #f0fdfa;
+    color: #0d9488;
+    border-left: 3px solid #0d9488;
     border-radius: 0 0.5rem 0.5rem 0;
+    font-weight: 700;
     box-shadow: none;
+}
+
+.sidebar-submenu .sidebar-link.active i {
+    color: #0d9488;
 }
 
 /* Sidebar User Footer */
 .sidebar-user-footer {
     padding: 0.9rem 1rem;
-    background-color: var(--ks-sidebar-header-bg);
+    background-color: #f8fafc;
     border-top: 1px solid var(--ks-sidebar-border);
     display: flex;
     align-items: center;
@@ -769,4 +781,36 @@ h1, h2, h3, h4, h5, h6, .font-display {
     .sidebar-backdrop.show {
         display: block;
     }
+}
+
+/* Teal Palette Utilities */
+.text-teal {
+    color: var(--ks-primary) !important;
+}
+.border-teal {
+    border-color: var(--ks-primary) !important;
+}
+.bg-teal {
+    background-color: var(--ks-primary) !important;
+}
+.bg-teal-subtle {
+    background-color: #f0fdfa !important;
+}
+
+/* Child Profile Tabs */
+#childProfileTabs .nav-link {
+    color: #64748b;
+    border: none;
+    border-bottom: 2px solid transparent;
+    transition: all 0.15s ease-in-out;
+}
+#childProfileTabs .nav-link:hover {
+    color: var(--ks-primary);
+    border-bottom: 2px solid #cbd5e1;
+}
+#childProfileTabs .nav-link.active {
+    color: var(--ks-primary) !important;
+    border-bottom: 2px solid var(--ks-primary) !important;
+    background: transparent;
+    font-weight: 700;
 }

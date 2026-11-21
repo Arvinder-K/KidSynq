@@ -7,11 +7,11 @@
                 K
             </div>
             <div class="min-w-0">
-                <div class="brand-text-title">
-                    <span>Kid<span style="color: #818cf8;">Synq</span></span>
+                <div class="brand-text-title text-slate-900">
+                    <span>Kid<span style="color: #4f46e5;">Synq</span></span>
                 </div>
-                <div class="brand-status-indicator" style="color: #a5b4fc;">
-                    <span class="pulse-dot" style="background-color: #818cf8;"></span> Platform Admin
+                <div class="brand-status-indicator" style="color: #4f46e5;">
+                    <span class="pulse-dot" style="background-color: #4f46e5;"></span> Platform Admin
                 </div>
             </div>
             {% elif request.user.role == 'Guardian' %}
@@ -19,11 +19,11 @@
                 F
             </div>
             <div class="min-w-0">
-                <div class="brand-text-title">
-                    <span>Kid<span style="color: #f472b6;">Family</span></span>
+                <div class="brand-text-title text-slate-900">
+                    <span>Kid<span style="color: #e11d48;">Family</span></span>
                 </div>
-                <div class="brand-status-indicator" style="color: #fbcfe8;">
-                    <span class="pulse-dot" style="background-color: #f472b6;"></span> Guardian Portal
+                <div class="brand-status-indicator" style="color: #e11d48;">
+                    <span class="pulse-dot" style="background-color: #e11d48;"></span> Guardian Portal
                 </div>
             </div>
             {% elif request.user.daycare %}
@@ -31,7 +31,7 @@
                 {{ request.user.daycare.name|make_list|first|upper|default:"K" }}
             </div>
             <div class="min-w-0">
-                <div class="brand-text-title text-truncate" style="max-width: 170px;"
+                <div class="brand-text-title text-slate-900 text-truncate" style="max-width: 170px;"
                     title="{{ request.user.daycare.name }}">
                     {{ request.user.daycare.name }}
                 </div>
@@ -367,7 +367,7 @@
             {{ request.user.first_name|default:request.user.username|make_list|first|upper }}
         </div>
         <div class="flex-grow-1 min-w-0">
-            <div class="text-white fw-bold small text-truncate leading-tight">
+            <div class="text-slate-900 fw-bold small text-truncate leading-tight">
                 {{ request.user.get_full_name|default:request.user.username }}
             </div>
             <div class="text-muted text-truncate" style="font-size: 0.72rem;">

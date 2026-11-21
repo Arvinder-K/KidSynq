@@ -63,101 +63,136 @@
                     </div>
                 </div>
 
-                <!-- Action Buttons -->
-                <div class="d-flex flex-wrap gap-2">
-                    <button type="button" class="btn btn-outline-success btn-sm d-inline-flex align-items-center gap-1 shadow-sm" data-bs-toggle="modal" data-bs-target="#recordPaymentModal">
+                <!-- Action Buttons Toolbar -->
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <button type="button" class="btn btn-success btn-sm px-3 shadow-sm d-inline-flex align-items-center gap-1.5 fw-semibold" data-bs-toggle="modal" data-bs-target="#recordPaymentModal">
                         <i class="bi bi-credit-card-2-front"></i> Record Payment
                     </button>
-                    <button type="button" class="btn btn-outline-info btn-sm d-inline-flex align-items-center gap-1 shadow-sm" data-bs-toggle="modal" data-bs-target="#createInvoiceModal">
+                    <button type="button" class="btn btn-outline-primary btn-sm px-3 shadow-sm d-inline-flex align-items-center gap-1.5 fw-semibold" data-bs-toggle="modal" data-bs-target="#createInvoiceModal">
                         <i class="bi bi-file-earmark-plus"></i> Attach Invoice
                     </button>
-                    <button type="button" class="btn btn-outline-primary btn-sm d-inline-flex align-items-center gap-1 shadow-sm" data-bs-toggle="modal" data-bs-target="#recordAttendanceModal">
-                        <i class="bi bi-calendar-check"></i> Record Attendance
+                    <button type="button" class="btn btn-outline-info btn-sm px-3 shadow-sm d-inline-flex align-items-center gap-1.5 fw-semibold" data-bs-toggle="modal" data-bs-target="#recordAttendanceModal">
+                        <i class="bi bi-calendar-check"></i> Roll Call
                     </button>
-                    <button type="button" class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-1 shadow-sm" data-bs-toggle="modal" data-bs-target="#switchClassroomModal">
-                        <i class="bi bi-arrow-left-right"></i> Allocate Classroom
-                    </button>
-                    <button type="button" class="btn btn-primary btn-sm d-inline-flex align-items-center gap-1 shadow-sm" data-bs-toggle="modal" data-bs-target="#addGuardianModal">
-                        <i class="bi bi-person-plus"></i> Add Parent/Guardian
-                    </button>
+                    <div class="dropdown">
+                        <button class="btn btn-light border btn-sm px-3 shadow-sm d-inline-flex align-items-center gap-1.5 fw-semibold dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-three-dots-vertical"></i> Manage
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-3">
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center gap-2 py-2 small" href="#" data-bs-toggle="modal" data-bs-target="#switchClassroomModal">
+                                    <i class="bi bi-arrow-left-right text-primary"></i> Allocate / Switch Classroom
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center gap-2 py-2 small" href="#" data-bs-toggle="modal" data-bs-target="#addGuardianModal">
+                                    <i class="bi bi-person-plus text-success"></i> Add Parent / Guardian
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider my-1"></li>
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center gap-2 py-2 small" href="?tab=personal">
+                                    <i class="bi bi-pencil-square text-secondary"></i> Edit Child Details
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </div>
 
         <!-- Metric KPI Cards Row -->
         <div class="px-4 pb-3">
-            <div class="row g-2">
+            <div class="row g-3">
                 <!-- Classroom Card -->
-                <div class="col-6 col-md-3">
-                    <div class="p-3 bg-light rounded-3 border h-100">
-                        <div class="text-muted small text-uppercase fw-semibold" style="font-size: 0.7rem; letter-spacing: 0.05em;">Classroom Allocation</div>
-                        <div class="fw-bold text-slate-800 text-truncate mt-1">
-                            {{ current_classroom.room_name|default:"Unallocated" }}
+                <div class="col-12 col-sm-6 col-xl-3">
+                    <div class="p-3 bg-white rounded-3 border shadow-xs h-100 d-flex flex-column justify-content-between">
+                        <div class="d-flex justify-content-between align-items-start mb-1">
+                            <span class="text-muted small text-uppercase fw-bold" style="font-size: 0.68rem; letter-spacing: 0.06em;">CLASSROOM ALLOCATION</span>
+                            <span class="p-1.5 bg-primary bg-opacity-10 text-primary rounded-2"><i class="bi bi-door-open fs-6"></i></span>
                         </div>
-                        <div class="text-muted small mt-1">
-                            {% if current_classroom.primary_teacher %}
-                                <i class="bi bi-person-badge me-1"></i>{{ current_classroom.primary_teacher.get_full_name|default:"Staff Educator" }}
-                            {% else %}
-                                Cap: {{ current_classroom.capacity|default:"15" }} children
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Primary Parent Card -->
-                <div class="col-6 col-md-3">
-                    <div class="p-3 bg-light rounded-3 border h-100">
-                        <div class="text-muted small text-uppercase fw-semibold" style="font-size: 0.7rem; letter-spacing: 0.05em;">Primary Guardian</div>
-                        <div class="fw-bold text-slate-800 text-truncate mt-1">
-                            {% if primary_guardian %}
-                                {{ primary_guardian.guardian.first_name }} {{ primary_guardian.guardian.last_name }} ({{ primary_guardian.relationship|default:"Guardian" }})
-                            {% elif families %}
-                                {{ families.0.family_name }}
-                            {% else %}
-                                No Parent Linked
-                            {% endif %}
-                        </div>
-                        <div class="text-muted small mt-1 text-truncate">
-                            {% if primary_guardian.guardian.phone %}
-                                <i class="bi bi-telephone me-1"></i>{{ primary_guardian.guardian.phone }}
-                            {% elif families.0.primary_phone %}
-                                <i class="bi bi-telephone me-1"></i>{{ families.0.primary_phone }}
-                            {% else %}
-                                <i class="bi bi-envelope me-1"></i>{{ primary_guardian.guardian.email|default:"No contact set" }}
-                            {% endif %}
+                        <div>
+                            <h6 class="fw-bold text-slate-900 mb-0 text-truncate">{{ current_classroom.room_name|default:"Unallocated" }}</h6>
+                            <small class="text-muted d-block text-truncate mt-0.5">
+                                {% if current_classroom.primary_teacher %}
+                                    <i class="bi bi-person-check text-success me-1"></i>{{ current_classroom.primary_teacher.get_full_name|default:"Lead Educator" }}
+                                {% else %}
+                                    Capacity: {{ current_classroom.capacity|default:"15" }} children
+                                {% endif %}
+                            </small>
                         </div>
                     </div>
                 </div>
 
-                <!-- Account / Billing Balance Card -->
-                <div class="col-6 col-md-3">
-                    <div class="p-3 bg-light rounded-3 border h-100">
-                        <div class="text-muted small text-uppercase fw-semibold" style="font-size: 0.7rem; letter-spacing: 0.05em;">Billing & Balance</div>
-                        <div class="d-flex align-items-baseline gap-1 mt-1">
-                            <span class="fs-5 fw-bold font-monospace {% if balance_due > 0 %}text-danger{% else %}text-success{% endif %}">
-                                ${{ balance_due|floatformat:2 }}
-                            </span>
-                            <span class="small text-muted">due</span>
+                <!-- Primary Guardian Card -->
+                <div class="col-12 col-sm-6 col-xl-3">
+                    <div class="p-3 bg-white rounded-3 border shadow-xs h-100 d-flex flex-column justify-content-between">
+                        <div class="d-flex justify-content-between align-items-start mb-1">
+                            <span class="text-muted small text-uppercase fw-bold" style="font-size: 0.68rem; letter-spacing: 0.06em;">PRIMARY GUARDIAN</span>
+                            <span class="p-1.5 rounded-2" style="background-color: rgba(13, 148, 136, 0.1); color: #0d9488;"><i class="bi bi-people fs-6"></i></span>
                         </div>
-                        <div class="text-muted small mt-1">
-                            Paid: <strong class="text-slate-700">${{ total_paid|floatformat:2 }}</strong> &bull; {{ payments|length }} Receipts
+                        <div>
+                            <h6 class="fw-bold text-slate-900 mb-0 text-truncate">
+                                {% if primary_guardian %}
+                                    {{ primary_guardian.guardian.first_name }} {{ primary_guardian.guardian.last_name }} ({{ primary_guardian.relationship|default:"Guardian" }})
+                                {% elif families %}
+                                    {{ families.0.family_name }}
+                                {% else %}
+                                    No Parent Linked
+                                {% endif %}
+                            </h6>
+                            <small class="text-muted d-block text-truncate mt-0.5">
+                                {% if primary_guardian.guardian.phone %}
+                                    <i class="bi bi-telephone me-1"></i>{{ primary_guardian.guardian.phone }}
+                                {% elif families.0.primary_phone %}
+                                    <i class="bi bi-telephone me-1"></i>{{ families.0.primary_phone }}
+                                {% else %}
+                                    {{ primary_guardian.guardian.email|default:"No phone on file" }}
+                                {% endif %}
+                            </small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Billing Balance Card -->
+                <div class="col-12 col-sm-6 col-xl-3">
+                    <div class="p-3 bg-white rounded-3 border shadow-xs h-100 d-flex flex-column justify-content-between">
+                        <div class="d-flex justify-content-between align-items-start mb-1">
+                            <span class="text-muted small text-uppercase fw-bold" style="font-size: 0.68rem; letter-spacing: 0.06em;">ACCOUNT BALANCE</span>
+                            <span class="p-1.5 bg-success bg-opacity-10 text-success rounded-2"><i class="bi bi-cash-stack fs-6"></i></span>
+                        </div>
+                        <div>
+                            <div class="d-flex align-items-baseline gap-1.5">
+                                <h6 class="fw-bold font-monospace mb-0 fs-5 {% if balance_due > 0 %}text-danger{% else %}text-success{% endif %}">
+                                    ${{ balance_due|floatformat:2 }}
+                                </h6>
+                                <span class="badge {% if balance_due > 0 %}bg-danger bg-opacity-10 text-danger{% else %}bg-success bg-opacity-10 text-success{% endif %}" style="font-size: 0.68rem;">
+                                    {% if balance_due > 0 %}DUE{% else %}SETTLED{% endif %}
+                                </span>
+                            </div>
+                            <small class="text-muted d-block text-truncate mt-0.5">
+                                Paid: <strong class="text-slate-800">${{ total_paid|floatformat:2 }}</strong> &bull; {{ payments|length }} Receipts
+                            </small>
                         </div>
                     </div>
                 </div>
 
                 <!-- Attendance KPI Card -->
-                <div class="col-6 col-md-3">
-                    <div class="p-3 bg-light rounded-3 border h-100">
-                        <div class="text-muted small text-uppercase fw-semibold" style="font-size: 0.7rem; letter-spacing: 0.05em;">Attendance Record</div>
-                        <div class="fs-5 fw-bold font-monospace text-slate-800 mt-1">
-                            {{ total_days_attended }} Days Logged
+                <div class="col-12 col-sm-6 col-xl-3">
+                    <div class="p-3 bg-white rounded-3 border shadow-xs h-100 d-flex flex-column justify-content-between">
+                        <div class="d-flex justify-content-between align-items-start mb-1">
+                            <span class="text-muted small text-uppercase fw-bold" style="font-size: 0.68rem; letter-spacing: 0.06em;">ATTENDANCE RECORD</span>
+                            <span class="p-1.5 bg-info bg-opacity-10 text-info rounded-2"><i class="bi bi-calendar-check fs-6"></i></span>
                         </div>
-                        <div class="text-muted small mt-1">
-                            {% if recent_attendance.0 %}
-                                Last: {{ recent_attendance.0.attendance_date|date:"M d" }} ({{ recent_attendance.0.attendance_status|title }})
-                            {% else %}
-                                No logs yet
-                            {% endif %}
+                        <div>
+                            <h6 class="fw-bold font-monospace text-slate-900 mb-0">{{ total_days_attended }} Days Logged</h6>
+                            <small class="text-muted d-block text-truncate mt-0.5">
+                                {% if recent_attendance.0 %}
+                                    Last: {{ recent_attendance.0.attendance_date|date:"M d" }} ({{ recent_attendance.0.attendance_status|title }})
+                                {% else %}
+                                    No attendance logged yet
+                                {% endif %}
+                            </small>
                         </div>
                     </div>
                 </div>
@@ -166,14 +201,14 @@
 
         <!-- Navigation Tabs -->
         <div class="border-top px-4 bg-white">
-            <ul class="nav nav-tabs border-0 pt-2 flex-nowrap overflow-auto" id="childProfileTabs" role="tablist">
+            <ul class="nav nav-tabs border-0 pt-2 flex-nowrap overflow-x-auto" id="childProfileTabs" role="tablist" style="scrollbar-width: thin;">
                 <li class="nav-item">
-                    <a class="nav-link py-2 px-3 fw-semibold small d-inline-flex align-items-center gap-1 {% if active_tab == 'overview' %}active text-primary border-bottom border-primary border-2{% else %}text-muted{% endif %}" href="?tab=overview">
+                    <a class="nav-link text-nowrap py-2.5 px-3 fw-semibold small d-inline-flex align-items-center gap-1.5 {% if active_tab == 'overview' %}active text-teal border-bottom border-teal border-2{% else %}text-muted{% endif %}" href="?tab=overview">
                         <i class="bi bi-grid-1x2"></i> Overview
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link py-2 px-3 fw-semibold small d-inline-flex align-items-center gap-1 {% if active_tab == 'classroom' %}active text-primary border-bottom border-primary border-2{% else %}text-muted{% endif %}" href="?tab=classroom">
+                    <a class="nav-link text-nowrap py-2.5 px-3 fw-semibold small d-inline-flex align-items-center gap-1.5 {% if active_tab == 'classroom' %}active text-teal border-bottom border-teal border-2{% else %}text-muted{% endif %}" href="?tab=classroom">
                         <i class="bi bi-door-open"></i> Classroom
                         {% if current_classroom %}
                             <span class="badge bg-primary bg-opacity-10 text-primary ms-1" style="font-size: 0.7rem;">Allocated</span>
@@ -181,25 +216,25 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link py-2 px-3 fw-semibold small d-inline-flex align-items-center gap-1 {% if active_tab == 'family' %}active text-primary border-bottom border-primary border-2{% else %}text-muted{% endif %}" href="?tab=family">
+                    <a class="nav-link text-nowrap py-2.5 px-3 fw-semibold small d-inline-flex align-items-center gap-1.5 {% if active_tab == 'family' %}active text-teal border-bottom border-teal border-2{% else %}text-muted{% endif %}" href="?tab=family">
                         <i class="bi bi-people"></i> Parents & Family
                         <span class="badge bg-secondary rounded-pill ms-1" style="font-size: 0.7rem;">{{ family_guardians|length }}</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link py-2 px-3 fw-semibold small d-inline-flex align-items-center gap-1 {% if active_tab == 'billing' %}active text-primary border-bottom border-primary border-2{% else %}text-muted{% endif %}" href="?tab=billing">
+                    <a class="nav-link text-nowrap py-2.5 px-3 fw-semibold small d-inline-flex align-items-center gap-1.5 {% if active_tab == 'billing' %}active text-teal border-bottom border-teal border-2{% else %}text-muted{% endif %}" href="?tab=billing">
                         <i class="bi bi-receipt"></i> Billing & Receipts
                         <span class="badge bg-success bg-opacity-10 text-success ms-1" style="font-size: 0.7rem;">{{ payments|length }}</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link py-2 px-3 fw-semibold small d-inline-flex align-items-center gap-1 {% if active_tab == 'reports' %}active text-primary border-bottom border-primary border-2{% else %}text-muted{% endif %}" href="?tab=reports">
+                    <a class="nav-link text-nowrap py-2.5 px-3 fw-semibold small d-inline-flex align-items-center gap-1.5 {% if active_tab == 'reports' %}active text-teal border-bottom border-teal border-2{% else %}text-muted{% endif %}" href="?tab=reports">
                         <i class="bi bi-journal-check"></i> Daily Reports
                         <span class="badge bg-info bg-opacity-10 text-info ms-1" style="font-size: 0.7rem;">{{ recent_reports|length }}</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link py-2 px-3 fw-semibold small d-inline-flex align-items-center gap-1 {% if active_tab == 'medical' %}active text-primary border-bottom border-primary border-2{% else %}text-muted{% endif %}" href="?tab=medical">
+                    <a class="nav-link text-nowrap py-2.5 px-3 fw-semibold small d-inline-flex align-items-center gap-1.5 {% if active_tab == 'medical' %}active text-teal border-bottom border-teal border-2{% else %}text-muted{% endif %}" href="?tab=medical">
                         <i class="bi bi-heart-pulse"></i> Medical & Health
                         {% if child.allergies %}
                             <span class="badge bg-danger rounded-circle p-1" style="width: 6px; height: 6px;"></span>
@@ -207,18 +242,18 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link py-2 px-3 fw-semibold small d-inline-flex align-items-center gap-1 {% if active_tab == 'attendance' %}active text-primary border-bottom border-primary border-2{% else %}text-muted{% endif %}" href="?tab=attendance">
+                    <a class="nav-link text-nowrap py-2.5 px-3 fw-semibold small d-inline-flex align-items-center gap-1.5 {% if active_tab == 'attendance' %}active text-teal border-bottom border-teal border-2{% else %}text-muted{% endif %}" href="?tab=attendance">
                         <i class="bi bi-calendar-check"></i> Attendance
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link py-2 px-3 fw-semibold small d-inline-flex align-items-center gap-1 {% if active_tab == 'documents' %}active text-primary border-bottom border-primary border-2{% else %}text-muted{% endif %}" href="?tab=documents">
+                    <a class="nav-link text-nowrap py-2.5 px-3 fw-semibold small d-inline-flex align-items-center gap-1.5 {% if active_tab == 'documents' %}active text-teal border-bottom border-teal border-2{% else %}text-muted{% endif %}" href="?tab=documents">
                         <i class="bi bi-file-earmark-check"></i> Consents
                         <span class="badge bg-secondary rounded-pill ms-1" style="font-size: 0.7rem;">{{ consent_assignments|length }}</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link py-2 px-3 fw-semibold small d-inline-flex align-items-center gap-1 {% if active_tab == 'personal' %}active text-primary border-bottom border-primary border-2{% else %}text-muted{% endif %}" href="?tab=personal">
+                    <a class="nav-link text-nowrap py-2.5 px-3 fw-semibold small d-inline-flex align-items-center gap-1.5 {% if active_tab == 'personal' %}active text-teal border-bottom border-teal border-2{% else %}text-muted{% endif %}" href="?tab=personal">
                         <i class="bi bi-pencil-square"></i> Edit Info
                     </a>
                 </li>

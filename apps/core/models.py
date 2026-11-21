@@ -2185,7 +2185,14 @@ class RegistrationApplication(models.Model):
 
     @property
     def date_of_birth(self):
-        return (self.application_data or {}).get('date_of_birth', '')
+        val = (self.application_data or {}).get('date_of_birth', '')
+        if val:
+            try:
+                from datetime import datetime
+                return datetime.strptime(str(val)[:10], '%Y-%m-%d').date()
+            except Exception:
+                return val
+        return None
 
     @property
     def gender(self):
@@ -2193,7 +2200,14 @@ class RegistrationApplication(models.Model):
 
     @property
     def preferred_start_date(self):
-        return (self.application_data or {}).get('preferred_start_date', '')
+        val = (self.application_data or {}).get('preferred_start_date', '')
+        if val:
+            try:
+                from datetime import datetime
+                return datetime.strptime(str(val)[:10], '%Y-%m-%d').date()
+            except Exception:
+                return val
+        return None
 
     @property
     def birth_reg_number(self):

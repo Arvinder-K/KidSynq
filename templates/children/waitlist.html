@@ -7,10 +7,12 @@
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
         <div>
             <h2 class="h4 fw-bold text-slate-800 mb-1">Waitlist Management</h2>
-            <p class="text-muted small mb-0">Prioritized waitlist queue for prospective families awaiting spot vacancy</p>
+            <p class="text-muted small mb-0">Prioritized waitlist queue for prospective families awaiting spot vacancy
+            </p>
         </div>
         <div>
-            <a href="{% url 'daycare_admissions' %}" class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-1 shadow-sm">
+            <a href="{% url 'daycare_admissions' %}"
+                class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-1 shadow-sm">
                 <i class="bi bi-inbox"></i>
                 <span>Admissions Inbox</span>
             </a>
@@ -37,17 +39,20 @@
                     <tr>
                         <td class="ps-4">
                             {% if entry.priority == 1 %}
-                                <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-2 py-1">
-                                    Priority 1 (High)
-                                </span>
+                            <span
+                                class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-2 py-1">
+                                Priority 1 (High)
+                            </span>
                             {% elif entry.priority == 2 %}
-                                <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 px-2 py-1">
-                                    Priority 2 (Std)
-                                </span>
+                            <span
+                                class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 px-2 py-1">
+                                Priority 2 (Std)
+                            </span>
                             {% else %}
-                                <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 px-2 py-1">
-                                    Priority {{ entry.priority }}
-                                </span>
+                            <span
+                                class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 px-2 py-1">
+                                Priority {{ entry.priority }}
+                            </span>
                             {% endif %}
                         </td>
                         <td class="fw-bold text-slate-800">
@@ -55,9 +60,9 @@
                         </td>
                         <td>{{ entry.child_dob|date:"M d, Y"|default:"-" }}</td>
                         <td>
-                            <span class="badge bg-light text-dark border">{{ entry.preferred_program|default:"General" }}</span>
+                            <span class="badge bg-light text-dark border">{{ entry.preferred_program|default:"General Program" }}</span>
                             {% if entry.notes %}
-                                <div class="text-muted small text-truncate" style="max-width: 180px;">{{ entry.notes }}</div>
+                            <div class="text-muted small text-truncate" style="max-width: 180px;">{{ entry.notes }}</div>
                             {% endif %}
                         </td>
                         <td>
@@ -68,20 +73,23 @@
                             <small class="text-muted">{{ entry.applicant_phone|default:entry.applicant_email|default:"" }}</small>
                         </td>
                         <td>
-                            <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 px-2 py-1">
+                            <span
+                                class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 px-2 py-1">
                                 <i class="bi bi-hourglass-split me-1"></i> Waiting
                             </span>
                         </td>
                         <td class="text-end pe-4">
                             {% if entry.application %}
-                                <a href="{% url 'daycare_admission_detail' entry.application.id %}" class="btn btn-sm btn-success py-1 px-3 fw-semibold d-inline-flex align-items-center gap-1 shadow-sm">
-                                    <i class="bi bi-person-check-fill"></i>
-                                    <span>Offer Spot & Enroll</span>
-                                </a>
+                            <a href="{% url 'daycare_admission_detail' entry.application.id %}"
+                                class="btn btn-sm btn-success py-1 px-3 fw-semibold d-inline-flex align-items-center gap-1 shadow-sm">
+                                <i class="bi bi-person-check-fill"></i>
+                                <span>Offer Spot & Enroll</span>
+                            </a>
                             {% else %}
-                                <a href="{% url 'daycare_child_new' %}" class="btn btn-sm btn-outline-primary py-1 px-2 fw-semibold">
-                                    <span>Enroll</span>
-                                </a>
+                            <a href="{% url 'daycare_child_new' %}"
+                                class="btn btn-sm btn-outline-primary py-1 px-2 fw-semibold">
+                                <span>Enroll</span>
+                            </a>
                             {% endif %}
                         </td>
                     </tr>
