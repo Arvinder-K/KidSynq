@@ -1,5 +1,6 @@
 import os
 import sys
+import uuid
 
 APP_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 if APP_DIR not in sys.path:
@@ -48,9 +49,11 @@ def test_workflow():
     print("  [PASS] GET /daycare/children/new/ returns 200 with Invoice & Payment options")
 
     # 3. Test POST Enroll Child with Attached Invoice and Payment Now
+    suffix = uuid.uuid4().hex[:4]
+    first_name = f"Lucas{suffix}"
     classroom = Classroom.objects.filter(daycare=daycare).first()
     enroll_data = {
-        'first_name': 'Lucas',
+        'first_name': first_name,
         'last_name': 'Vance',
         'preferred_name': 'Luke',
         'date_of_birth': '2024-05-10',
@@ -61,7 +64,7 @@ def test_workflow():
         'guardian_last_name': 'Vance',
         'guardian_relationship': 'Mother',
         'guardian_phone': '(416) 555-9090',
-        'guardian_email': 'amanda.vance@example.com',
+        'guardian_email': f'amanda.{suffix}@example.com',
         'guardian_address': '456 King St W, Toronto, ON',
         'medical_info': 'Mild pollen sensitivity',
         'dietary_restrictions': 'Nut-free',
@@ -74,7 +77,7 @@ def test_workflow():
         'paid_amount': '543.38',
         'payment_method': 'ETRANSFER',
         'payment_date': '2026-11-21',
-        'transaction_reference': 'TEST-INTERAC-9876',
+        'transaction_reference': f'TEST-INTERAC-{suffix}',
         'payer_name': 'Amanda Vance',
     }
 
@@ -83,16 +86,16 @@ def test_workflow():
     assert resp.status_code == 302, f"Expected 302 redirect, got {resp.status_code}"
 
     # Verify created records
-    child = Student.objects.filter(first_name='Lucas', last_name='Vance', daycare=daycare).first()
-    assert child is not None, "Student Lucas Vance was not created!"
+    child = Student.objects.filter(first_name=first_name, last_name='Vance', daycare=daycare).first()
+    assert child is not None, f"Student {first_name} Vance was not created!"
     print(f"  [PASS] Created Student: {child.first_name} {child.last_name} ({child.id})")
 
-    invoice = Invoice.objects.filter(student=child).first()
+    invoice = Invoice.objects.filter(student=child).order_by('-created_at').first()
     assert invoice is not None, "Invoice was not attached to child!"
     print(f"  [PASS] Attached Invoice: {invoice.invoice_number} | Amount: ${invoice.total_amount}")
     assert abs(float(invoice.total_amount) - 543.38) < 0.05, f"Incorrect invoice total: {invoice.total_amount}"
 
-    payment = Payment.objects.filter(student=child).first()
+    payment = Payment.objects.filter(student=child).order_by('-created_at').first()
     assert payment is not None, "Payment was not recorded!"
     print(f"  [PASS] Recorded Payment Receipt: {payment.receipt_number} | Paid: ${payment.amount} | Payer: {payment.payer_name}")
 

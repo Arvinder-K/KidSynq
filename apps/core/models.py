@@ -2103,6 +2103,66 @@ class RegistrationApplication(models.Model):
     access_token = models.CharField(max_length=32, blank=True, default='')
     application_data = models.JSONField(default=dict, blank=True)
 
+    @property
+    def child_first_name(self):
+        return (self.application_data or {}).get('child_first_name', '')
+
+    @property
+    def child_last_name(self):
+        return (self.application_data or {}).get('child_last_name', '')
+
+    @property
+    def child_name(self):
+        first = self.child_first_name
+        last = self.child_last_name
+        if first or last:
+            return f"{first} {last}".strip()
+        return "Applicant Child"
+
+    @property
+    def parent_first_name(self):
+        data_first = (self.application_data or {}).get('parent_first_name')
+        if data_first:
+            return data_first
+        if self.applicant_name:
+            parts = self.applicant_name.split()
+            return parts[0] if parts else ''
+        return ''
+
+    @property
+    def parent_last_name(self):
+        data_last = (self.application_data or {}).get('parent_last_name')
+        if data_last:
+            return data_last
+        if self.applicant_name:
+            parts = self.applicant_name.split()
+            return ' '.join(parts[1:]) if len(parts) > 1 else ''
+        return ''
+
+    @property
+    def parent_email(self):
+        return self.applicant_email or (self.application_data or {}).get('parent_email', '')
+
+    @property
+    def parent_phone(self):
+        return self.applicant_phone or (self.application_data or {}).get('parent_phone', '')
+
+    @property
+    def program_interest(self):
+        return (self.application_data or {}).get('program_name') or (self.application_data or {}).get('program_interest', 'General Program')
+
+    @property
+    def medical_notes(self):
+        return (self.application_data or {}).get('medical_notes', '')
+
+    @property
+    def date_of_birth(self):
+        return (self.application_data or {}).get('date_of_birth', '')
+
+    @property
+    def gender(self):
+        return (self.application_data or {}).get('gender', 'unspecified')
+
 
 class StaffAttendance(models.Model):
     STATUS_CHOICES = [
