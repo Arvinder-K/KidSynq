@@ -1,3 +1,4 @@
+import uuid
 from decimal import Decimal
 from django.contrib import messages
 from django.core.paginator import Paginator
@@ -13,7 +14,7 @@ from core.models import (
     RegistrationApplication, WaitlistEntry,
     Family, FamilyChild, FamilyGuardian, Guardian,
     Invoice, InvoiceItem, Payment, ChildSubsidyProfile,
-    IncidentReport, ConsentFormAssignment
+    IncidentReport, ConsentFormAssignment, FeeStructure
 )
 
 def get_user_daycare(user):
@@ -61,38 +62,51 @@ class ChildCreateView(StaffRequiredMixin, View):
         daycare = get_user_daycare(request.user)
         classrooms = Classroom.objects.filter(daycare=daycare, deleted_at__isnull=True).order_by('room_name')
         programs = Program.objects.filter(daycare=daycare).order_by('name')
+        fee_structures = FeeStructure.objects.filter(daycare=daycare, is_active=True).order_by('name')
         return render(request, self.template_name, {
             'classrooms': classrooms,
-            'programs': programs
+            'programs': programs,
+            'fee_structures': fee_structures,
         })
 
     def post(self, request):
         daycare = get_user_daycare(request.user)
         first_name = request.POST.get('first_name', '').strip()
         last_name = request.POST.get('last_name', '').strip()
+        preferred_name = request.POST.get('preferred_name', '').strip()
         dob = request.POST.get('date_of_birth')
         gender = request.POST.get('gender', 'unspecified')
         classroom_id = request.POST.get('classroom_id')
         enrollment_date = request.POST.get('enrollment_date') or timezone.now().date()
         medical_info = request.POST.get('medical_info', '').strip()
         dietary_restrictions = request.POST.get('dietary_restrictions', '').strip()
+        doctor_name = request.POST.get('doctor_name', '').strip()
+        doctor_phone = request.POST.get('doctor_phone', '').strip()
+        hospital_name = request.POST.get('hospital_name', '').strip()
 
         if not first_name or not last_name:
             messages.error(request, "First name and last name are required.")
             return redirect('daycare_child_new')
 
+        # 1. Create Student
         student = Student.objects.create(
             daycare=daycare,
             first_name=first_name,
             last_name=last_name,
+            preferred_name=preferred_name,
             dob=dob if dob else None,
             gender=gender,
             joining_date=enrollment_date,
+            admission_date=enrollment_date,
             medical_notes=medical_info,
             dietary_restrictions=dietary_restrictions,
+            doctor_name=doctor_name,
+            doctor_phone=doctor_phone,
+            hospital_name=hospital_name,
             status='Active'
         )
 
+        # 2. Classroom Enrollment
         if classroom_id:
             ClassroomStudent.objects.create(
                 student=student,
@@ -101,8 +115,162 @@ class ChildCreateView(StaffRequiredMixin, View):
                 start_date=enrollment_date
             )
 
-        messages.success(request, f"Child '{first_name} {last_name}' enrolled successfully.")
-        return redirect('daycare_child_detail', pk=student.id)
+        # 3. Parent / Guardian Info
+        guardian_first_name = request.POST.get('guardian_first_name', '').strip()
+        guardian_last_name = request.POST.get('guardian_last_name', '').strip()
+        guardian_relation = request.POST.get('guardian_relationship', 'Parent').strip()
+        guardian_phone = request.POST.get('guardian_phone', '').strip()
+        guardian_email = request.POST.get('guardian_email', '').strip()
+        guardian_address = request.POST.get('guardian_address', '').strip()
+
+        family_name = f"{guardian_last_name or last_name} Family"
+        family, _ = Family.objects.get_or_create(
+            daycare=daycare,
+            family_name=family_name,
+            defaults={
+                'primary_phone': guardian_phone,
+                'primary_email': guardian_email,
+                'address': guardian_address,
+                'status': 'Active'
+            }
+        )
+        FamilyChild.objects.get_or_create(family=family, student=student)
+
+        if guardian_first_name or guardian_phone or guardian_email:
+            g_obj, _ = Guardian.objects.get_or_create(
+                daycare=daycare,
+                first_name=guardian_first_name or first_name,
+                last_name=guardian_last_name or last_name,
+                defaults={
+                    'phone': guardian_phone,
+                    'email': guardian_email or None,
+                    'status': 'Active'
+                }
+            )
+            FamilyGuardian.objects.get_or_create(
+                family=family,
+                guardian=g_obj,
+                defaults={'relationship': guardian_relation, 'is_primary': True, 'status': 'Active'}
+            )
+
+        # 4. Attach Initial Invoice & Payment Option
+        attach_invoice = request.POST.get('attach_invoice') in ['true', 'on', '1']
+        invoice_obj = None
+        payment_obj = None
+
+        if attach_invoice:
+            invoice_desc = request.POST.get('invoice_description', '').strip() or 'Monthly Childcare Tuition'
+            raw_amount = request.POST.get('invoice_amount') or '1150.00'
+            try:
+                subtotal = Decimal(str(raw_amount))
+            except Exception:
+                subtotal = Decimal('1150.00')
+
+            apply_cwelcc = request.POST.get('apply_cwelcc') in ['true', 'on', '1']
+            if apply_cwelcc:
+                discount = (subtotal * Decimal('0.5275')).quantize(Decimal('0.01'))
+                total_amount = max(Decimal('0.00'), subtotal - discount)
+                ChildSubsidyProfile.objects.create(
+                    daycare=daycare,
+                    student=student,
+                    family=family,
+                    program_name='CWELCC (Canada-Wide Early Learning & Child Care)',
+                    subsidy_type='Fee Reduction',
+                    subsidy_rate=Decimal('52.75'),
+                    parent_co_pay_amount=total_amount,
+                    is_active=True,
+                    effective_from=enrollment_date
+                )
+            else:
+                discount = Decimal('0.00')
+                total_amount = subtotal
+
+            payment_action = request.POST.get('payment_action', 'pay_now')
+            due_date = request.POST.get('due_date') or (timezone.now().date() + timezone.timedelta(days=14))
+
+            if payment_action == 'pay_now':
+                paid_str = request.POST.get('paid_amount') or str(total_amount)
+                try:
+                    amount_paid = Decimal(str(paid_str))
+                except Exception:
+                    amount_paid = total_amount
+
+                balance_due = max(Decimal('0.00'), total_amount - amount_paid)
+                inv_status = 'PAID' if balance_due <= Decimal('0.00') else 'PARTIALLY_PAID'
+                pay_method = request.POST.get('payment_method', 'ETRANSFER')
+                txn_ref = request.POST.get('transaction_reference') or f"TXN-{uuid.uuid4().hex[:8].upper()}"
+                payer_name = request.POST.get('payer_name') or f"{guardian_first_name} {guardian_last_name}".strip() or f"{family.family_name}"
+                pay_date = request.POST.get('payment_date') or timezone.now().date()
+            else:
+                amount_paid = Decimal('0.00')
+                balance_due = total_amount
+                inv_status = 'ISSUED'
+
+            invoice_num = f"INV-{timezone.now().strftime('%Y%m')}-{uuid.uuid4().hex[:4].upper()}"
+            invoice_obj = Invoice.objects.create(
+                daycare=daycare,
+                family=family,
+                student=student,
+                invoice_number=invoice_num,
+                invoice_type='STANDARD',
+                issue_date=timezone.now().date(),
+                due_date=due_date,
+                subtotal=subtotal,
+                discount=discount,
+                discount_total=discount,
+                total_amount=total_amount,
+                amount_paid=amount_paid,
+                balance_due=balance_due,
+                status=inv_status,
+                currency='CAD',
+                notes=invoice_desc
+            )
+
+            InvoiceItem.objects.create(
+                invoice=invoice_obj,
+                description=invoice_desc,
+                quantity=1,
+                unit_price=subtotal,
+                subtotal=subtotal,
+                total=subtotal
+            )
+            if apply_cwelcc and discount > 0:
+                InvoiceItem.objects.create(
+                    invoice=invoice_obj,
+                    description='CWELCC 52.75% Provincial Fee Reduction',
+                    quantity=1,
+                    unit_price=-discount,
+                    subtotal=-discount,
+                    total=-discount
+                )
+
+            if payment_action == 'pay_now' and amount_paid > 0:
+                receipt_num = f"REC-{timezone.now().strftime('%Y%m')}-{uuid.uuid4().hex[:4].upper()}"
+                payment_obj = Payment.objects.create(
+                    daycare=daycare,
+                    invoice=invoice_obj,
+                    family=family,
+                    student=student,
+                    receipt_number=receipt_num,
+                    amount=amount_paid,
+                    currency='CAD',
+                    payment_date=pay_date,
+                    payment_method=pay_method,
+                    status='COMPLETED',
+                    transaction_reference=txn_ref,
+                    payer_name=payer_name,
+                    notes='Initial child enrollment fee receipt'
+                )
+
+        if invoice_obj and payment_obj:
+            messages.success(request, f"Child '{first_name} {last_name}' enrolled successfully! Invoice '{invoice_obj.invoice_number}' created and Payment Receipt '{payment_obj.receipt_number}' generated.")
+            return redirect(f"/daycare/children/{student.id}/?tab=billing")
+        elif invoice_obj:
+            messages.success(request, f"Child '{first_name} {last_name}' enrolled successfully with attached statement '{invoice_obj.invoice_number}'.")
+            return redirect(f"/daycare/children/{student.id}/?tab=billing")
+        else:
+            messages.success(request, f"Child '{first_name} {last_name}' enrolled successfully.")
+            return redirect('daycare_child_detail', pk=student.id)
 
 class ChildDetailView(StaffRequiredMixin, View):
     template_name = 'children/detail.html'
@@ -359,6 +527,107 @@ class ChildDetailView(StaffRequiredMixin, View):
                     att.check_in_time = check_in
                 att.save()
             messages.success(request, f"Attendance for {att_date} recorded as {status_val}.")
+
+        elif action == 'create_invoice':
+            desc = request.POST.get('invoice_description', 'Monthly Childcare Tuition').strip() or 'Monthly Childcare Tuition'
+            amount_val = request.POST.get('amount') or '1150.00'
+            try:
+                subtotal = Decimal(str(amount_val))
+            except Exception:
+                subtotal = Decimal('1150.00')
+
+            apply_cwelcc = request.POST.get('apply_cwelcc') in ['true', 'on', '1']
+            if apply_cwelcc:
+                discount = (subtotal * Decimal('0.5275')).quantize(Decimal('0.01'))
+                total_amount = max(Decimal('0.00'), subtotal - discount)
+            else:
+                discount = Decimal('0.00')
+                total_amount = subtotal
+
+            fc = FamilyChild.objects.filter(student=child).first()
+            family = fc.family if fc else None
+            due_date = request.POST.get('due_date') or (timezone.now().date() + timezone.timedelta(days=14))
+            inv_num = f"INV-{timezone.now().strftime('%Y%m')}-{uuid.uuid4().hex[:4].upper()}"
+
+            inv = Invoice.objects.create(
+                daycare=daycare,
+                family=family,
+                student=child,
+                invoice_number=inv_num,
+                invoice_type='STANDARD',
+                issue_date=timezone.now().date(),
+                due_date=due_date,
+                subtotal=subtotal,
+                discount=discount,
+                discount_total=discount,
+                total_amount=total_amount,
+                amount_paid=Decimal('0.00'),
+                balance_due=total_amount,
+                status='ISSUED',
+                currency='CAD',
+                notes=desc
+            )
+            InvoiceItem.objects.create(
+                invoice=inv,
+                description=desc,
+                quantity=1,
+                unit_price=subtotal,
+                subtotal=subtotal,
+                total=subtotal
+            )
+            if apply_cwelcc and discount > 0:
+                InvoiceItem.objects.create(
+                    invoice=inv,
+                    description='CWELCC 52.75% Provincial Fee Reduction',
+                    quantity=1,
+                    unit_price=-discount,
+                    subtotal=-discount,
+                    total=-discount
+                )
+            messages.success(request, f"Invoice '{inv.invoice_number}' created and attached to {child.first_name} successfully.")
+            return redirect(f"{request.path}?tab=billing")
+
+        elif action == 'record_payment':
+            inv_id = request.POST.get('invoice_id')
+            inv = get_object_or_404(Invoice, pk=inv_id, daycare=daycare)
+            amount_val = request.POST.get('amount') or str(inv.balance_due)
+            try:
+                pay_amount = Decimal(str(amount_val))
+            except Exception:
+                pay_amount = inv.balance_due
+
+            pay_method = request.POST.get('payment_method', 'ETRANSFER')
+            txn_ref = request.POST.get('transaction_reference') or f"TXN-{uuid.uuid4().hex[:8].upper()}"
+            payer_name = request.POST.get('payer_name') or (inv.family.family_name if inv.family else f"{child.first_name}'s Parent")
+            pay_date = request.POST.get('payment_date') or timezone.now().date()
+
+            receipt_num = f"REC-{timezone.now().strftime('%Y%m')}-{uuid.uuid4().hex[:4].upper()}"
+            Payment.objects.create(
+                daycare=daycare,
+                invoice=inv,
+                family=inv.family,
+                student=child,
+                receipt_number=receipt_num,
+                amount=pay_amount,
+                currency='CAD',
+                payment_date=pay_date,
+                payment_method=pay_method,
+                status='COMPLETED',
+                transaction_reference=txn_ref,
+                payer_name=payer_name,
+                notes=request.POST.get('notes', 'Tuition payment recorded')
+            )
+
+            inv.amount_paid = inv.amount_paid + pay_amount
+            inv.balance_due = max(Decimal('0.00'), inv.total_amount - inv.amount_paid)
+            if inv.balance_due <= Decimal('0.00'):
+                inv.status = 'PAID'
+            else:
+                inv.status = 'PARTIALLY_PAID'
+            inv.save()
+
+            messages.success(request, f"Payment of ${pay_amount:.2f} recorded! Receipt '{receipt_num}' generated.")
+            return redirect(f"{request.path}?tab=billing")
 
         return redirect(f"{request.path}?tab={request.POST.get('tab', 'overview')}")
 

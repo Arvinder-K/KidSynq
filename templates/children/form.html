@@ -1,29 +1,46 @@
 {% extends "base.html" %}
 
-{% block title %}Enroll Child{% endblock %}
+{% block title %}Enroll Child &mdash; New Admission{% endblock %}
 
 {% block content %}
 <div class="mb-4">
     <a href="{% url 'daycare_children' %}" class="small text-muted text-decoration-none">
         <i class="bi bi-arrow-left me-1"></i> Back to Roster
     </a>
-    <h2 class="h4 fw-bold text-slate-800 mt-2 mb-1">New Child Admission</h2>
-    <p class="text-muted small">Enroll a student into the daycare center and assign initial room & medical notes</p>
+    <div class="d-flex justify-content-between align-items-center mt-2 flex-wrap gap-2">
+        <div>
+            <h2 class="h4 fw-bold text-slate-800 mb-1">New Child Admission & Enrollment</h2>
+            <p class="text-muted small mb-0">Enroll a student into the daycare center, assign room, register family contacts, attach initial invoice and collect payment.</p>
+        </div>
+    </div>
 </div>
 
-<form method="post" class="card border-0 shadow-sm" style="max-width: 900px;">
+<form method="post" id="enrollChildForm" class="card border-0 shadow-sm rounded-4 mb-5" style="max-width: 960px;">
     {% csrf_token %}
     <div class="card-body p-4 p-md-5">
-        
-        <h5 class="fw-bold text-primary mb-3"><i class="bi bi-person me-2"></i> Child Information</h5>
+
+        <!-- ============================================== -->
+        <!-- 1. CHILD INFORMATION -->
+        <!-- ============================================== -->
+        <div class="d-flex align-items-center gap-2 mb-3">
+            <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+                <i class="bi bi-person-fill fs-5"></i>
+            </div>
+            <h5 class="fw-bold text-slate-800 mb-0">Child Information</h5>
+        </div>
+
         <div class="row g-3 mb-4">
             <div class="col-12 col-md-6">
                 <label class="form-label small fw-semibold">First Name <span class="text-danger">*</span></label>
-                <input type="text" name="first_name" class="form-control" placeholder="e.g. Liam" required>
+                <input type="text" name="first_name" id="childFirstName" class="form-control" placeholder="e.g. Liam" required oninput="updatePayerNamePreview()">
             </div>
             <div class="col-12 col-md-6">
                 <label class="form-label small fw-semibold">Last Name <span class="text-danger">*</span></label>
-                <input type="text" name="last_name" class="form-control" placeholder="e.g. Miller" required>
+                <input type="text" name="last_name" id="childLastName" class="form-control" placeholder="e.g. Miller" required oninput="updatePayerNamePreview()">
+            </div>
+            <div class="col-12 col-md-4">
+                <label class="form-label small fw-semibold">Preferred Name / Nickname</label>
+                <input type="text" name="preferred_name" class="form-control" placeholder="e.g. Laim">
             </div>
             <div class="col-12 col-md-4">
                 <label class="form-label small fw-semibold">Date of Birth</label>
@@ -38,30 +55,100 @@
                     <option value="unspecified" selected>Prefer not to say</option>
                 </select>
             </div>
-            <div class="col-12 col-md-4">
-                <label class="form-label small fw-semibold">Enrollment Date</label>
-                <input type="date" name="enrollment_date" class="form-control" value="{{ 'now'|date:'Y-m-d' }}">
+            <div class="col-12 col-md-6">
+                <label class="form-label small fw-semibold">Enrollment / Start Date</label>
+                <input type="date" name="enrollment_date" class="form-control" value="{% now 'Y-m-d' %}">
+            </div>
+            <div class="col-12 col-md-6">
+                <label class="form-label small fw-semibold">Admission / Roster ID (Optional)</label>
+                <input type="text" name="admission_number" class="form-control" placeholder="e.g. ADM-2026-088">
             </div>
         </div>
 
         <hr class="my-4">
 
-        <h5 class="fw-bold text-primary mb-3"><i class="bi bi-door-open me-2"></i> Classroom & Program Assignment</h5>
+        <!-- ============================================== -->
+        <!-- 2. CLASSROOM & PROGRAM ASSIGNMENT -->
+        <!-- ============================================== -->
+        <div class="d-flex align-items-center gap-2 mb-3">
+            <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+                <i class="bi bi-door-open-fill fs-5"></i>
+            </div>
+            <h5 class="fw-bold text-slate-800 mb-0">Classroom & Program Assignment</h5>
+        </div>
+
         <div class="row g-3 mb-4">
-            <div class="col-12 col-md-6">
+            <div class="col-12 col-md-7">
                 <label class="form-label small fw-semibold">Assign Classroom</label>
                 <select name="classroom_id" class="form-select">
                     <option value="">Unassigned (Assign Later)</option>
                     {% for room in classrooms %}
-                    <option value="{{ room.id }}">{{ room.name }} (Capacity: {{ room.capacity }})</option>
+                    <option value="{{ room.id }}">
+                        {{ room.room_name }} (Cap: {{ room.capacity|default:"15" }} &bull; {{ room.age_group.name|default:room.age_group|default:"Toddler" }})
+                    </option>
                     {% endfor %}
                 </select>
+                <div class="form-text small text-muted">Educators in this room will automatically receive the child on their daily roster.</div>
             </div>
         </div>
 
         <hr class="my-4">
 
-        <h5 class="fw-bold text-primary mb-3"><i class="bi bi-heart-pulse me-2"></i> Health & Dietary Information</h5>
+        <!-- ============================================== -->
+        <!-- 3. PARENT & GUARDIAN INFORMATION -->
+        <!-- ============================================== -->
+        <div class="d-flex align-items-center gap-2 mb-3">
+            <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+                <i class="bi bi-people-fill fs-5"></i>
+            </div>
+            <h5 class="fw-bold text-slate-800 mb-0">Parent & Guardian Information</h5>
+        </div>
+
+        <div class="row g-3 mb-4">
+            <div class="col-12 col-md-6">
+                <label class="form-label small fw-semibold">Primary Guardian First Name</label>
+                <input type="text" name="guardian_first_name" id="guardianFirstName" class="form-control" placeholder="e.g. David" oninput="updatePayerNamePreview()">
+            </div>
+            <div class="col-12 col-md-6">
+                <label class="form-label small fw-semibold">Primary Guardian Last Name</label>
+                <input type="text" name="guardian_last_name" id="guardianLastName" class="form-control" placeholder="e.g. Miller" oninput="updatePayerNamePreview()">
+            </div>
+            <div class="col-12 col-md-4">
+                <label class="form-label small fw-semibold">Relationship to Child</label>
+                <select name="guardian_relationship" class="form-select">
+                    <option value="Father" selected>Father</option>
+                    <option value="Mother">Mother</option>
+                    <option value="Guardian">Legal Guardian</option>
+                    <option value="Foster Parent">Foster Parent</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+            <div class="col-12 col-md-4">
+                <label class="form-label small fw-semibold">Phone Number</label>
+                <input type="text" name="guardian_phone" class="form-control" placeholder="e.g. (416) 555-0142">
+            </div>
+            <div class="col-12 col-md-4">
+                <label class="form-label small fw-semibold">Email Address</label>
+                <input type="email" name="guardian_email" class="form-control" placeholder="e.g. david.miller@example.com">
+            </div>
+            <div class="col-12">
+                <label class="form-label small fw-semibold">Family Residential Address</label>
+                <input type="text" name="guardian_address" class="form-control" placeholder="e.g. 742 Evergreen Terrace, Toronto, ON M4B 1B3">
+            </div>
+        </div>
+
+        <hr class="my-4">
+
+        <!-- ============================================== -->
+        <!-- 4. HEALTH & DIETARY INFORMATION -->
+        <!-- ============================================== -->
+        <div class="d-flex align-items-center gap-2 mb-3">
+            <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+                <i class="bi bi-heart-pulse-fill fs-5"></i>
+            </div>
+            <h5 class="fw-bold text-slate-800 mb-0">Health & Dietary Information</h5>
+        </div>
+
         <div class="row g-3 mb-4">
             <div class="col-12 col-md-6">
                 <label class="form-label small fw-semibold">Medical / Allergy Notes</label>
@@ -69,15 +156,295 @@
             </div>
             <div class="col-12 col-md-6">
                 <label class="form-label small fw-semibold">Dietary Restrictions</label>
-                <textarea name="dietary_restrictions" class="form-control" rows="3" placeholder="e.g. Vegetarian, Lactose intolerance"></textarea>
+                <textarea name="dietary_restrictions" class="form-control" rows="3" placeholder="e.g. Vegetarian, Nut-free snack program only"></textarea>
+            </div>
+            <div class="col-12 col-md-4">
+                <label class="form-label small fw-semibold">Pediatrician / Clinic</label>
+                <input type="text" name="doctor_name" class="form-control form-control-sm" placeholder="e.g. Dr. Katherine Bell, MD">
+            </div>
+            <div class="col-12 col-md-4">
+                <label class="form-label small fw-semibold">Clinic Phone Number</label>
+                <input type="text" name="doctor_phone" class="form-control form-control-sm" placeholder="e.g. (416) 555-8822">
+            </div>
+            <div class="col-12 col-md-4">
+                <label class="form-label small fw-semibold">Preferred Emergency Hospital</label>
+                <input type="text" name="hospital_name" class="form-control form-control-sm" placeholder="e.g. SickKids Toronto">
             </div>
         </div>
 
-        <div class="d-flex justify-content-end gap-2 pt-3">
+        <hr class="my-4">
+
+        <!-- ============================================== -->
+        <!-- 5. ATTACH INITIAL INVOICE & PAYMENT OPTIONS -->
+        <!-- ============================================== -->
+        <div class="card border border-primary border-opacity-25 bg-primary bg-opacity-10 rounded-4 p-4 mb-4">
+            <div class="d-flex align-items-start justify-content-between mb-3 flex-wrap gap-2">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
+                        <i class="bi bi-receipt fs-5"></i>
+                    </div>
+                    <div>
+                        <h5 class="fw-bold text-slate-900 mb-0">Initial Billing Statement & Payment Option</h5>
+                        <p class="text-muted small mb-0">Attach an enrollment tuition invoice and collect or bill payment immediately.</p>
+                    </div>
+                </div>
+                <div class="form-check form-switch fs-5 mb-0">
+                    <input class="form-check-input" type="checkbox" id="attachInvoiceCheck" name="attach_invoice" value="true" checked onchange="toggleInvoiceSection()">
+                    <label class="form-check-label fw-semibold text-slate-800 fs-6 ms-2" for="attachInvoiceCheck">
+                        Attach Invoice
+                    </label>
+                </div>
+            </div>
+
+            <div id="invoiceSectionContainer">
+                <div class="card border-0 bg-white rounded-3 p-3 shadow-sm mb-3">
+                    <div class="row g-3">
+                        <!-- Fee Preset -->
+                        <div class="col-12 col-md-6">
+                            <label class="form-label small fw-semibold text-slate-800">Select Standard Fee Structure</label>
+                            <select id="feeStructureSelect" class="form-select form-select-sm" onchange="onFeeStructureChange()">
+                                {% for fee in fee_structures %}
+                                <option value="{{ fee.id }}" data-amount="{{ fee.amount }}" data-desc="{{ fee.name }}" {% if forloop.first %}selected{% endif %}>
+                                    {{ fee.name }} (${{ fee.amount|floatformat:2 }})
+                                </option>
+                                {% empty %}
+                                <option value="toddler" data-amount="1150.00" data-desc="Monthly Toddler Child Care Tuition" selected>Toddler Monthly Program ($1,150.00)</option>
+                                <option value="infant" data-amount="1350.00" data-desc="Monthly Infant Child Care Tuition">Infant Full-Time Program ($1,350.00)</option>
+                                <option value="preschool" data-amount="950.00" data-desc="Monthly Preschool Child Care Tuition">Preschool Program ($950.00)</option>
+                                <option value="reg" data-amount="100.00" data-desc="New Student Registration & Administrative Fee">Registration Fee ($100.00)</option>
+                                {% endfor %}
+                                <option value="custom" data-amount="1150.00" data-desc="Childcare Tuition Services">Custom Fee / Amount</option>
+                            </select>
+                        </div>
+
+                        <!-- Invoice Description -->
+                        <div class="col-12 col-md-6">
+                            <label class="form-label small fw-semibold text-slate-800">Invoice Description / Line Item</label>
+                            <input type="text" name="invoice_description" id="invoiceDescriptionInput" class="form-control form-control-sm" value="Monthly Toddler Child Care Tuition" required>
+                        </div>
+
+                        <!-- Amount Input -->
+                        <div class="col-12 col-md-4">
+                            <label class="form-label small fw-semibold text-slate-800">Standard Rate ($ CAD)</label>
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text">$</span>
+                                <input type="number" step="0.01" name="invoice_amount" id="invoiceAmountInput" class="form-control" value="1150.00" required oninput="calculateBilling()">
+                            </div>
+                        </div>
+
+                        <!-- Due Date -->
+                        <div class="col-12 col-md-4">
+                            <label class="form-label small fw-semibold text-slate-800">Invoice Due Date</label>
+                            <input type="date" name="due_date" id="dueDateInput" class="form-control form-control-sm" value="{% now 'Y-m-d' %}">
+                        </div>
+
+                        <!-- CWELCC Subsidy Checkbox -->
+                        <div class="col-12 col-md-4 d-flex align-items-end">
+                            <div class="form-check p-2 bg-info bg-opacity-10 border border-info border-opacity-25 rounded-2 w-100">
+                                <input class="form-check-input ms-1" type="checkbox" name="apply_cwelcc" id="applyCwelccCheck" value="true" checked onchange="calculateBilling()">
+                                <label class="form-check-label small fw-bold text-info ms-2" for="applyCwelccCheck">
+                                    Apply CWELCC Subsidy (52.75% Off)
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Live Calculation Box -->
+                    <div class="p-3 bg-light rounded-3 mt-3 border">
+                        <div class="d-flex justify-content-between align-items-center small mb-1">
+                            <span class="text-muted">Standard Program Tuition:</span>
+                            <span class="fw-semibold font-monospace" id="calcSubtotal">$1,150.00</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center small mb-2 text-info" id="calcSubsidyRow">
+                            <span>CWELCC Provincial Subsidy (52.75%):</span>
+                            <span class="fw-semibold font-monospace" id="calcDiscount">-$606.63</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                            <span class="fw-bold text-slate-800">Net Parent Payable Amount:</span>
+                            <span class="fw-bold font-monospace fs-5 text-success" id="calcTotal">$543.37</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ============================================== -->
+                <!-- PAYMENT OPTION (OPEN BY DEFAULT) -->
+                <!-- ============================================== -->
+                <div class="card border-0 bg-white rounded-3 p-4 shadow-sm">
+                    <div class="d-flex align-items-center gap-2 mb-3">
+                        <i class="bi bi-credit-card-2-front text-success fs-5"></i>
+                        <h6 class="fw-bold text-slate-900 mb-0">Payment Collection Option</h6>
+                    </div>
+
+                    <!-- Radio Toggle -->
+                    <div class="row g-2 mb-3">
+                        <div class="col-12 col-md-6">
+                            <label class="p-3 border rounded-3 w-100 d-flex align-items-start gap-2 cursor-pointer bg-light" id="payNowLabel">
+                                <input class="form-check-input mt-1" type="radio" name="payment_action" id="payNowRadio" value="pay_now" checked onchange="togglePaymentFields()">
+                                <div>
+                                    <strong class="text-slate-800 d-block">Collect Payment Now (Generate Receipt)</strong>
+                                    <span class="small text-muted">Records completed payment and generates an official parent payment receipt immediately.</span>
+                                </div>
+                            </label>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="p-3 border rounded-3 w-100 d-flex align-items-start gap-2 cursor-pointer bg-light" id="billLaterLabel">
+                                <input class="form-check-input mt-1" type="radio" name="payment_action" id="billLaterRadio" value="bill_later" onchange="togglePaymentFields()">
+                                <div>
+                                    <strong class="text-slate-800 d-block">Bill Family Later (Send Unpaid Statement)</strong>
+                                    <span class="small text-muted">Issues an open invoice with balance due to be paid by parent at a later date.</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Payment Details (Open when Pay Now selected) -->
+                    <div id="paymentDetailsFields">
+                        <div class="p-3 rounded-3 border border-success border-opacity-25 bg-success bg-opacity-10 mb-3">
+                            <div class="row g-3">
+                                <div class="col-12 col-md-4">
+                                    <label class="form-label small fw-semibold text-slate-800">Payment Method</label>
+                                    <select name="payment_method" class="form-select form-select-sm">
+                                        <option value="ETRANSFER" selected>Interac e-Transfer</option>
+                                        <option value="CREDIT_CARD">Credit Card</option>
+                                        <option value="DEBIT_CARD">Debit / POS</option>
+                                        <option value="CASH">Cash</option>
+                                        <option value="CHEQUE">Cheque</option>
+                                        <option value="BANK_TRANSFER">Direct Bank Transfer</option>
+                                    </select>
+                                </div>
+
+                                <div class="col-12 col-md-4">
+                                    <label class="form-label small fw-semibold text-slate-800">Amount Paid ($ CAD)</label>
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" step="0.01" name="paid_amount" id="paidAmountInput" class="form-control fw-bold font-monospace text-success" value="543.37" required>
+                                    </div>
+                                </div>
+
+                                <div class="col-12 col-md-4">
+                                    <label class="form-label small fw-semibold text-slate-800">Payment Date</label>
+                                    <input type="date" name="payment_date" class="form-control form-control-sm" value="{% now 'Y-m-d' %}">
+                                </div>
+
+                                <div class="col-12 col-md-6">
+                                    <label class="form-label small fw-semibold text-slate-800">Transaction Reference / Receipt Note</label>
+                                    <input type="text" name="transaction_reference" class="form-control form-control-sm" placeholder="e.g. e-Transfer Ref #884920, Cheque #104">
+                                </div>
+
+                                <div class="col-12 col-md-6">
+                                    <label class="form-label small fw-semibold text-slate-800">Payer Name</label>
+                                    <input type="text" name="payer_name" id="payerNameInput" class="form-control form-control-sm" placeholder="e.g. David Miller (Father)">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center gap-2 small text-success">
+                            <i class="bi bi-patch-check-fill fs-5"></i>
+                            <span>An official printable <strong>Payment Receipt</strong> will be automatically generated upon completing enrollment.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Submission Actions -->
+        <div class="d-flex justify-content-end gap-2 pt-3 border-top">
             <a href="{% url 'daycare_children' %}" class="btn btn-light border px-4">Cancel</a>
-            <button type="submit" class="btn btn-primary px-4 fw-semibold">Complete Enrollment</button>
+            <button type="submit" class="btn btn-primary px-4 fw-semibold d-inline-flex align-items-center gap-2">
+                <i class="bi bi-person-check-fill"></i> Complete Enrollment & Generate Receipt
+            </button>
         </div>
     </div>
 </form>
-{% endblock %}
 
+<script>
+function updatePayerNamePreview() {
+    const gFirst = document.getElementById('guardianFirstName').value.trim();
+    const gLast = document.getElementById('guardianLastName').value.trim();
+    const cLast = document.getElementById('childLastName').value.trim();
+    const payerInput = document.getElementById('payerNameInput');
+    
+    if (gFirst || gLast) {
+        payerInput.value = (gFirst + ' ' + gLast).trim();
+    } else if (cLast) {
+        payerInput.value = cLast + ' Family';
+    }
+}
+
+function onFeeStructureChange() {
+    const select = document.getElementById('feeStructureSelect');
+    const selectedOption = select.options[select.selectedIndex];
+    const amount = selectedOption.getAttribute('data-amount');
+    const desc = selectedOption.getAttribute('data-desc');
+
+    if (amount) {
+        document.getElementById('invoiceAmountInput').value = parseFloat(amount).toFixed(2);
+    }
+    if (desc) {
+        document.getElementById('invoiceDescriptionInput').value = desc;
+    }
+    calculateBilling();
+}
+
+function calculateBilling() {
+    const rawAmount = parseFloat(document.getElementById('invoiceAmountInput').value) || 0.00;
+    const applyCwelcc = document.getElementById('applyCwelccCheck').checked;
+    
+    let discount = 0.00;
+    if (applyCwelcc) {
+        discount = rawAmount * 0.5275;
+        document.getElementById('calcSubsidyRow').style.display = 'flex';
+    } else {
+        document.getElementById('calcSubsidyRow').style.display = 'none';
+    }
+
+    const netTotal = Math.max(0.00, rawAmount - discount);
+
+    document.getElementById('calcSubtotal').textContent = '$' + rawAmount.toFixed(2);
+    document.getElementById('calcDiscount').textContent = '-$' + discount.toFixed(2);
+    document.getElementById('calcTotal').textContent = '$' + netTotal.toFixed(2);
+    
+    // Update paid amount default
+    document.getElementById('paidAmountInput').value = netTotal.toFixed(2);
+}
+
+function toggleInvoiceSection() {
+    const check = document.getElementById('attachInvoiceCheck');
+    const container = document.getElementById('invoiceSectionContainer');
+    if (check.checked) {
+        container.style.display = 'block';
+    } else {
+        container.style.display = 'none';
+    }
+}
+
+function togglePaymentFields() {
+    const payNowRadio = document.getElementById('payNowRadio');
+    const fields = document.getElementById('paymentDetailsFields');
+    const payNowLabel = document.getElementById('payNowLabel');
+    const billLaterLabel = document.getElementById('billLaterLabel');
+
+    if (payNowRadio.checked) {
+        fields.style.display = 'block';
+        payNowLabel.classList.add('border-primary', 'bg-primary', 'bg-opacity-10');
+        billLaterLabel.classList.remove('border-primary', 'bg-primary', 'bg-opacity-10');
+    } else {
+        fields.style.display = 'none';
+        billLaterLabel.classList.add('border-primary', 'bg-primary', 'bg-opacity-10');
+        payNowLabel.classList.remove('border-primary', 'bg-primary', 'bg-opacity-10');
+    }
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    calculateBilling();
+    togglePaymentFields();
+    updatePayerNamePreview();
+});
+</script>
+
+<style>
+.cursor-pointer {
+    cursor: pointer;
+}
+</style>
+{% endblock %}

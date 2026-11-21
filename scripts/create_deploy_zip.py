@@ -4,8 +4,11 @@ import zipfile
 BASE_DIR = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
 ZIP_NAME = os.path.join(BASE_DIR, "kidsynq_deploy.zip")
 
-INCLUDE_DIRS = ['apps', 'config', 'kidsynq', 'static', 'staticfiles', 'templates', 'media']
-INCLUDE_FILES = ['manage.py', 'passenger_wsgi.py', '.htaccess', 'requirements.txt', '.env.example']
+INCLUDE_DIRS = ['apps', 'config', 'kidsynq', 'static', 'staticfiles', 'templates', 'media', 'scripts']
+INCLUDE_FILES = [
+    'manage.py', 'passenger_wsgi.py', '.htaccess', 'requirements.txt', '.env.example',
+    'reset_fresh_database.py', 'reset_fresh_database', 'seed_all_data.py', 'seed_all_data'
+]
 
 print(f"Creating {ZIP_NAME} from {BASE_DIR}...")
 
