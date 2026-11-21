@@ -158,11 +158,11 @@ class RatioMonitoringService:
 
         # C) Classroom direct staff relations (if user linked to employee)
         if classroom.primary_teacher:
-            pe = Employee.objects.filter(user=classroom.primary_teacher, daycare=daycare, is_active=True).first()
+            pe = Employee.objects.filter(user=classroom.primary_teacher, daycare=daycare, status__iexact='Active').first()
             if pe:
                 teacher_emp_ids.add(pe.id)
         if classroom.assistant_teacher:
-            ae = Employee.objects.filter(user=classroom.assistant_teacher, daycare=daycare, is_active=True).first()
+            ae = Employee.objects.filter(user=classroom.assistant_teacher, daycare=daycare, status__iexact='Active').first()
             if ae:
                 teacher_emp_ids.add(ae.id)
 

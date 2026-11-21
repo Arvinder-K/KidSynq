@@ -1,62 +1,126 @@
 {% extends "base.html" %}
 
-{% block title %}Daily Report - {{ child.first_name }} - KidSynq{% endblock %}
+{% block title %}Daily Activity Report: {{ child.first_name }} {{ child.last_name }} - KidSynq{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-        <h2 class="h4 fw-bold text-slate-800 mb-1">Daily Report: {{ child.first_name }} {{ child.last_name }}</h2>
-        <p class="text-muted small mb-0">Record date: {{ date }} &bull; Classroom: {{ child.classroom.name|default:"Unassigned" }}</p>
+<!-- Top Header & Action Toolbar -->
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-4">
+    <div class="d-flex align-items-center gap-3">
+        <div class="rounded-circle bg-primary bg-opacity-10 text-primary fw-bold fs-4 d-flex align-items-center justify-content-center" style="width: 56px; height: 56px;">
+            {{ child.first_name|first }}{{ child.last_name|first }}
+        </div>
+        <div>
+            <div class="d-flex align-items-center gap-2">
+                <h2 class="h4 fw-bold text-slate-800 mb-0">{{ child.first_name }} {{ child.last_name }}</h2>
+                {% if report.status == 'Published' %}
+                    <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">
+                        <i class="bi bi-cloud-check me-1"></i> Published to Family
+                    </span>
+                {% else %}
+                    <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-2 py-1">
+                        <i class="bi bi-pencil-square me-1"></i> Draft Report
+                    </span>
+                {% endif %}
+            </div>
+            <p class="text-muted small mb-0">
+                Date: <strong>{{ date }}</strong> &bull; 
+                Classroom: <strong>{{ child.classroom.room_name|default:"Unassigned" }}</strong> &bull;
+                {% if attendance and attendance.check_in_time %}
+                    Arrival: <span class="text-success fw-semibold">{{ attendance.check_in_time|time:"g:i A" }}</span>
+                {% else %}
+                    Arrival: <span class="text-muted">Not recorded</span>
+                {% endif %}
+                {% if attendance and attendance.check_out_time %}
+                    &bull; Departure: <span class="text-secondary fw-semibold">{{ attendance.check_out_time|time:"g:i A" }}</span>
+                {% endif %}
+            </p>
+        </div>
     </div>
-    <a href="{% url 'daycare_daily_reports' %}?date={{ date }}" class="btn btn-outline-secondary d-inline-flex align-items-center gap-2">
-        <i class="bi bi-arrow-left"></i> Back to Hub
-    </a>
+    <div class="d-flex flex-wrap gap-2">
+        <a href="{% url 'daycare_daily_reports' %}?date={{ date }}" class="btn btn-outline-secondary d-inline-flex align-items-center gap-2">
+            <i class="bi bi-arrow-left"></i> Hub
+        </a>
+        <a href="{% url 'daycare_attendance' %}?date={{ date }}" class="btn btn-outline-primary d-inline-flex align-items-center gap-2">
+            <i class="bi bi-calendar-check"></i> Roll Call
+        </a>
+        <form method="post" class="d-inline">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="publish_report">
+            <button type="submit" class="btn btn-success d-inline-flex align-items-center gap-2">
+                <i class="bi bi-send-check-fill"></i> Publish to Family Portal
+            </button>
+        </form>
+    </div>
 </div>
 
 <div class="row g-4">
-    <!-- Meals Section -->
-    <div class="col-12 col-md-6">
-        <div class="card border-0 shadow-sm h-100">
+    <!-- LEFT COLUMN: Meals, Naps, Diapers/Potty -->
+    <div class="col-12 col-lg-6">
+        <!-- 1. MEALS & FLUID INTAKE -->
+        <div class="card border-0 shadow-sm mb-4">
             <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
-                <h6 class="card-title mb-0 fw-semibold text-slate-800">
-                    <i class="bi bi-egg-fried text-warning me-2"></i> Meals & Snacks
+                <h6 class="card-title mb-0 fw-bold text-slate-800">
+                    <i class="bi bi-egg-fried text-warning me-2"></i> Meals & Hydration
                 </h6>
+                <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addMealModal">
+                    <i class="bi bi-plus-lg"></i> Add Entry
+                </button>
             </div>
             <div class="card-body p-0">
                 <div class="list-group list-group-flush">
-                    {% for meal in meals %}
-                    <div class="list-group-item d-flex justify-content-between align-items-center">
-                        <div>
-                            <div class="fw-medium text-slate-800">{{ meal.meal_type|title }}</div>
-                            <small class="text-muted">{{ meal.food_items|default:"Standard meal" }}</small>
+                    {% for m in meals %}
+                    <div class="list-group-item p-3">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <div class="fw-semibold text-slate-800">{{ m.meal_type }}</div>
+                                <div class="text-muted small">{{ m.food_provided|default:"Standard meal" }}</div>
+                                {% if m.notes %}
+                                    <div class="small text-secondary mt-1"><i class="bi bi-info-circle me-1"></i>{{ m.notes }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="text-end">
+                                <span class="badge {% if m.amount_eaten == 'All' %}bg-success-subtle text-success{% elif m.amount_eaten == 'Most' %}bg-info-subtle text-info{% elif m.amount_eaten == 'None' %}bg-danger-subtle text-danger{% else %}bg-warning-subtle text-warning{% endif %}">
+                                    {{ m.amount_eaten|default:"All" }}
+                                </span>
+                                {% if m.time %}
+                                    <div class="text-muted small font-monospace mt-1">{{ m.time|time:"g:i A" }}</div>
+                                {% endif %}
+                            </div>
                         </div>
-                        <span class="badge bg-light text-dark">{{ meal.quantity_consumed|default:"All" }}</span>
                     </div>
                     {% empty %}
-                    <div class="text-center py-4 text-muted small">No meal entries recorded for today.</div>
+                    <div class="text-center py-4 text-muted small">No meals or hydration logged yet.</div>
                     {% endfor %}
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Nap Times -->
-    <div class="col-12 col-md-6">
-        <div class="card border-0 shadow-sm h-100">
+        <!-- 2. NAP & REST PERIODS -->
+        <div class="card border-0 shadow-sm mb-4">
             <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
-                <h6 class="card-title mb-0 fw-semibold text-slate-800">
-                    <i class="bi bi-moon-stars text-primary me-2"></i> Nap & Rest Periods
+                <h6 class="card-title mb-0 fw-bold text-slate-800">
+                    <i class="bi bi-moon-stars-fill text-indigo-500 me-2"></i> Nap & Rest Periods
                 </h6>
+                <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addNapModal">
+                    <i class="bi bi-plus-lg"></i> Add Nap
+                </button>
             </div>
             <div class="card-body p-0">
                 <div class="list-group list-group-flush">
-                    {% for nap in naps %}
-                    <div class="list-group-item d-flex justify-content-between align-items-center">
-                        <div>
-                            <div class="fw-medium text-slate-800">Nap Session</div>
-                            <small class="text-muted">{{ nap.notes|default:"Restful" }}</small>
+                    {% for n in naps %}
+                    <div class="list-group-item p-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="fw-semibold text-slate-800">
+                                    {{ n.start_time|time:"g:i A" }} - {% if n.end_time %}{{ n.end_time|time:"g:i A" }}{% else %}<span class="text-muted">In Progress</span>{% endif %}
+                                </div>
+                                <div class="text-muted small">Quality: <strong class="text-slate-800">{{ n.quality|default:"Slept Well" }}</strong></div>
+                                {% if n.notes %}
+                                    <div class="small text-secondary mt-1">{{ n.notes }}</div>
+                                {% endif %}
+                            </div>
+                            <span class="badge bg-primary-subtle text-primary">{{ n.duration_minutes|default:"--" }} min</span>
                         </div>
-                        <span class="badge bg-primary-subtle text-primary">{{ nap.start_time|time:"g:i A" }} - {{ nap.end_time|time:"g:i A" }}</span>
                     </div>
                     {% empty %}
                     <div class="text-center py-4 text-muted small">No nap periods recorded today.</div>
@@ -64,30 +128,646 @@
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Activities -->
-    <div class="col-12">
-        <div class="card border-0 shadow-sm">
-            <div class="card-header bg-white border-bottom py-3">
-                <h6 class="card-title mb-0 fw-semibold text-slate-800">
-                    <i class="bi bi-palette text-success me-2"></i> Learning & Play Activities
+        <!-- 3. DIAPER & TOILETING ACTIVITIES -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                <h6 class="card-title mb-0 fw-bold text-slate-800">
+                    <i class="bi bi-droplet-half text-teal me-2"></i> Diaper & Toileting
                 </h6>
+                <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addToiletModal">
+                    <i class="bi bi-plus-lg"></i> Add Check
+                </button>
             </div>
             <div class="card-body p-0">
                 <div class="list-group list-group-flush">
-                    {% for act in activities %}
-                    <div class="list-group-item">
-                        <div class="fw-medium text-slate-800">{{ act.title }}</div>
-                        <small class="text-muted">{{ act.description|default:"" }}</small>
+                    {% for t in toileting %}
+                    <div class="list-group-item p-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="fw-semibold text-slate-800">{{ t.type|default:"Diaper Check" }}</div>
+                                <div class="text-muted small">
+                                    Condition: <strong class="text-slate-800">{{ t.condition }}</strong> &bull; 
+                                    Assistance: {{ t.assistance_level|default:"Assisted" }}
+                                </div>
+                                {% if t.notes %}
+                                    <div class="small text-secondary mt-1">{{ t.notes }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="text-muted small font-monospace">{{ t.time|time:"g:i A" }}</div>
+                        </div>
                     </div>
                     {% empty %}
-                    <div class="text-center py-4 text-muted small">No specific curriculum activities logged.</div>
+                    <div class="text-center py-4 text-muted small">No diaper or toileting checks recorded today.</div>
                     {% endfor %}
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- RIGHT COLUMN: Mood, Activities, Meds, Incidents, Notes -->
+    <div class="col-12 col-lg-6">
+        <!-- 4. MOOD & WELL-BEING -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                <h6 class="card-title mb-0 fw-bold text-slate-800">
+                    <i class="bi bi-emoji-smile-fill text-warning me-2"></i> Mood & Disposition
+                </h6>
+                <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addMoodModal">
+                    <i class="bi bi-plus-lg"></i> Add Mood
+                </button>
+            </div>
+            <div class="card-body p-3">
+                <div class="d-flex flex-wrap gap-2">
+                    {% for m in moods %}
+                    <span class="badge bg-light text-slate-800 border px-3 py-2">
+                        <i class="bi bi-emoji-smile me-1 text-primary"></i> {{ m.mood }} 
+                        <span class="text-muted ms-1 font-monospace">{{ m.time|time:"g:i A" }}</span>
+                    </span>
+                    {% empty %}
+                    <span class="text-muted small">No mood updates logged yet.</span>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. LEARNING, ACTIVITIES & OUTDOOR PLAY -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                <h6 class="card-title mb-0 fw-bold text-slate-800">
+                    <i class="bi bi-tree-fill text-success me-2"></i> Activities & Outdoor Play
+                </h6>
+                <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addActivityModal">
+                    <i class="bi bi-plus-lg"></i> Add Activity
+                </button>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for act in activities %}
+                    <div class="list-group-item p-3">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <div class="fw-semibold text-slate-800">{{ act.name }}</div>
+                                <span class="badge bg-success-subtle text-success small">{{ act.activity_category|default:"Curriculum" }}</span>
+                                <span class="badge bg-light text-muted small border">{{ act.learning_area|default:"Cognitive" }}</span>
+                                {% if act.description %}
+                                    <div class="small text-muted mt-1">{{ act.description }}</div>
+                                {% endif %}
+                            </div>
+                            <span class="badge bg-primary-subtle text-primary">{{ act.participation|default:"Engaged" }}</span>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-4 text-muted small">No specific curriculum activities logged yet.</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- 6. AUTHORIZED MEDICATION ADMINISTRATION -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                <h6 class="card-title mb-0 fw-bold text-slate-800">
+                    <i class="bi bi-capsule text-danger me-2"></i> Medication Administration
+                </h6>
+                {% if medications_prescribed %}
+                <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#addMedicationModal">
+                    <i class="bi bi-plus-lg"></i> Record Dose
+                </button>
+                {% endif %}
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for admin in medications_administered %}
+                    <div class="list-group-item p-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="fw-semibold text-slate-800">{{ admin.medication.medication_name }}</div>
+                                <div class="text-muted small">
+                                    Dose: <strong>{{ admin.dosage_given }}</strong> &bull; 
+                                    Administered by: {{ admin.administered_by.first_name|default:"Educator" }} &bull;
+                                    Witness: {{ admin.witness.first_name|default:"Verified" }}
+                                </div>
+                            </div>
+                            <span class="badge bg-success-subtle text-success">{{ admin.time|time:"g:i A" }}</span>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-3 text-muted small">
+                        {% if medications_prescribed %}
+                            Medications on file. None administered today.
+                        {% else %}
+                            No active medications authorized for this child.
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- 7. HEALTH, TEMPERATURE & INCIDENTS -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                <h6 class="card-title mb-0 fw-bold text-slate-800">
+                    <i class="bi bi-thermometer-half text-info me-2"></i> Health Checks & Incidents
+                </h6>
+                <div class="d-flex gap-1">
+                    <button type="button" class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#addTempModal">
+                        <i class="bi bi-plus-lg"></i> Temp
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-warning" data-bs-toggle="modal" data-bs-target="#addIncidentModal">
+                        <i class="bi bi-plus-lg"></i> Incident
+                    </button>
+                </div>
+            </div>
+            <div class="card-body p-3">
+                <div class="row g-2">
+                    <div class="col-6">
+                        <div class="p-2 bg-light rounded text-center">
+                            <div class="text-muted small">Temperature Checks</div>
+                            {% for temp in temperatures %}
+                                <div class="fw-bold text-slate-800 mt-1">{{ temp.temperature_value }}°C ({{ temp.time|time:"g:i A" }})</div>
+                            {% empty %}
+                                <div class="text-muted small mt-1">Normal / None logged</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="p-2 bg-light rounded text-center">
+                            <div class="text-muted small">Incidents Logged</div>
+                            {% for inc in incidents %}
+                                <div class="fw-bold text-danger mt-1">{{ inc.incident_type }} ({{ inc.severity }})</div>
+                            {% empty %}
+                                <div class="text-muted small mt-1">No incidents reported</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 8. EDUCATOR MESSAGE & SUMMARY -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white border-bottom py-3">
+                <h6 class="card-title mb-0 fw-bold text-slate-800">
+                    <i class="bi bi-chat-quote-fill text-primary me-2"></i> Educator Daily Note to Family
+                </h6>
+            </div>
+            <div class="card-body p-3">
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="save_notes">
+                    <div class="mb-3">
+                        <textarea name="notes" class="form-control" rows="3" placeholder="Write a summary message for the parents about today's achievements, friends, or reminders...">{{ report.notes|default:"" }}</textarea>
+                    </div>
+                    <button type="submit" class="btn btn-sm btn-primary">Save Educator Note</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== MODALS FOR ADDING ACTIVITIES ==================== -->
+
+<!-- Modal: Add Meal -->
+<div class="modal fade" id="addMealModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="add_meal">
+                <div class="modal-header border-bottom py-3">
+                    <h5 class="modal-title fw-bold text-slate-800"><i class="bi bi-egg-fried text-warning me-2"></i>Log Meal or Hydration</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Meal Type</label>
+                        <select name="meal_type" class="form-select">
+                            <option value="Breakfast">Breakfast</option>
+                            <option value="Morning Snack">Morning Snack</option>
+                            <option value="Lunch" selected>Lunch</option>
+                            <option value="Afternoon Snack">Afternoon Snack</option>
+                            <option value="Late Snack">Late Snack</option>
+                            <option value="Water / Hydration">Water / Hydration</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Food / Beverage Provided</label>
+                        <input type="text" name="food_provided" class="form-control" placeholder="e.g. Oatmeal with berries, Milk">
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="form-label fw-semibold">Amount Eaten</label>
+                            <select name="amount_eaten" class="form-select">
+                                <option value="All" selected>All</option>
+                                <option value="Most">Most</option>
+                                <option value="Half">Half</option>
+                                <option value="Little">Little</option>
+                                <option value="None">None</option>
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label fw-semibold">Fluid Intake (Optional)</label>
+                            <input type="text" name="fluid_intake" class="form-control" placeholder="e.g. 180 ml / 6 oz">
+                        </div>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="form-label fw-semibold">Time</label>
+                            <input type="time" name="time" class="form-control">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label fw-semibold">Notes</label>
+                            <input type="text" name="notes" class="form-control" placeholder="e.g. Asked for seconds">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-top py-2">
+                    <button type="button" class="btn btn-light border" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Meal</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Add Nap -->
+<div class="modal fade" id="addNapModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="add_nap">
+                <div class="modal-header border-bottom py-3">
+                    <h5 class="modal-title fw-bold text-slate-800"><i class="bi bi-moon-stars text-primary me-2"></i>Record Nap / Rest</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="form-label fw-semibold">Start Time *</label>
+                            <input type="time" name="start_time" class="form-control" required>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label fw-semibold">End Time</label>
+                            <input type="time" name="end_time" class="form-control">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Nap Quality</label>
+                        <select name="quality" class="form-select">
+                            <option value="Slept" selected>Slept Well</option>
+                            <option value="Restful">Restful / Quiet Time</option>
+                            <option value="Restless">Restless</option>
+                            <option value="Did Not Sleep">Did Not Sleep</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Notes</label>
+                        <input type="text" name="notes" class="form-control" placeholder="e.g. Fell asleep quickly with lullaby">
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-top py-2">
+                    <button type="button" class="btn btn-light border" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Nap</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Add Toileting -->
+<div class="modal fade" id="addToiletModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="add_toileting">
+                <div class="modal-header border-bottom py-3">
+                    <h5 class="modal-title fw-bold text-slate-800"><i class="bi bi-droplet-half text-teal me-2"></i>Log Diaper / Potty Check</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="form-label fw-semibold">Type</label>
+                            <select name="record_type" class="form-select">
+                                <option value="Diaper" selected>Diaper Check</option>
+                                <option value="Potty">Potty Attempt</option>
+                                <option value="Toilet">Toilet Success</option>
+                                <option value="Accident">Accident</option>
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label fw-semibold">Condition</label>
+                            <select name="condition" class="form-select">
+                                <option value="Dry">Dry</option>
+                                <option value="Wet" selected>Wet</option>
+                                <option value="BM">Bowel Movement</option>
+                                <option value="Both">Both</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="form-label fw-semibold">Assistance Level</label>
+                            <select name="assistance_level" class="form-select">
+                                <option value="Assisted" selected>Assisted</option>
+                                <option value="Independent">Independent</option>
+                                <option value="Full Assistance">Full Assistance</option>
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label fw-semibold">Time</label>
+                            <input type="time" name="time" class="form-control">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Notes</label>
+                        <input type="text" name="notes" class="form-control" placeholder="e.g. Diaper cream applied">
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-top py-2">
+                    <button type="button" class="btn btn-light border" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Check</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Add Mood -->
+<div class="modal fade" id="addMoodModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="add_mood">
+                <div class="modal-header border-bottom py-3">
+                    <h5 class="modal-title fw-bold text-slate-800"><i class="bi bi-emoji-smile text-warning me-2"></i>Record Mood</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Mood & Disposition</label>
+                        <select name="mood" class="form-select">
+                            <option value="Happy" selected>Happy & Cheerful</option>
+                            <option value="Energetic">Energetic & Playful</option>
+                            <option value="Calm">Calm & Content</option>
+                            <option value="Fussy">Fussy / Clingy</option>
+                            <option value="Tired">Tired / Needing Rest</option>
+                            <option value="Sad">Sad / Misses Home</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Time</label>
+                        <input type="time" name="time" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Notes</label>
+                        <input type="text" name="notes" class="form-control" placeholder="e.g. Smiling during circle time">
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-top py-2">
+                    <button type="button" class="btn btn-light border" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Mood</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Add Activity -->
+<div class="modal fade" id="addActivityModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="add_activity">
+                <div class="modal-header border-bottom py-3">
+                    <h5 class="modal-title fw-bold text-slate-800"><i class="bi bi-tree text-success me-2"></i>Log Activity & Outdoor Play</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Activity Title *</label>
+                        <input type="text" name="name" class="form-control" placeholder="e.g. Playground Nature Walk & Tricycles" required>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="form-label fw-semibold">Category</label>
+                            <select name="activity_category" class="form-select">
+                                <option value="Outdoor Play" selected>Outdoor Play & Nature</option>
+                                <option value="Sensory Play">Sensory Play</option>
+                                <option value="Gross Motor">Gross Motor Skills</option>
+                                <option value="Fine Motor">Fine Motor & Crafts</option>
+                                <option value="Creative Arts">Creative Arts & Music</option>
+                                <option value="Storytime">Storytime & Literacy</option>
+                                <option value="STEM">STEM & Science Discovery</option>
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label fw-semibold">Learning Domain</label>
+                            <select name="learning_area" class="form-select">
+                                <option value="Physical & Well-Being" selected>Physical & Well-Being</option>
+                                <option value="Cognitive & Discovery">Cognitive & Discovery</option>
+                                <option value="Social-Emotional">Social-Emotional</option>
+                                <option value="Language & Communication">Language & Communication</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="form-label fw-semibold">Participation</label>
+                            <select name="participation" class="form-select">
+                                <option value="Engaged" selected>Actively Engaged</option>
+                                <option value="Enthusiastic">Enthusiastic Leader</option>
+                                <option value="Gentle">Gentle Participation</option>
+                                <option value="Observer">Observer</option>
+                            </select>
+                        </div>
+                        <div class="col-3">
+                            <label class="form-label fw-semibold">Start</label>
+                            <input type="time" name="start_time" class="form-control">
+                        </div>
+                        <div class="col-3">
+                            <label class="form-label fw-semibold">End</label>
+                            <input type="time" name="end_time" class="form-control">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Description</label>
+                        <textarea name="description" class="form-control" rows="2" placeholder="e.g. Practiced balance and enjoyed ball games with peers outdoors."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-top py-2">
+                    <button type="button" class="btn btn-light border" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Activity</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Add Medication -->
+{% if medications_prescribed %}
+<div class="modal fade" id="addMedicationModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="add_medication">
+                <div class="modal-header border-bottom py-3">
+                    <h5 class="modal-title fw-bold text-slate-800"><i class="bi bi-capsule text-danger me-2"></i>Record Medication Administration</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Prescribed Medication *</label>
+                        <select name="medication_id" class="form-select" required>
+                            {% for med in medications_prescribed %}
+                            <option value="{{ med.id }}">{{ med.medication_name }} - {{ med.dosage }} ({{ med.frequency }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="form-label fw-semibold">Dosage Given</label>
+                            <input type="text" name="dosage_given" class="form-control" placeholder="e.g. 5 ml">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label fw-semibold">Time Administered</label>
+                            <input type="time" name="time" class="form-control">
+                        </div>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="form-label fw-semibold">Staff Witness</label>
+                            <select name="witness_id" class="form-select">
+                                <option value="">-- Select Witness Educator --</option>
+                                {% for emp in employees %}
+                                <option value="{{ emp.id }}">{{ emp.first_name }} {{ emp.last_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label fw-semibold">Outcome</label>
+                            <select name="outcome" class="form-select">
+                                <option value="Normal" selected>Normal / Tolerated</option>
+                                <option value="Refused">Refused</option>
+                                <option value="Vomited">Vomited</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Notes</label>
+                        <input type="text" name="teacher_notes" class="form-control" placeholder="e.g. Taken with water, child felt fine">
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-top py-2">
+                    <button type="button" class="btn btn-light border" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Confirm Administration</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Modal: Add Temperature -->
+<div class="modal fade" id="addTempModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="add_temperature">
+                <div class="modal-header border-bottom py-3">
+                    <h5 class="modal-title fw-bold text-slate-800"><i class="bi bi-thermometer-half text-info me-2"></i>Record Temperature</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="form-label fw-semibold">Temperature (°C) *</label>
+                            <input type="number" step="0.1" name="temperature_value" class="form-control" placeholder="e.g. 36.8" required>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label fw-semibold">Method</label>
+                            <select name="method" class="form-select">
+                                <option value="Forehead" selected>Forehead Scan</option>
+                                <option value="Ear">Ear / Tympanic</option>
+                                <option value="Armpit">Armpit / Axillary</option>
+                                <option value="Oral">Oral</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Notes</label>
+                        <input type="text" name="notes" class="form-control" placeholder="e.g. Routine check upon arrival">
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-top py-2">
+                    <button type="button" class="btn btn-light border" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-info text-white">Save Temperature</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Add Incident -->
+<div class="modal fade" id="addIncidentModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="add_incident">
+                <div class="modal-header border-bottom py-3">
+                    <h5 class="modal-title fw-bold text-slate-800"><i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>Log Incident</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="form-label fw-semibold">Incident Type</label>
+                            <select name="incident_type" class="form-select">
+                                <option value="Minor Scratch" selected>Minor Scratch</option>
+                                <option value="Bump / Bruise">Bump / Bruise</option>
+                                <option value="Fall">Fall</option>
+                                <option value="Bite">Bite</option>
+                                <option value="Scrape">Scrape</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label fw-semibold">Severity</label>
+                            <select name="severity" class="form-select">
+                                <option value="Low" selected>Low (Minor / Bandage)</option>
+                                <option value="Medium">Medium (Ice pack applied)</option>
+                                <option value="High">High (Requires parent contact)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Description *</label>
+                        <textarea name="description" class="form-control" rows="2" placeholder="Describe what happened..." required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">First Aid / Action Taken *</label>
+                        <input type="text" name="action_taken" class="form-control" placeholder="e.g. Washed with warm water, cold compress applied" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Witness Educator</label>
+                        <input type="text" name="witness" class="form-control" placeholder="e.g. Sarah Jenkins">
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-top py-2">
+                    <button type="button" class="btn btn-light border" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-warning">Save Incident</button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 {% endblock %}
-

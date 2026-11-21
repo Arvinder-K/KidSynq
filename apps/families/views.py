@@ -48,8 +48,19 @@ class FamilyDailyReportsView(GuardianRequiredMixin, View):
         today = timezone.now().date()
         date_str = request.GET.get('date', today.strftime('%Y-%m-%d'))
         children = get_guardian_children(request.user)
-        reports = DailyReport.objects.filter(student__in=children, report_date=date_str).select_related('student')
-        return render(request, self.template_name, {'reports': reports, 'selected_date': date_str})
+        reports = DailyReport.objects.filter(
+            student__in=children,
+            report_date=date_str
+        ).select_related(
+            'student', 'classroom', 'teacher', 'attendance_record', 'attendance_record__pickup_person'
+        ).prefetch_related(
+            'meals', 'naps', 'toileting', 'activities', 'moods', 'temperatures', 'photos'
+        )
+        return render(request, self.template_name, {
+            'reports': reports,
+            'selected_date': date_str,
+            'children': children
+        })
 
 class FamilyBillingView(GuardianRequiredMixin, View):
     template_name = 'family/billing.html'
