@@ -260,6 +260,17 @@ class DaycareSubscription(models.Model):
         super().save(*args, **kwargs)
 
 class Employee(models.Model):
+    @property
+    def full_name(self):
+        return f"{self.first_name or ''} {self.last_name or ''}".strip()
+
+    def get_full_name(self):
+        return self.full_name
+
+    @property
+    def username(self):
+        return self.user.username if self.user else ''
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     daycare = models.ForeignKey(Daycare, on_delete=models.CASCADE, related_name='employees')
     user = models.OneToOneField(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='employee_profile')
@@ -2007,6 +2018,13 @@ class FamilyMessage(models.Model):
 
 
 class Guardian(models.Model):
+    @property
+    def full_name(self):
+        return f"{self.first_name or ''} {self.last_name or ''}".strip()
+
+    def get_full_name(self):
+        return self.full_name
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     first_name = models.CharField(max_length=255)
     last_name = models.CharField(max_length=255)
