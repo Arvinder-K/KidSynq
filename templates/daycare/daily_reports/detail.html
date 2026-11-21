@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}Daily Report - {{ child.first_name }} - KidSynq{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="h4 fw-bold text-slate-800 mb-1">Daily Report: {{ child.first_name }} {{ child.last_name }}</h2>
+        <p class="text-muted small mb-0">Record date: {{ date }} &bull; Classroom: {{ child.classroom.name|default:"Unassigned" }}</p>
+    </div>
+    <a href="{% url 'daycare_daily_reports' %}?date={{ date }}" class="btn btn-outline-secondary d-inline-flex align-items-center gap-2">
+        <i class="bi bi-arrow-left"></i> Back to Hub
+    </a>
+</div>
+
+<div class="row g-4">
+    <!-- Meals Section -->
+    <div class="col-12 col-md-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                <h6 class="card-title mb-0 fw-semibold text-slate-800">
+                    <i class="bi bi-egg-fried text-warning me-2"></i> Meals & Snacks
+                </h6>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for meal in meals %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="fw-medium text-slate-800">{{ meal.meal_type|title }}</div>
+                            <small class="text-muted">{{ meal.food_items|default:"Standard meal" }}</small>
+                        </div>
+                        <span class="badge bg-light text-dark">{{ meal.quantity_consumed|default:"All" }}</span>
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-4 text-muted small">No meal entries recorded for today.</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Nap Times -->
+    <div class="col-12 col-md-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                <h6 class="card-title mb-0 fw-semibold text-slate-800">
+                    <i class="bi bi-moon-stars text-primary me-2"></i> Nap & Rest Periods
+                </h6>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for nap in naps %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="fw-medium text-slate-800">Nap Session</div>
+                            <small class="text-muted">{{ nap.notes|default:"Restful" }}</small>
+                        </div>
+                        <span class="badge bg-primary-subtle text-primary">{{ nap.start_time|time:"g:i A" }} - {{ nap.end_time|time:"g:i A" }}</span>
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-4 text-muted small">No nap periods recorded today.</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Activities -->
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-bottom py-3">
+                <h6 class="card-title mb-0 fw-semibold text-slate-800">
+                    <i class="bi bi-palette text-success me-2"></i> Learning & Play Activities
+                </h6>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for act in activities %}
+                    <div class="list-group-item">
+                        <div class="fw-medium text-slate-800">{{ act.title }}</div>
+                        <small class="text-muted">{{ act.description|default:"" }}</small>
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-4 text-muted small">No specific curriculum activities logged.</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

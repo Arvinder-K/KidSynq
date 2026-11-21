@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block title %}Compliance & Licensing - KidSynq{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="h4 fw-bold text-slate-800 mb-1">Compliance & Regulatory Standards</h2>
+        <p class="text-muted small mb-0">Child Care and Early Years Act (CCEYA), licensing and educator credentials oversight</p>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-12 col-md-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="text-muted small fw-medium">License Status</span>
+                    <span class="badge bg-success-subtle text-success">Compliant</span>
+                </div>
+                <div class="fs-4 fw-bold text-slate-800">Standard License</div>
+                <div class="small text-muted mt-1">Valid through 2026</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-md-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="text-muted small fw-medium">Educator Ratios</span>
+                    <span class="badge bg-success-subtle text-success">Good</span>
+                </div>
+                <div class="fs-4 fw-bold text-slate-800">100% In Ratio</div>
+                <div class="small text-muted mt-1">Across all active classrooms</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-md-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="text-muted small fw-medium">Inspection History</span>
+                    <i class="bi bi-shield-check text-success fs-5"></i>
+                </div>
+                <div class="fs-4 fw-bold text-slate-800">0 Violations</div>
+                <div class="small text-muted mt-1">Annual audit cleared</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-white border-bottom py-3">
+        <h5 class="card-title mb-0 fw-semibold">Mandatory Compliance Checkpoints</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="list-group list-group-flush">
+            <div class="list-group-item d-flex justify-content-between align-items-center py-3">
+                <div class="d-flex align-items-center gap-3">
+                    <i class="bi bi-check-circle-fill text-success fs-5"></i>
+                    <div>
+                        <div class="fw-semibold text-slate-800">Staff First Aid / CPR Certification</div>
+                        <div class="small text-muted">All active on-duty staff have certified valid First Aid & CPR Level C.</div>
+                    </div>
+                </div>
+                <span class="badge bg-success-subtle text-success">Verified</span>
+            </div>
+            <div class="list-group-item d-flex justify-content-between align-items-center py-3">
+                <div class="d-flex align-items-center gap-3">
+                    <i class="bi bi-check-circle-fill text-success fs-5"></i>
+                    <div>
+                        <div class="fw-semibold text-slate-800">Vulnerable Sector Check (VSC) Verification</div>
+                        <div class="small text-muted">Criminal background checks active for all staff and classroom volunteers.</div>
+                    </div>
+                </div>
+                <span class="badge bg-success-subtle text-success">Up to Date</span>
+            </div>
+            <div class="list-group-item d-flex justify-content-between align-items-center py-3">
+                <div class="d-flex align-items-center gap-3">
+                    <i class="bi bi-check-circle-fill text-success fs-5"></i>
+                    <div>
+                        <div class="fw-semibold text-slate-800">Immunization & Allergy Protocol Filings</div>
+                        <div class="small text-muted">Child medical files cross-checked against public health requirements.</div>
+                    </div>
+                </div>
+                <span class="badge bg-success-subtle text-success">Compliant</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

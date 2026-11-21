@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}{% if classroom %}Edit Classroom{% else %}New Classroom{% endif %}{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <a href="{% url 'daycare_classrooms' %}" class="small text-muted text-decoration-none">
+        <i class="bi bi-arrow-left me-1"></i> Back to Classrooms
+    </a>
+    <h2 class="h4 fw-bold text-slate-800 mt-2 mb-1">{% if classroom %}Edit Classroom &mdash; {{ classroom.name }}{% else %}Create Classroom{% endif %}</h2>
+    <p class="text-muted small">Configure room capacity, licensed space, and program assignment</p>
+</div>
+
+<form method="post" class="card border-0 shadow-sm" style="max-width: 700px;">
+    {% csrf_token %}
+    <div class="card-body p-4">
+        <div class="row g-3">
+            <div class="col-12">
+                <label class="form-label small fw-semibold">Classroom Name <span class="text-danger">*</span></label>
+                <input type="text" name="name" class="form-control" value="{{ classroom.name|default:'' }}" placeholder="e.g. Toddler Room B, Infant Nursery" required>
+            </div>
+            <div class="col-12 col-md-6">
+                <label class="form-label small fw-semibold">Maximum Capacity <span class="text-danger">*</span></label>
+                <input type="number" name="capacity" class="form-control" value="{{ classroom.capacity|default:'15' }}" required min="1">
+            </div>
+            <div class="col-12 col-md-6">
+                <label class="form-label small fw-semibold">Program Category</label>
+                <select name="program_id" class="form-select">
+                    <option value="">Standard General Care</option>
+                    {% for p in programs %}
+                    <option value="{{ p.id }}" {% if classroom.program_id == p.id %}selected{% endif %}>{{ p.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+            <a href="{% url 'daycare_classrooms' %}" class="btn btn-light border px-4">Cancel</a>
+            <button type="submit" class="btn btn-primary px-4 fw-semibold">Save Classroom</button>
+        </div>
+    </div>
+</form>
+{% endblock %}
+

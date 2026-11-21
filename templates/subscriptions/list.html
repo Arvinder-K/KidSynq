@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}Assigned Subscriptions{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="h4 fw-bold text-slate-800 mb-1">Assigned Tenant Subscriptions</h2>
+        <p class="text-muted small mb-0">Active daycare subscription contracts, renewals, and usage quotas</p>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Daycare</th>
+                    <th>Plan Name</th>
+                    <th>Price</th>
+                    <th>Status</th>
+                    <th>Limits (Students / Staff / Rooms)</th>
+                    <th>Renewal Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for sub in page_obj %}
+                <tr>
+                    <td class="fw-bold">
+                        <a href="{% url 'superadmin_daycare_detail' sub.daycare.id %}" class="text-decoration-none">
+                            {{ sub.daycare.name }}
+                        </a>
+                    </td>
+                    <td><span class="fw-semibold text-primary">{{ sub.subscription_plan.name }}</span></td>
+                    <td class="small">${{ sub.subscription_plan.price }} / {{ sub.subscription_plan.billing_frequency }}</td>
+                    <td>
+                        {% if sub.subscription_status == 'active' %}
+                            <span class="badge badge-soft-success">Active</span>
+                        {% elif sub.subscription_status == 'suspended' %}
+                            <span class="badge badge-soft-danger">Suspended</span>
+                        {% elif sub.subscription_status == 'trial' %}
+                            <span class="badge badge-soft-warning">Trial</span>
+                        {% else %}
+                            <span class="badge badge-soft-secondary">{{ sub.subscription_status|title }}</span>
+                        {% endif %}
+                    </td>
+                    <td class="small text-muted font-monospace">
+                        {{ sub.max_students }}c &bull; {{ sub.max_staff }}s &bull; {{ sub.max_classrooms }}r &bull; {{ sub.max_storage_gb }}GB
+                    </td>
+                    <td class="small">{{ sub.end_date|date:"M d, Y"|default:"Continuous" }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center py-5 text-muted">No subscriptions assigned yet.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="card-footer bg-transparent py-3">
+        {% include "includes/pagination.html" %}
+    </div>
+</div>
+{% endblock %}
+

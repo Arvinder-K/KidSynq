@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}Add Employee{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <a href="{% url 'daycare_employees' %}" class="small text-muted text-decoration-none">
+        <i class="bi bi-arrow-left me-1"></i> Back to Staff Roster
+    </a>
+    <h2 class="h4 fw-bold text-slate-800 mt-2 mb-1">New Employee Registration</h2>
+    <p class="text-muted small">Onboard a new staff member or early childhood educator</p>
+</div>
+
+<form method="post" class="card border-0 shadow-sm" style="max-width: 800px;">
+    {% csrf_token %}
+    <div class="card-body p-4 p-md-5">
+        <h5 class="fw-bold text-primary mb-3"><i class="bi bi-person me-2"></i> Personal Details</h5>
+        <div class="row g-3 mb-4">
+            <div class="col-12 col-md-6">
+                <label class="form-label small fw-semibold">First Name <span class="text-danger">*</span></label>
+                <input type="text" name="first_name" class="form-control" placeholder="e.g. Sarah" required>
+            </div>
+            <div class="col-12 col-md-6">
+                <label class="form-label small fw-semibold">Last Name <span class="text-danger">*</span></label>
+                <input type="text" name="last_name" class="form-control" placeholder="e.g. Connor" required>
+            </div>
+            <div class="col-12 col-md-6">
+                <label class="form-label small fw-semibold">Email Address</label>
+                <input type="email" name="email" class="form-control" placeholder="sarah@example.com">
+            </div>
+            <div class="col-12 col-md-6">
+                <label class="form-label small fw-semibold">Phone Number</label>
+                <input type="text" name="phone_number" class="form-control" placeholder="(555) 345-6789">
+            </div>
+        </div>
+
+        <hr class="my-4">
+
+        <h5 class="fw-bold text-primary mb-3"><i class="bi bi-briefcase me-2"></i> Employment Role & Start Date</h5>
+        <div class="row g-3 mb-4">
+            <div class="col-12 col-md-6">
+                <label class="form-label small fw-semibold">Staff Role / Category</label>
+                <select name="employee_type_id" class="form-select">
+                    <option value="">Standard Educator</option>
+                    {% for et in emp_types %}
+                    <option value="{{ et.id }}">{{ et.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-12 col-md-6">
+                <label class="form-label small fw-semibold">Hire Date</label>
+                <input type="date" name="hire_date" class="form-control" value="{{ 'now'|date:'Y-m-d' }}">
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-end gap-2 pt-3">
+            <a href="{% url 'daycare_employees' %}" class="btn btn-light border px-4">Cancel</a>
+            <button type="submit" class="btn btn-primary px-4 fw-semibold">Save Employee Record</button>
+        </div>
+    </div>
+</form>
+{% endblock %}
+

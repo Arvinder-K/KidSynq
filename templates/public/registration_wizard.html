@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}Child Registration Form - {{ daycare.name }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center py-4">
+    <div class="col-12 col-md-10 col-lg-8">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="h4 fw-bold text-slate-800 mb-1">Child Enrollment Application</h2>
+                <p class="text-muted small mb-0">{{ daycare.name }} Admissions</p>
+            </div>
+            <a href="{% url 'registration_landing' daycare_slug=daycare.id %}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left me-1"></i> Back
+            </a>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4 p-md-5">
+                <form method="post">
+                    {% csrf_token %}
+
+                    <h5 class="fw-bold text-slate-800 mb-3 pb-2 border-bottom">
+                        <i class="bi bi-person-fill text-primary me-2"></i> Child Information
+                    </h5>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">Child's First Name <span class="text-danger">*</span></label>
+                            <input type="text" name="child_first_name" class="form-control" required placeholder="e.g. Liam">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">Child's Last Name <span class="text-danger">*</span></label>
+                            <input type="text" name="child_last_name" class="form-control" required placeholder="e.g. Miller">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">Date of Birth</label>
+                            <input type="date" name="date_of_birth" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">Gender</label>
+                            <select name="gender" class="form-select">
+                                <option value="unspecified">Prefer not to say</option>
+                                <option value="male">Male</option>
+                                <option value="female">Female</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-medium">Program of Interest</label>
+                            <select name="program" class="form-select">
+                                <option value="">Select a Program</option>
+                                {% for p in programs %}
+                                    <option value="{{ p.id }}">{{ p.name }} ({{ p.min_age_months }}-{{ p.max_age_months }} mos)</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <h5 class="fw-bold text-slate-800 mb-3 pb-2 border-bottom">
+                        <i class="bi bi-people-fill text-primary me-2"></i> Parent / Guardian Information
+                    </h5>
+                    <div class="row g-3 mb-4">
+                        <div class="col-12">
+                            <label class="form-label fw-medium">Guardian Full Name <span class="text-danger">*</span></label>
+                            <input type="text" name="guardian_name" class="form-control" required placeholder="e.g. Sarah Miller">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">Email Address <span class="text-danger">*</span></label>
+                            <input type="email" name="guardian_email" class="form-control" required placeholder="sarah.miller@example.com">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">Phone Number <span class="text-danger">*</span></label>
+                            <input type="tel" name="guardian_phone" class="form-control" required placeholder="(555) 000-0000">
+                        </div>
+                    </div>
+
+                    <h5 class="fw-bold text-slate-800 mb-3 pb-2 border-bottom">
+                        <i class="bi bi-shield-plus text-primary me-2"></i> Medical & Dietary Details
+                    </h5>
+                    <div class="row g-3 mb-4">
+                        <div class="col-12">
+                            <label class="form-label fw-medium">Allergies, Medical Alerts or Special Considerations</label>
+                            <textarea name="medical_notes" class="form-control" rows="2" placeholder="List any known food/environmental allergies or medication requirements"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2 pt-3">
+                        <button type="submit" class="btn btn-primary btn-lg fw-bold">
+                            Submit Application <i class="bi bi-send ms-2"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

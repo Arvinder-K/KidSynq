@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}Platform Invoices{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="h4 fw-bold text-slate-800 mb-1">Platform Subscription Invoices</h2>
+        <p class="text-muted small mb-0">Subscription billing statements generated for daycare tenant organizations</p>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Invoice #</th>
+                    <th>Daycare</th>
+                    <th>Amount</th>
+                    <th>Issue Date</th>
+                    <th>Due Date</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for inv in page_obj %}
+                <tr>
+                    <td class="font-monospace small fw-bold">{{ inv.invoice_number|default:inv.id|slice:":8" }}</td>
+                    <td class="fw-semibold">
+                        {% if inv.daycare %}
+                            <a href="{% url 'superadmin_daycare_detail' inv.daycare.id %}" class="text-decoration-none">
+                                {{ inv.daycare.name }}
+                            </a>
+                        {% elif inv.subscription.daycare %}
+                            <a href="{% url 'superadmin_daycare_detail' inv.subscription.daycare.id %}" class="text-decoration-none">
+                                {{ inv.subscription.daycare.name }}
+                            </a>
+                        {% else %}
+                            <span class="text-muted">-</span>
+                        {% endif %}
+                    </td>
+                    <td class="fw-bold">${{ inv.amount|floatformat:2 }}</td>
+                    <td class="small text-muted">{{ inv.issue_date|date:"M d, Y" }}</td>
+                    <td class="small">{{ inv.due_date|date:"M d, Y" }}</td>
+                    <td>
+                        {% if inv.status == 'paid' %}
+                            <span class="badge badge-soft-success">Paid</span>
+                        {% elif inv.status == 'unpaid' %}
+                            <span class="badge badge-soft-warning">Unpaid</span>
+                        {% elif inv.status == 'overdue' %}
+                            <span class="badge badge-soft-danger">Overdue</span>
+                        {% else %}
+                            <span class="badge badge-soft-secondary">{{ inv.status|title }}</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center py-5 text-muted">No invoices generated yet.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="card-footer bg-transparent py-3">
+        {% include "includes/pagination.html" %}
+    </div>
+</div>
+{% endblock %}
+

@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}Admissions & Registration Applications - KidSynq{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="h4 fw-bold text-slate-800 mb-1">Admissions & Applications</h2>
+        <p class="text-muted small mb-0">Incoming child enrollment inquiries submitted via the online registration portal</p>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4">Child Name</th>
+                        <th>Parent / Guardian</th>
+                        <th>Contact Email & Phone</th>
+                        <th>Submission Date</th>
+                        <th>Program Interest</th>
+                        <th class="text-end pe-4">Application Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for app in applications %}
+                    <tr>
+                        <td class="ps-4 fw-medium text-slate-800">
+                            {{ app.child_first_name }} {{ app.child_last_name }}
+                        </td>
+                        <td>{{ app.parent_first_name }} {{ app.parent_last_name|default:"" }}</td>
+                        <td>
+                            <div><i class="bi bi-envelope me-1 text-muted"></i> {{ app.parent_email }}</div>
+                            <div class="small text-muted"><i class="bi bi-telephone me-1 text-muted"></i> {{ app.parent_phone }}</div>
+                        </td>
+                        <td>{{ app.submitted_at|date:"M d, Y" }}</td>
+                        <td><span class="badge bg-light text-dark">{{ app.program_interest|default:"General" }}</span></td>
+                        <td class="text-end pe-4">
+                            {% if app.status == 'approved' %}
+                                <span class="badge bg-success-subtle text-success">Approved</span>
+                            {% elif app.status == 'rejected' %}
+                                <span class="badge bg-danger-subtle text-danger">Declined</span>
+                            {% else %}
+                                <span class="badge bg-warning-subtle text-warning">New Application</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5 text-muted">
+                            <i class="bi bi-inbox fs-1 d-block mb-2 text-secondary opacity-50"></i>
+                            No enrollment applications pending review.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

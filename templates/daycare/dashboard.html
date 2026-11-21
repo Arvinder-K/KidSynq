@@ -1,0 +1,491 @@
+{% extends "base.html" %}
+
+{% block title %}Daycare Center Command Center &bull; {{ daycare.name }}{% endblock %}
+
+{% block content %}
+<!-- Welcome & Quick Action Header -->
+<div class="card border-0 shadow-sm p-4 mb-4" style="background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%); border-left: 5px solid var(--ks-primary) !important;">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <h1 class="h3 fw-bold font-display text-slate-900 mb-0">Center Command Center</h1>
+                <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 rounded-pill px-2.5 py-1 small">
+                    <span class="pulse-dot"></span> Live Operations
+                </span>
+            </div>
+            <p class="text-muted small mb-0">
+                <i class="bi bi-building me-1 text-primary"></i> <strong>{{ daycare.name }}</strong> &bull; <i class="bi bi-calendar-event me-1"></i> Today is {{ "now"|date:"l, F d, Y" }}
+            </p>
+        </div>
+
+        <!-- Quick Workflow Action Buttons -->
+        <div class="d-flex flex-wrap align-items-center gap-2">
+            <a href="{% url 'daycare_child_new' %}" class="btn btn-primary d-inline-flex align-items-center gap-2 shadow-xs">
+                <i class="bi bi-person-plus-fill"></i> <span>Enroll Child</span>
+            </a>
+            <a href="{% url 'daycare_attendance' %}" class="btn btn-outline-primary d-inline-flex align-items-center gap-2 shadow-xs">
+                <i class="bi bi-calendar-check"></i> <span>Roll Call</span>
+            </a>
+            <a href="{% url 'daycare_invoices' %}" class="btn btn-light border text-slate-700 d-inline-flex align-items-center gap-2 shadow-xs">
+                <i class="bi bi-receipt"></i> <span>Invoices</span>
+            </a>
+            <a href="{% url 'daycare_pickup_verification' %}" class="btn btn-light border text-slate-700 d-inline-flex align-items-center gap-2 shadow-xs" title="Open Pickup Kiosk">
+                <i class="bi bi-qr-code-scan"></i> <span>Kiosk Mode</span>
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- ========================================================================= -->
+<!-- 4 VIBRANT KPI METRIC CARDS (Exact match to React version theme)           -->
+<!-- ========================================================================= -->
+<div class="row g-3 mb-4">
+    <!-- Card 1: Children Present (Emerald-Teal Theme) -->
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="kpi-card kpi-emerald h-100">
+            <div>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="small fw-bold text-uppercase text-muted" style="font-size: 0.72rem; letter-spacing: 0.05em;">Children Present Today</span>
+                    <div class="kpi-icon-box emerald">
+                        <i class="bi bi-person-check-fill"></i>
+                    </div>
+                </div>
+                <div class="d-flex align-items-baseline gap-2">
+                    <div class="fs-2 fw-bold font-display text-slate-900">{{ checked_in_today }}</div>
+                    <span class="small text-muted fw-semibold">/ {{ student_count }} enrolled</span>
+                </div>
+                <div class="small text-success fw-bold mt-1">
+                    <i class="bi bi-arrow-up-right me-1"></i> Roll Call Synchronized
+                </div>
+            </div>
+            <div class="pt-2 border-top border-emerald-100 mt-3 d-flex justify-content-between align-items-center">
+                <a href="{% url 'daycare_attendance' %}" class="small fw-bold text-decoration-none" style="color: #0f766e;">
+                    Daily Roll Call <i class="bi bi-chevron-right small"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card 2: Staff On Duty (Cyan-Blue Theme) -->
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="kpi-card kpi-cyan h-100">
+            <div>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="small fw-bold text-uppercase text-muted" style="font-size: 0.72rem; letter-spacing: 0.05em;">Educators on Duty</span>
+                    <div class="kpi-icon-box cyan">
+                        <i class="bi bi-person-badge-fill"></i>
+                    </div>
+                </div>
+                <div class="d-flex align-items-baseline gap-2">
+                    <div class="fs-2 fw-bold font-display text-slate-900">{{ staff_on_duty }}</div>
+                    <span class="small text-muted fw-semibold">/ {{ staff_count }} staff</span>
+                </div>
+                <div class="small text-info fw-bold mt-1">
+                    <i class="bi bi-shield-check me-1"></i> Ratio Rules Maintained
+                </div>
+            </div>
+            <div class="pt-2 border-top border-cyan-100 mt-3 d-flex justify-content-between align-items-center">
+                <a href="{% url 'daycare_staff_attendance' %}" class="small fw-bold text-decoration-none" style="color: #0369a1;">
+                    Staff Time Clock <i class="bi bi-chevron-right small"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card 3: Active Classrooms (Purple-Indigo Theme) -->
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="kpi-card kpi-purple h-100">
+            <div>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="small fw-bold text-uppercase text-muted" style="font-size: 0.72rem; letter-spacing: 0.05em;">Active Classrooms</span>
+                    <div class="kpi-icon-box purple">
+                        <i class="bi bi-door-open-fill"></i>
+                    </div>
+                </div>
+                <div class="d-flex align-items-baseline gap-2">
+                    <div class="fs-2 fw-bold font-display text-slate-900">{{ classroom_count }}</div>
+                    <span class="small text-muted fw-semibold">Rooms open</span>
+                </div>
+                <div class="small fw-bold mt-1" style="color: #6366f1;">
+                    <i class="bi bi-check-circle me-1"></i> Capacity Monitored
+                </div>
+            </div>
+            <div class="pt-2 border-top border-purple-100 mt-3 d-flex justify-content-between align-items-center">
+                <a href="{% url 'daycare_classrooms' %}" class="small fw-bold text-decoration-none" style="color: #4f46e5;">
+                    View Rooms <i class="bi bi-chevron-right small"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card 4: Open Invoices & Receivables (Amber-Orange Theme) -->
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="kpi-card kpi-amber h-100">
+            <div>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="small fw-bold text-uppercase text-muted" style="font-size: 0.72rem; letter-spacing: 0.05em;">Unpaid Receivables</span>
+                    <div class="kpi-icon-box amber">
+                        <i class="bi bi-receipt"></i>
+                    </div>
+                </div>
+                <div class="d-flex align-items-baseline gap-2">
+                    <div class="fs-2 fw-bold font-display text-slate-900">${{ unpaid_total|floatformat:2 }}</div>
+                    <span class="small text-muted fw-semibold">({{ unpaid_count }} due)</span>
+                </div>
+                <div class="small fw-bold mt-1" style="color: #d97706;">
+                    <i class="bi bi-clock-history me-1"></i> Tuition Invoices
+                </div>
+            </div>
+            <div class="pt-2 border-top border-amber-100 mt-3 d-flex justify-content-between align-items-center">
+                <a href="{% url 'daycare_invoices' %}" class="small fw-bold text-decoration-none" style="color: #b45309;">
+                    Billing Statements <i class="bi bi-chevron-right small"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ========================================================================= -->
+<!-- CORE ANALYTICS: ATTENDANCE TREND & ROOM OCCUPANCY CHARTS                  -->
+<!-- ========================================================================= -->
+<div class="row g-4 mb-4">
+    <!-- Chart 1: 7-Day Attendance Trajectory -->
+    <div class="col-12 col-lg-8">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-transparent d-flex justify-content-between align-items-center py-3">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="kpi-icon-box teal" style="width: 32px; height: 32px; font-size: 1rem;">
+                        <i class="bi bi-graph-up"></i>
+                    </div>
+                    <div>
+                        <h5 class="card-title mb-0 fw-bold fs-6 text-slate-900">7-Day Child Attendance Trajectory</h5>
+                        <small class="text-muted">Daily check-in volume across all classrooms</small>
+                    </div>
+                </div>
+                <a href="{% url 'daycare_attendance_command' %}" class="btn btn-sm btn-light border text-muted">Command Center</a>
+            </div>
+            <div class="card-body p-3" style="min-height: 250px;">
+                <canvas id="attendanceLineChart" style="max-height: 230px;"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart 2: Room Distribution & Capacity -->
+    <div class="col-12 col-lg-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-transparent d-flex justify-content-between align-items-center py-3">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="kpi-icon-box purple" style="width: 32px; height: 32px; font-size: 1rem;">
+                        <i class="bi bi-pie-chart"></i>
+                    </div>
+                    <div>
+                        <h5 class="card-title mb-0 fw-bold fs-6 text-slate-900">Room Capacity</h5>
+                        <small class="text-muted">Licensed student seats</small>
+                    </div>
+                </div>
+                <a href="{% url 'daycare_classrooms' %}" class="btn btn-sm btn-light border text-muted">Rooms</a>
+            </div>
+            <div class="card-body p-3 d-flex align-items-center justify-content-center" style="min-height: 250px;">
+                <canvas id="roomsDoughnutChart" style="max-height: 220px;"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ========================================================================= -->
+<!-- DAYCARE TASK & OPERATIONS CENTER (4 Categorized Clean Action Cards)       -->
+<!-- ========================================================================= -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-transparent py-3 d-flex justify-content-between align-items-center">
+        <div>
+            <h5 class="card-title mb-0 fw-bold font-display text-slate-900">
+                <i class="bi bi-grid-fill text-primary me-2"></i> Daycare Task & Operations Center
+            </h5>
+            <small class="text-muted">Fast-track direct access to daily management workflows across all center modules</small>
+        </div>
+    </div>
+    <div class="card-body p-4">
+        <div class="row g-4">
+            <!-- 1. Classroom Tasks -->
+            <div class="col-12 col-md-6 col-xl-3">
+                <div class="task-action-box h-100">
+                    <div class="d-flex align-items-center gap-2 mb-3 text-primary fw-bold font-display fs-6">
+                        <i class="bi bi-door-open-fill fs-5"></i>
+                        <span>Classroom Tasks</span>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'daycare_classrooms' %}" class="task-action-btn">
+                            <span><i class="bi bi-list-check me-2 text-primary"></i> Classrooms Roster</span>
+                            <i class="bi bi-chevron-right text-muted small"></i>
+                        </a>
+                        <a href="{% url 'daycare_classroom_new' %}" class="task-action-btn">
+                            <span><i class="bi bi-plus-circle-fill me-2 text-success"></i> Add New Classroom</span>
+                            <i class="bi bi-chevron-right text-muted small"></i>
+                        </a>
+                        <a href="{% url 'daycare_ratio_monitoring' %}" class="task-action-btn">
+                            <span><i class="bi bi-pie-chart-fill me-2 text-info"></i> Live Ratio Monitor</span>
+                            <i class="bi bi-chevron-right text-muted small"></i>
+                        </a>
+                        <a href="{% url 'daycare_programs' %}" class="task-action-btn">
+                            <span><i class="bi bi-book-half me-2 text-secondary"></i> Programs & Age Groups</span>
+                            <i class="bi bi-chevron-right text-muted small"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. Staff & HR Tasks -->
+            <div class="col-12 col-md-6 col-xl-3">
+                <div class="task-action-box h-100">
+                    <div class="d-flex align-items-center gap-2 mb-3 text-info fw-bold font-display fs-6">
+                        <i class="bi bi-people-fill fs-5"></i>
+                        <span>Staff & HR Tasks</span>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'daycare_employees' %}" class="task-action-btn">
+                            <span><i class="bi bi-person-lines-fill me-2 text-primary"></i> Staff Directory</span>
+                            <i class="bi bi-chevron-right text-muted small"></i>
+                        </a>
+                        <a href="{% url 'daycare_employee_new' %}" class="task-action-btn">
+                            <span><i class="bi bi-person-plus-fill me-2 text-success"></i> Add New Educator</span>
+                            <i class="bi bi-chevron-right text-muted small"></i>
+                        </a>
+                        <a href="{% url 'daycare_scheduling' %}" class="task-action-btn">
+                            <span><i class="bi bi-calendar3 me-2 text-info"></i> Weekly Shift Schedule</span>
+                            <i class="bi bi-chevron-right text-muted small"></i>
+                        </a>
+                        <a href="{% url 'daycare_staff_attendance' %}" class="task-action-btn">
+                            <span><i class="bi bi-clock-history me-2 text-warning"></i> Staff Time Clock</span>
+                            <i class="bi bi-chevron-right text-muted small"></i>
+                        </a>
+                        <a href="{% url 'daycare_leave' %}" class="task-action-btn">
+                            <span><i class="bi bi-calendar-x me-2 text-danger"></i> Leave Requests</span>
+                            <i class="bi bi-chevron-right text-muted small"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. Children & Daily Ops Tasks -->
+            <div class="col-12 col-md-6 col-xl-3">
+                <div class="task-action-box h-100">
+                    <div class="d-flex align-items-center gap-2 mb-3 text-success fw-bold font-display fs-6">
+                        <i class="bi bi-mortarboard-fill fs-5"></i>
+                        <span>Children & Ops Tasks</span>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'daycare_children' %}" class="task-action-btn">
+                            <span><i class="bi bi-person-heart me-2 text-primary"></i> Children Roster</span>
+                            <i class="bi bi-chevron-right text-muted small"></i>
+                        </a>
+                        <a href="{% url 'daycare_child_new' %}" class="task-action-btn">
+                            <span><i class="bi bi-person-plus me-2 text-success"></i> Enroll New Child</span>
+                            <i class="bi bi-chevron-right text-muted small"></i>
+                        </a>
+                        <a href="{% url 'daycare_attendance' %}" class="task-action-btn">
+                            <span><i class="bi bi-check-circle-fill me-2 text-info"></i> Daily Roll Call</span>
+                            <i class="bi bi-chevron-right text-muted small"></i>
+                        </a>
+                        <a href="{% url 'daycare_safe_arrival' %}" class="task-action-btn">
+                            <span><i class="bi bi-shield-check me-2 text-warning"></i> Safe Arrival Hub</span>
+                            <i class="bi bi-chevron-right text-muted small"></i>
+                        </a>
+                        <a href="{% url 'daycare_daily_reports' %}" class="task-action-btn">
+                            <span><i class="bi bi-journal-text me-2 text-secondary"></i> Daily Activity Reports</span>
+                            <i class="bi bi-chevron-right text-muted small"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. Billing & Financial Tasks -->
+            <div class="col-12 col-md-6 col-xl-3">
+                <div class="task-action-box h-100">
+                    <div class="d-flex align-items-center gap-2 mb-3 text-warning fw-bold font-display fs-6">
+                        <i class="bi bi-cash-stack fs-5"></i>
+                        <span>Billing & Finance</span>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'daycare_invoices' %}" class="task-action-btn">
+                            <span><i class="bi bi-receipt me-2 text-primary"></i> Tuition Invoices</span>
+                            <i class="bi bi-chevron-right text-muted small"></i>
+                        </a>
+                        <a href="{% url 'daycare_payments' %}" class="task-action-btn">
+                            <span><i class="bi bi-credit-card me-2 text-success"></i> Payments & Receipts</span>
+                            <i class="bi bi-chevron-right text-muted small"></i>
+                        </a>
+                        <a href="{% url 'daycare_subsidies' %}" class="task-action-btn">
+                            <span><i class="bi bi-bank me-2 text-info"></i> Subsidies & CWELCC</span>
+                            <i class="bi bi-chevron-right text-muted small"></i>
+                        </a>
+                        <a href="{% url 'daycare_tax_receipts' %}" class="task-action-btn">
+                            <span><i class="bi bi-file-earmark-text me-2 text-secondary"></i> Tax Receipts (CRA)</span>
+                            <i class="bi bi-chevron-right text-muted small"></i>
+                        </a>
+                        <a href="{% url 'daycare_fee_structures' %}" class="task-action-btn">
+                            <span><i class="bi bi-tags me-2 text-warning"></i> Fee Plans & Pricing</span>
+                            <i class="bi bi-chevron-right text-muted small"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ========================================================================= -->
+<!-- CLASSROOMS OVERVIEW & TODAY'S CHECK-IN LOGS TABLE                         -->
+<!-- ========================================================================= -->
+<div class="row g-4">
+    <!-- Active Classrooms Overview -->
+    <div class="col-12 col-lg-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-transparent d-flex justify-content-between align-items-center py-3">
+                <span class="fw-bold fs-6 text-slate-900">Classrooms & Capacity Overview</span>
+                <a href="{% url 'daycare_classrooms' %}" class="small text-decoration-none">Manage Classrooms</a>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Classroom</th>
+                            <th>Age Group</th>
+                            <th>Capacity</th>
+                            <th class="text-end">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for room in classrooms %}
+                        <tr>
+                            <td class="fw-bold">
+                                <a href="{% url 'daycare_classroom_detail' room.id %}" class="text-decoration-none text-slate-900">
+                                    {{ room.room_name }}
+                                </a>
+                            </td>
+                            <td class="small text-muted">{{ room.age_group.name|default:"General" }}</td>
+                            <td>
+                                <span class="badge badge-soft-secondary font-monospace">{{ room.capacity|default:"15" }} seats</span>
+                            </td>
+                            <td class="text-end">
+                                <span class="badge badge-soft-success">Active</span>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center py-4 text-muted">No classrooms configured yet.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Check-ins -->
+    <div class="col-12 col-lg-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-transparent d-flex justify-content-between align-items-center py-3">
+                <span class="fw-bold fs-6 text-slate-900">Today's Check-in Log</span>
+                <a href="{% url 'daycare_attendance' %}" class="small text-decoration-none">All Attendance</a>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Student</th>
+                            <th>Room</th>
+                            <th>Time</th>
+                            <th class="text-end">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for att in recent_checkins %}
+                        <tr>
+                            <td class="fw-bold">
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="rounded-circle bg-light border d-flex align-items-center justify-content-center text-primary fw-bold" style="width: 28px; height: 28px; font-size: 0.75rem;">
+                                        {{ att.student.first_name|make_list|first|upper }}
+                                    </div>
+                                    <span>{{ att.student.first_name }} {{ att.student.last_name }}</span>
+                                </div>
+                            </td>
+                            <td class="small text-muted">{{ att.classroom.room_name|default:"Main Room" }}</td>
+                            <td class="small font-monospace text-muted">{{ att.check_in_time|default:"Today" }}</td>
+                            <td class="text-end">
+                                <span class="badge badge-soft-success">Checked In</span>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center py-4 text-muted">No check-ins recorded today yet.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // 1. Attendance 7-Day Line Chart
+    const weekLabels = {{ chart_week_labels|safe }};
+    const weekData = {{ chart_week_data|safe }};
+
+    renderChart('attendanceLineChart', 'line', {
+        labels: weekLabels,
+        datasets: [{
+            label: 'Children Checked In',
+            data: weekData,
+            borderColor: '#0d9488',
+            backgroundColor: 'rgba(13, 148, 136, 0.1)',
+            fill: true,
+            tension: 0.35,
+            borderWidth: 2.5,
+            pointBackgroundColor: '#0d9488',
+            pointRadius: 4,
+            pointHoverRadius: 6
+        }]
+    }, {
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: { precision: 0, font: { family: "'Plus Jakarta Sans', sans-serif" } },
+                grid: { color: 'rgba(226, 232, 240, 0.6)' }
+            },
+            x: {
+                grid: { display: false },
+                ticks: { font: { family: "'Plus Jakarta Sans', sans-serif" } }
+            }
+        }
+    });
+
+    // 2. Room Capacity Doughnut Chart
+    const roomLabels = {{ chart_room_labels|safe }};
+    const roomData = {{ chart_room_data|safe }};
+
+    renderChart('roomsDoughnutChart', 'doughnut', {
+        labels: roomLabels,
+        datasets: [{
+            data: roomData,
+            backgroundColor: [
+                '#0d9488', '#06b6d4', '#6366f1', '#f59e0b', '#ec4899', '#8b5cf6'
+            ],
+            borderWidth: 2,
+            borderColor: '#ffffff'
+        }]
+    }, {
+        cutout: '72%',
+        plugins: {
+            legend: {
+                position: 'bottom',
+                labels: { boxWidth: 10, padding: 12, font: { size: 11 } }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

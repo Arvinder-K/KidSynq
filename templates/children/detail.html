@@ -1,0 +1,1599 @@
+{% extends "base.html" %}
+
+{% block title %}{{ child.first_name }} {{ child.last_name }} &mdash; Child Profile{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <!-- Breadcrumb -->
+    <a href="{% url 'daycare_children' %}" class="small text-muted text-decoration-none">
+        <i class="bi bi-arrow-left me-1"></i> Back to Children Roster
+    </a>
+
+    <!-- Child Profile Hero Header Card -->
+    <div class="card border-0 shadow-sm mt-2 overflow-hidden rounded-4">
+        <div class="card-body p-4">
+            <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center fw-bold fs-2 text-white shadow-sm flex-shrink-0"
+                         style="width: 72px; height: 72px; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);">
+                        {{ child.first_name|make_list|first }}{{ child.last_name|make_list|first }}
+                    </div>
+                    <div>
+                        <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+                            <h2 class="h4 fw-bold text-slate-800 mb-0">{{ child.first_name }} {{ child.last_name }}</h2>
+                            {% if child.preferred_name %}
+                                <span class="badge bg-light text-muted border">"{{ child.preferred_name }}"</span>
+                            {% endif %}
+                            {% if child.status|lower == 'active' %}
+                                <span class="badge badge-soft-success"><i class="bi bi-check-circle-fill me-1"></i>Active</span>
+                            {% else %}
+                                <span class="badge badge-soft-secondary">{{ child.status|title }}</span>
+                            {% endif %}
+                        </div>
+
+                        <div class="d-flex flex-wrap align-items-center gap-2 small text-muted">
+                            {% if current_classroom %}
+                                <span class="badge badge-soft-primary d-inline-flex align-items-center gap-1">
+                                    <i class="bi bi-door-open"></i> {{ current_classroom.room_name }}
+                                </span>
+                            {% else %}
+                                <span class="badge badge-soft-warning"><i class="bi bi-exclamation-circle me-1"></i>No Classroom Allocated</span>
+                            {% endif %}
+
+                            {% if child.admission_number %}
+                                <span class="font-monospace text-muted">#{{ child.admission_number }}</span>
+                                <span class="text-secondary">&bull;</span>
+                            {% endif %}
+
+                            {% if child.date_of_birth %}
+                                <span><i class="bi bi-balloon me-1 text-danger"></i> Born: {{ child.date_of_birth|date:"M d, Y" }}</span>
+                                <span class="text-secondary">&bull;</span>
+                            {% endif %}
+
+                            {% if subsidy %}
+                                <span class="badge badge-soft-info" title="{{ subsidy.program_name }} - {{ subsidy.subsidy_rate }}% Reduction">
+                                    <i class="bi bi-shield-check me-1"></i> CWELCC ({{ subsidy.subsidy_rate }}% Subsidized)
+                                </span>
+                            {% endif %}
+
+                            {% if child.allergies or child.medical_conditions %}
+                                <span class="badge badge-soft-danger"><i class="bi bi-exclamation-triangle-fill me-1"></i> Medical Alert</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="d-flex flex-wrap gap-2">
+                    <button type="button" class="btn btn-outline-primary btn-sm d-inline-flex align-items-center gap-1 shadow-sm" data-bs-toggle="modal" data-bs-target="#recordAttendanceModal">
+                        <i class="bi bi-calendar-check"></i> Record Attendance
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-1 shadow-sm" data-bs-toggle="modal" data-bs-target="#switchClassroomModal">
+                        <i class="bi bi-arrow-left-right"></i> Allocate Classroom
+                    </button>
+                    <button type="button" class="btn btn-primary btn-sm d-inline-flex align-items-center gap-1 shadow-sm" data-bs-toggle="modal" data-bs-target="#addGuardianModal">
+                        <i class="bi bi-person-plus"></i> Add Parent/Guardian
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Metric KPI Cards Row -->
+        <div class="px-4 pb-3">
+            <div class="row g-2">
+                <!-- Classroom Card -->
+                <div class="col-6 col-md-3">
+                    <div class="p-3 bg-light rounded-3 border h-100">
+                        <div class="text-muted small text-uppercase fw-semibold" style="font-size: 0.7rem; letter-spacing: 0.05em;">Classroom Allocation</div>
+                        <div class="fw-bold text-slate-800 text-truncate mt-1">
+                            {{ current_classroom.room_name|default:"Unallocated" }}
+                        </div>
+                        <div class="text-muted small mt-1">
+                            {% if current_classroom.primary_teacher %}
+                                <i class="bi bi-person-badge me-1"></i>{{ current_classroom.primary_teacher.get_full_name|default:"Staff Educator" }}
+                            {% else %}
+                                Cap: {{ current_classroom.capacity|default:"15" }} children
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Primary Parent Card -->
+                <div class="col-6 col-md-3">
+                    <div class="p-3 bg-light rounded-3 border h-100">
+                        <div class="text-muted small text-uppercase fw-semibold" style="font-size: 0.7rem; letter-spacing: 0.05em;">Primary Guardian</div>
+                        <div class="fw-bold text-slate-800 text-truncate mt-1">
+                            {% if primary_guardian %}
+                                {{ primary_guardian.guardian.first_name }} {{ primary_guardian.guardian.last_name }} ({{ primary_guardian.relationship|default:"Guardian" }})
+                            {% elif families %}
+                                {{ families.0.family_name }}
+                            {% else %}
+                                No Parent Linked
+                            {% endif %}
+                        </div>
+                        <div class="text-muted small mt-1 text-truncate">
+                            {% if primary_guardian.guardian.phone %}
+                                <i class="bi bi-telephone me-1"></i>{{ primary_guardian.guardian.phone }}
+                            {% elif families.0.primary_phone %}
+                                <i class="bi bi-telephone me-1"></i>{{ families.0.primary_phone }}
+                            {% else %}
+                                <i class="bi bi-envelope me-1"></i>{{ primary_guardian.guardian.email|default:"No contact set" }}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Account / Billing Balance Card -->
+                <div class="col-6 col-md-3">
+                    <div class="p-3 bg-light rounded-3 border h-100">
+                        <div class="text-muted small text-uppercase fw-semibold" style="font-size: 0.7rem; letter-spacing: 0.05em;">Billing & Balance</div>
+                        <div class="d-flex align-items-baseline gap-1 mt-1">
+                            <span class="fs-5 fw-bold font-monospace {% if balance_due > 0 %}text-danger{% else %}text-success{% endif %}">
+                                ${{ balance_due|floatformat:2 }}
+                            </span>
+                            <span class="small text-muted">due</span>
+                        </div>
+                        <div class="text-muted small mt-1">
+                            Paid: <strong class="text-slate-700">${{ total_paid|floatformat:2 }}</strong> &bull; {{ payments|length }} Receipts
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Attendance KPI Card -->
+                <div class="col-6 col-md-3">
+                    <div class="p-3 bg-light rounded-3 border h-100">
+                        <div class="text-muted small text-uppercase fw-semibold" style="font-size: 0.7rem; letter-spacing: 0.05em;">Attendance Record</div>
+                        <div class="fs-5 fw-bold font-monospace text-slate-800 mt-1">
+                            {{ total_days_attended }} Days Logged
+                        </div>
+                        <div class="text-muted small mt-1">
+                            {% if recent_attendance.0 %}
+                                Last: {{ recent_attendance.0.attendance_date|date:"M d" }} ({{ recent_attendance.0.attendance_status|title }})
+                            {% else %}
+                                No logs yet
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="border-top px-4 bg-white">
+            <ul class="nav nav-tabs border-0 pt-2 flex-nowrap overflow-auto" id="childProfileTabs" role="tablist">
+                <li class="nav-item">
+                    <a class="nav-link py-2 px-3 fw-semibold small d-inline-flex align-items-center gap-1 {% if active_tab == 'overview' %}active text-primary border-bottom border-primary border-2{% else %}text-muted{% endif %}" href="?tab=overview">
+                        <i class="bi bi-grid-1x2"></i> Overview
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link py-2 px-3 fw-semibold small d-inline-flex align-items-center gap-1 {% if active_tab == 'classroom' %}active text-primary border-bottom border-primary border-2{% else %}text-muted{% endif %}" href="?tab=classroom">
+                        <i class="bi bi-door-open"></i> Classroom
+                        {% if current_classroom %}
+                            <span class="badge bg-primary bg-opacity-10 text-primary ms-1" style="font-size: 0.7rem;">Allocated</span>
+                        {% endif %}
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link py-2 px-3 fw-semibold small d-inline-flex align-items-center gap-1 {% if active_tab == 'family' %}active text-primary border-bottom border-primary border-2{% else %}text-muted{% endif %}" href="?tab=family">
+                        <i class="bi bi-people"></i> Parents & Family
+                        <span class="badge bg-secondary rounded-pill ms-1" style="font-size: 0.7rem;">{{ family_guardians|length }}</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link py-2 px-3 fw-semibold small d-inline-flex align-items-center gap-1 {% if active_tab == 'billing' %}active text-primary border-bottom border-primary border-2{% else %}text-muted{% endif %}" href="?tab=billing">
+                        <i class="bi bi-receipt"></i> Billing & Receipts
+                        <span class="badge bg-success bg-opacity-10 text-success ms-1" style="font-size: 0.7rem;">{{ payments|length }}</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link py-2 px-3 fw-semibold small d-inline-flex align-items-center gap-1 {% if active_tab == 'reports' %}active text-primary border-bottom border-primary border-2{% else %}text-muted{% endif %}" href="?tab=reports">
+                        <i class="bi bi-journal-check"></i> Daily Reports
+                        <span class="badge bg-info bg-opacity-10 text-info ms-1" style="font-size: 0.7rem;">{{ recent_reports|length }}</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link py-2 px-3 fw-semibold small d-inline-flex align-items-center gap-1 {% if active_tab == 'medical' %}active text-primary border-bottom border-primary border-2{% else %}text-muted{% endif %}" href="?tab=medical">
+                        <i class="bi bi-heart-pulse"></i> Medical & Health
+                        {% if child.allergies %}
+                            <span class="badge bg-danger rounded-circle p-1" style="width: 6px; height: 6px;"></span>
+                        {% endif %}
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link py-2 px-3 fw-semibold small d-inline-flex align-items-center gap-1 {% if active_tab == 'attendance' %}active text-primary border-bottom border-primary border-2{% else %}text-muted{% endif %}" href="?tab=attendance">
+                        <i class="bi bi-calendar-check"></i> Attendance
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link py-2 px-3 fw-semibold small d-inline-flex align-items-center gap-1 {% if active_tab == 'documents' %}active text-primary border-bottom border-primary border-2{% else %}text-muted{% endif %}" href="?tab=documents">
+                        <i class="bi bi-file-earmark-check"></i> Consents
+                        <span class="badge bg-secondary rounded-pill ms-1" style="font-size: 0.7rem;">{{ consent_assignments|length }}</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link py-2 px-3 fw-semibold small d-inline-flex align-items-center gap-1 {% if active_tab == 'personal' %}active text-primary border-bottom border-primary border-2{% else %}text-muted{% endif %}" href="?tab=personal">
+                        <i class="bi bi-pencil-square"></i> Edit Info
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- ========================================== -->
+<!-- TAB CONTENT PANELS -->
+<!-- ========================================== -->
+
+{% if active_tab == 'overview' %}
+<div class="row g-4">
+    <!-- Left Column: Classroom & Family -->
+    <div class="col-12 col-lg-6">
+        <!-- Classroom Allocation Summary Card -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-transparent fw-bold d-flex justify-content-between align-items-center py-3">
+                <span class="d-inline-flex align-items-center gap-2">
+                    <i class="bi bi-door-open text-primary fs-5"></i>
+                    <span>Classroom Allocation</span>
+                </span>
+                <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#switchClassroomModal">
+                    <i class="bi bi-arrow-left-right me-1"></i> Switch / Assign
+                </button>
+            </div>
+            <div class="card-body">
+                {% if current_classroom %}
+                    <div class="p-3 bg-light rounded-3 mb-3 border">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <h5 class="fw-bold text-slate-800 mb-0">{{ current_classroom.room_name }}</h5>
+                                <span class="badge bg-primary bg-opacity-10 text-primary font-monospace mt-1">{{ current_classroom.room_code|default:"Room" }}</span>
+                            </div>
+                            <span class="badge badge-soft-success">Currently Enrolled</span>
+                        </div>
+                        <dl class="row mb-0 small mt-2">
+                            <dt class="col-4 text-muted">Age Group:</dt>
+                            <dd class="col-8 fw-semibold mb-1">{{ current_classroom.age_group.name|default:current_classroom.age_group|default:"Toddler" }}</dd>
+
+                            <dt class="col-4 text-muted">Lead Educator:</dt>
+                            <dd class="col-8 mb-1">
+                                {% if current_classroom.primary_teacher %}
+                                    <i class="bi bi-person-check text-success me-1"></i>{{ current_classroom.primary_teacher.get_full_name|default:"Lead Educator" }}
+                                {% else %}
+                                    <span class="text-muted">Staff assigned to room</span>
+                                {% endif %}
+                            </dd>
+
+                            <dt class="col-4 text-muted">Room Capacity:</dt>
+                            <dd class="col-8 mb-1">{{ current_classroom.capacity|default:"15" }} children licensed</dd>
+
+                            <dt class="col-4 text-muted">Enrollment Date:</dt>
+                            <dd class="col-8 mb-0">{{ current_enrollment.start_date|date:"F d, Y"|default:child.admission_date|date:"F d, Y"|default:"Active" }}</dd>
+                        </dl>
+                    </div>
+                {% else %}
+                    <div class="text-center py-4 bg-light rounded-3 border mb-3">
+                        <i class="bi bi-door-closed text-warning fs-1 d-block mb-2"></i>
+                        <h6 class="fw-bold text-slate-800">No Classroom Currently Allocated</h6>
+                        <p class="text-muted small mb-2">This child is registered but not yet assigned to a daycare classroom room.</p>
+                        <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#switchClassroomModal">
+                            <i class="bi bi-plus-circle me-1"></i> Allocate to Classroom
+                        </button>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Parents & Family Contacts Card -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-transparent fw-bold d-flex justify-content-between align-items-center py-3">
+                <span class="d-inline-flex align-items-center gap-2">
+                    <i class="bi bi-people text-primary fs-5"></i>
+                    <span>Parents & Guardians</span>
+                </span>
+                <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addGuardianModal">
+                    <i class="bi bi-person-plus me-1"></i> Add Parent
+                </button>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for fg in family_guardians %}
+                    <div class="list-group-item p-3">
+                        <div class="d-flex justify-content-between align-items-start mb-1">
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="rounded-circle bg-primary bg-opacity-10 text-primary fw-bold d-flex align-items-center justify-content-center" style="width: 38px; height: 38px; font-size: 0.85rem;">
+                                    {{ fg.guardian.first_name|slice:":1" }}{{ fg.guardian.last_name|slice:":1" }}
+                                </div>
+                                <div>
+                                    <div class="fw-bold text-slate-800">
+                                        {{ fg.guardian.first_name }} {{ fg.guardian.last_name }}
+                                        {% if fg.is_primary %}
+                                            <span class="badge badge-soft-success ms-1">Primary Contact</span>
+                                        {% endif %}
+                                    </div>
+                                    <span class="text-muted small">{{ fg.relationship|default:"Guardian" }} &bull; {{ fg.family.family_name }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row g-2 mt-2 pt-2 border-top small">
+                            <div class="col-12 col-sm-6">
+                                <i class="bi bi-telephone text-muted me-1"></i>
+                                {% if fg.guardian.phone %}
+                                    <a href="tel:{{ fg.guardian.phone }}" class="text-decoration-none fw-semibold text-dark">{{ fg.guardian.phone }}</a>
+                                {% else %}
+                                    <span class="text-muted">No phone</span>
+                                {% endif %}
+                            </div>
+                            <div class="col-12 col-sm-6">
+                                <i class="bi bi-envelope text-muted me-1"></i>
+                                {% if fg.guardian.email %}
+                                    <a href="mailto:{{ fg.guardian.email }}" class="text-decoration-none text-truncate d-inline-block align-bottom" style="max-width: 180px;">{{ fg.guardian.email }}</a>
+                                {% else %}
+                                    <span class="text-muted">No email</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="p-4 text-center text-muted">
+                        <i class="bi bi-people text-secondary fs-2 d-block mb-1 opacity-50"></i>
+                        No parents or guardians registered for this child yet.
+                        <div class="mt-2">
+                            <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addGuardianModal">
+                                Link Parent Account
+                            </button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column: Billing, Receipts & Today's Care -->
+    <div class="col-12 col-lg-6">
+        <!-- Billing & Payment Receipts Summary Card -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-transparent fw-bold d-flex justify-content-between align-items-center py-3">
+                <span class="d-inline-flex align-items-center gap-2">
+                    <i class="bi bi-receipt text-success fs-5"></i>
+                    <span>Payment Receipts & Billing Ledger</span>
+                </span>
+                <a href="?tab=billing" class="btn btn-outline-secondary btn-sm">
+                    View All ({{ payments|length }})
+                </a>
+            </div>
+            <div class="card-body">
+                <!-- Financial Stats Row -->
+                <div class="row g-2 mb-3">
+                    <div class="col-4">
+                        <div class="p-2 bg-light rounded-2 text-center border">
+                            <div class="text-muted small" style="font-size: 0.7rem;">TOTAL INVOICED</div>
+                            <div class="fw-bold font-monospace text-slate-800">${{ total_invoiced|floatformat:2 }}</div>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="p-2 bg-success bg-opacity-10 rounded-2 text-center border border-success border-opacity-25">
+                            <div class="text-success small fw-semibold" style="font-size: 0.7rem;">TOTAL PAID</div>
+                            <div class="fw-bold font-monospace text-success">${{ total_paid|floatformat:2 }}</div>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="p-2 {% if balance_due > 0 %}bg-danger bg-opacity-10 border border-danger border-opacity-25{% else %}bg-light border{% endif %} rounded-2 text-center">
+                            <div class="{% if balance_due > 0 %}text-danger{% else %}text-muted{% endif %} small fw-semibold" style="font-size: 0.7rem;">BALANCE DUE</div>
+                            <div class="fw-bold font-monospace {% if balance_due > 0 %}text-danger{% else %}text-muted{% endif %}">${{ balance_due|floatformat:2 }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Latest Payment Receipt -->
+                {% if payments %}
+                    <h6 class="small fw-bold text-muted text-uppercase mb-2" style="font-size: 0.72rem; letter-spacing: 0.05em;">Recent Payment Receipts</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover align-middle mb-0 small">
+                            <thead class="table-light text-muted">
+                                <tr>
+                                    <th>Receipt #</th>
+                                    <th>Date</th>
+                                    <th>Method</th>
+                                    <th class="text-end">Amount Paid</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for pay in payments|slice:":3" %}
+                                <tr>
+                                    <td class="font-monospace fw-bold text-primary">{{ pay.receipt_number|default:pay.transaction_reference|default:pay.id|stringformat:".10s" }}</td>
+                                    <td>{{ pay.payment_date|date:"M d, Y" }}</td>
+                                    <td><span class="badge bg-light text-dark border">{{ pay.payment_method|title }}</span></td>
+                                    <td class="text-end font-monospace fw-bold text-success">${{ pay.amount|floatformat:2 }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted small text-center my-3">No payments or receipts processed for this child yet.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Medical & Care Alert Card -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-transparent fw-bold d-flex justify-content-between align-items-center py-3">
+                <span class="d-inline-flex align-items-center gap-2">
+                    <i class="bi bi-heart-pulse text-danger fs-5"></i>
+                    <span>Medical & Care Instructions</span>
+                </span>
+                <a href="?tab=medical" class="small text-decoration-none">Full Medical Profile &rarr;</a>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <h6 class="fw-bold small text-muted mb-1 text-uppercase" style="font-size: 0.7rem;">Allergies & Medical Alerts</h6>
+                    {% if child.allergies %}
+                        <div class="alert alert-danger p-2 mb-0 d-flex align-items-center gap-2 small">
+                            <i class="bi bi-exclamation-octagon-fill fs-5"></i>
+                            <span class="fw-semibold">{{ child.allergies }}</span>
+                        </div>
+                    {% else %}
+                        <p class="text-slate-700 small mb-0"><i class="bi bi-check-circle text-success me-1"></i>None reported</p>
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <h6 class="fw-bold small text-muted mb-1 text-uppercase" style="font-size: 0.7rem;">Dietary Restrictions</h6>
+                    <p class="text-slate-800 small mb-0">{{ child.dietary_restrictions|default:"Standard meal program" }}</p>
+                </div>
+
+                <div class="row g-2 pt-2 border-top small">
+                    <div class="col-6">
+                        <span class="text-muted d-block" style="font-size: 0.72rem;">Pediatrician:</span>
+                        <strong class="text-slate-800">{{ child.doctor_name|default:"Not specified" }}</strong>
+                    </div>
+                    <div class="col-6">
+                        <span class="text-muted d-block" style="font-size: 0.72rem;">Preferred Hospital:</span>
+                        <strong class="text-slate-800">{{ child.hospital_name|default:"Local General" }}</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Attendance Log -->
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-transparent fw-bold d-flex justify-content-between align-items-center py-3">
+                <span>Recent Attendance</span>
+                <a href="?tab=attendance" class="small text-decoration-none">All Records &rarr;</a>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0 small">
+                    <thead class="table-light text-muted">
+                        <tr>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th>Check-in</th>
+                            <th>Check-out</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for att in recent_attendance|slice:":5" %}
+                        <tr>
+                            <td class="fw-semibold">{{ att.attendance_date|date:"M d, Y" }}</td>
+                            <td>
+                                {% if att.attendance_status|lower == 'present' or att.attendance_status|lower == 'checked_in' %}
+                                    <span class="badge badge-soft-success">Present</span>
+                                {% elif att.attendance_status|lower == 'absent' %}
+                                    <span class="badge badge-soft-danger">Absent</span>
+                                {% else %}
+                                    <span class="badge badge-soft-warning">{{ att.attendance_status|title }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ att.check_in_time|default:"-" }}</td>
+                            <td>{{ att.check_out_time|default:"-" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="4" class="text-center py-3 text-muted">No attendance logs available.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ========================================== -->
+<!-- TAB: CLASSROOM ALLOCATION -->
+<!-- ========================================== -->
+{% elif active_tab == 'classroom' %}
+<div class="row g-4">
+    <!-- Current Allocation Card -->
+    <div class="col-12 col-lg-7">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-transparent fw-bold d-flex justify-content-between align-items-center py-3">
+                <span class="d-inline-flex align-items-center gap-2">
+                    <i class="bi bi-door-open-fill text-primary"></i>
+                    <span>Current Classroom Allocation</span>
+                </span>
+                {% if current_classroom %}
+                    <span class="badge badge-soft-success">Active Enrollment</span>
+                {% else %}
+                    <span class="badge badge-soft-warning">Unassigned</span>
+                {% endif %}
+            </div>
+            <div class="card-body p-4">
+                {% if current_classroom %}
+                    <div class="d-flex align-items-center gap-3 mb-4 p-3 bg-light rounded-3 border">
+                        <div class="rounded-3 bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center fw-bold fs-2" style="width: 60px; height: 60px;">
+                            <i class="bi bi-door-open"></i>
+                        </div>
+                        <div>
+                            <h4 class="fw-bold text-slate-800 mb-1">{{ current_classroom.room_name }}</h4>
+                            <div class="text-muted small">
+                                <span class="badge bg-secondary font-monospace me-1">{{ current_classroom.room_code|default:"Room" }}</span>
+                                {{ current_classroom.age_group.name|default:current_classroom.age_group|default:"Toddler Program" }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <dl class="row mb-4">
+                        <dt class="col-sm-4 text-muted small">Lead Educator</dt>
+                        <dd class="col-sm-8 small fw-semibold text-slate-800">
+                            {% if current_classroom.primary_teacher %}
+                                <i class="bi bi-person-check text-success me-1"></i>{{ current_classroom.primary_teacher.get_full_name|default:"Lead Educator" }}
+                            {% else %}
+                                <span class="text-muted">Unassigned Educator</span>
+                            {% endif %}
+                        </dd>
+
+                        <dt class="col-sm-4 text-muted small">Room Capacity</dt>
+                        <dd class="col-sm-8 small">{{ current_classroom.capacity|default:"15" }} Children Licensed</dd>
+
+                        <dt class="col-sm-4 text-muted small">Age Bracket</dt>
+                        <dd class="col-sm-8 small">{{ current_classroom.min_age_months|default:"18" }} &ndash; {{ current_classroom.max_age_months|default:"30" }} Months</dd>
+
+                        <dt class="col-sm-4 text-muted small">Classroom Location</dt>
+                        <dd class="col-sm-8 small">{{ current_classroom.location|default:"Main Facility Floor 1" }}</dd>
+
+                        <dt class="col-sm-4 text-muted small">Enrollment Start Date</dt>
+                        <dd class="col-sm-8 small fw-semibold text-primary">{{ current_enrollment.start_date|date:"F d, Y"|default:child.admission_date|date:"F d, Y"|default:"Active" }}</dd>
+                    </dl>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="bi bi-door-closed fs-1 text-muted opacity-50 mb-2 d-block"></i>
+                        <h5 class="fw-bold text-slate-800">No Classroom Allocated</h5>
+                        <p class="text-muted small">Select an available classroom from the panel on the right to place this child.</p>
+                    </div>
+                {% endif %}
+
+                <!-- Classroom History Table -->
+                <h6 class="fw-bold small text-muted text-uppercase mb-2 pt-3 border-top" style="font-size: 0.72rem; letter-spacing: 0.05em;">Enrollment History</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover align-middle mb-0 small">
+                        <thead class="table-light text-muted">
+                            <tr>
+                                <th>Classroom</th>
+                                <th>Start Date</th>
+                                <th>End Date</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for enh in enrollment_history %}
+                            <tr>
+                                <td class="fw-semibold text-slate-800">{{ enh.classroom.room_name }}</td>
+                                <td>{{ enh.start_date|date:"M d, Y" }}</td>
+                                <td>{{ enh.end_date|date:"M d, Y"|default:"Present" }}</td>
+                                <td>
+                                    {% if enh.status|lower == 'active' %}
+                                        <span class="badge badge-soft-success">Active</span>
+                                    {% elif enh.status|lower == 'transferred' %}
+                                        <span class="badge badge-soft-secondary">Transferred</span>
+                                    {% else %}
+                                        <span class="badge badge-soft-warning">{{ enh.status|title }}</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="4" class="text-center py-3 text-muted">No historical classroom changes logged.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Switch / Allocate Form Card -->
+    <div class="col-12 col-lg-5">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-transparent fw-bold py-3">
+                <i class="bi bi-pencil-square text-primary me-1"></i> Change / Re-allocate Classroom
+            </div>
+            <div class="card-body p-4">
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="change_classroom">
+                    <input type="hidden" name="tab" value="classroom">
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold text-slate-700">Select New Classroom</label>
+                        <select name="classroom_id" class="form-select form-select-sm" required>
+                            <option value="" disabled {% if not current_classroom %}selected{% endif %}>Choose an available room...</option>
+                            {% for room in classrooms %}
+                            <option value="{{ room.id }}" {% if current_classroom.id == room.id %}selected{% endif %}>
+                                {{ room.room_name }} (Cap: {{ room.capacity|default:"15" }} &bull; {{ room.age_group.name|default:room.age_group|default:"Toddler" }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text small text-muted">Re-assigning transfers current active enrollment and sets new start date.</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold text-slate-700">Effective Start Date</label>
+                        <input type="date" name="start_date" class="form-control form-control-sm" value="{% now 'Y-m-d' %}">
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label small fw-semibold text-slate-700">Reason for Transfer (Optional)</label>
+                        <input type="text" name="transfer_notes" class="form-control form-control-sm" placeholder="e.g. Age bracket transition, parent request">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-sm w-100 fw-semibold">
+                        <i class="bi bi-check2-circle me-1"></i> Save Classroom Allocation
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ========================================== -->
+<!-- TAB: PARENTS & FAMILY -->
+<!-- ========================================== -->
+{% elif active_tab == 'family' %}
+<div class="row g-4">
+    <!-- Family Overview & Guardians Grid -->
+    <div class="col-12 col-lg-8">
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-transparent fw-bold d-flex justify-content-between align-items-center py-3">
+                <span class="d-inline-flex align-items-center gap-2">
+                    <i class="bi bi-house-door text-primary"></i>
+                    <span>Family Account Information</span>
+                </span>
+                <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addGuardianModal">
+                    <i class="bi bi-person-plus me-1"></i> Add Parent / Guardian
+                </button>
+            </div>
+            <div class="card-body">
+                {% for fam in families %}
+                <div class="p-3 bg-light rounded-3 mb-4 border">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h5 class="fw-bold text-slate-800 mb-1">{{ fam.family_name }}</h5>
+                            <div class="text-muted small">
+                                <i class="bi bi-geo-alt me-1"></i>{{ fam.address|default:"Address on file" }}
+                            </div>
+                        </div>
+                        <span class="badge badge-soft-success">Active Account</span>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="alert alert-info small mb-4">
+                    <i class="bi bi-info-circle me-1"></i> This child is not linked to a family file yet. Click "Add Parent / Guardian" to create the family profile.
+                </div>
+                {% endfor %}
+
+                <h6 class="fw-bold small text-muted text-uppercase mb-3" style="font-size: 0.72rem; letter-spacing: 0.05em;">Registered Parents & Legal Guardians</h6>
+                <div class="row g-3">
+                    {% for fg in family_guardians %}
+                    <div class="col-12 col-md-6">
+                        <div class="card border h-100 shadow-sm rounded-3">
+                            <div class="card-body p-3">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="rounded-circle bg-primary bg-opacity-10 text-primary fw-bold d-flex align-items-center justify-content-center" style="width: 44px; height: 44px;">
+                                            {{ fg.guardian.first_name|slice:":1" }}{{ fg.guardian.last_name|slice:":1" }}
+                                        </div>
+                                        <div>
+                                            <h6 class="fw-bold text-slate-800 mb-0">{{ fg.guardian.first_name }} {{ fg.guardian.last_name }}</h6>
+                                            <span class="badge bg-light text-dark border">{{ fg.relationship|default:"Parent" }}</span>
+                                        </div>
+                                    </div>
+                                    {% if fg.is_primary %}
+                                        <span class="badge badge-soft-success">Primary</span>
+                                    {% endif %}
+                                </div>
+                                <dl class="row mb-0 small mt-3">
+                                    <dt class="col-4 text-muted">Phone:</dt>
+                                    <dd class="col-8 mb-1">
+                                        {% if fg.guardian.phone %}
+                                            <a href="tel:{{ fg.guardian.phone }}" class="text-decoration-none fw-semibold">{{ fg.guardian.phone }}</a>
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </dd>
+
+                                    <dt class="col-4 text-muted">Email:</dt>
+                                    <dd class="col-8 mb-1">
+                                        {% if fg.guardian.email %}
+                                            <a href="mailto:{{ fg.guardian.email }}" class="text-decoration-none text-truncate d-block">{{ fg.guardian.email }}</a>
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </dd>
+
+                                    <dt class="col-4 text-muted">Portal Login:</dt>
+                                    <dd class="col-8 mb-0">
+                                        {% if fg.guardian.user %}
+                                            <span class="badge badge-soft-success"><i class="bi bi-check-circle me-1"></i>Active</span>
+                                        {% else %}
+                                            <span class="badge badge-soft-secondary">Invite Pending</span>
+                                        {% endif %}
+                                    </dd>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="col-12 text-center py-4 text-muted">
+                        No guardians on file.
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Emergency Contacts & Pickups Column -->
+    <div class="col-12 col-lg-4">
+        <!-- Emergency Contacts Card -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-transparent fw-bold d-flex justify-content-between align-items-center py-3">
+                <span class="small fw-bold">Emergency Contacts</span>
+                <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="collapse" data-bs-target="#addContactCollapse">
+                    <i class="bi bi-plus"></i> Add
+                </button>
+            </div>
+            <!-- Collapsible Add Contact Form -->
+            <div class="collapse p-3 border-bottom bg-light" id="addContactCollapse">
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="add_contact">
+                    <input type="hidden" name="tab" value="family">
+                    <div class="mb-2">
+                        <input type="text" name="contact_name" class="form-control form-control-sm" placeholder="Full Name" required>
+                    </div>
+                    <div class="mb-2">
+                        <input type="text" name="relation" class="form-control form-control-sm" placeholder="Relationship" required>
+                    </div>
+                    <div class="mb-2">
+                        <input type="text" name="phone" class="form-control form-control-sm" placeholder="Phone Number" required>
+                    </div>
+                    <button type="submit" class="btn btn-sm btn-primary w-100">Save Contact</button>
+                </form>
+            </div>
+            <div class="list-group list-group-flush small">
+                {% for ec in emergency_contacts %}
+                <div class="list-group-item p-3">
+                    <div class="fw-bold text-slate-800">{{ ec.name }}</div>
+                    <div class="text-muted">{{ ec.relationship }} &bull; <a href="tel:{{ ec.phone_number }}" class="text-decoration-none fw-semibold">{{ ec.phone_number }}</a></div>
+                </div>
+                {% empty %}
+                <div class="p-3 text-center text-muted">No emergency contacts listed.</div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Authorized Pickups Card -->
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-transparent fw-bold d-flex justify-content-between align-items-center py-3">
+                <span class="small fw-bold">Authorized Pickups</span>
+                <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="collapse" data-bs-target="#addPickupCollapse">
+                    <i class="bi bi-plus"></i> Add
+                </button>
+            </div>
+            <!-- Collapsible Add Pickup Form -->
+            <div class="collapse p-3 border-bottom bg-light" id="addPickupCollapse">
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="add_pickup">
+                    <input type="hidden" name="tab" value="family">
+                    <div class="mb-2">
+                        <input type="text" name="pickup_name" class="form-control form-control-sm" placeholder="Full Name" required>
+                    </div>
+                    <div class="mb-2">
+                        <input type="text" name="relation" class="form-control form-control-sm" placeholder="Relationship" required>
+                    </div>
+                    <div class="mb-2">
+                        <input type="text" name="phone" class="form-control form-control-sm" placeholder="Phone Number" required>
+                    </div>
+                    <button type="submit" class="btn btn-sm btn-primary w-100">Authorize Pickup</button>
+                </form>
+            </div>
+            <div class="list-group list-group-flush small">
+                {% for p in pickups %}
+                <div class="list-group-item p-3 d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="fw-bold text-slate-800">{{ p.name }}</div>
+                        <div class="text-muted">{{ p.relationship }} &bull; {{ p.phone }}</div>
+                    </div>
+                    <span class="badge badge-soft-success">Authorized</span>
+                </div>
+                {% empty %}
+                <div class="p-3 text-center text-muted">No authorized pickups designated.</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ========================================== -->
+<!-- TAB: BILLING & PAYMENT RECEIPTS -->
+<!-- ========================================== -->
+{% elif active_tab == 'billing' %}
+<div class="mb-4">
+    <!-- Billing Metric Banner -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-4">
+            <div class="row g-3 align-items-center">
+                <div class="col-12 col-md-3">
+                    <span class="text-muted small text-uppercase fw-semibold" style="font-size: 0.7rem;">TOTAL INVOICED</span>
+                    <h3 class="fw-bold font-monospace text-slate-800 mb-0">${{ total_invoiced|floatformat:2 }}</h3>
+                    <small class="text-muted">{{ invoices|length }} statement{% if invoices|length != 1 %}s{% endif %} issued</small>
+                </div>
+                <div class="col-12 col-md-3">
+                    <span class="text-success small text-uppercase fw-semibold" style="font-size: 0.7rem;">TOTAL AMOUNT PAID</span>
+                    <h3 class="fw-bold font-monospace text-success mb-0">${{ total_paid|floatformat:2 }}</h3>
+                    <small class="text-muted">{{ payments|length }} payment receipt{% if payments|length != 1 %}s{% endif %}</small>
+                </div>
+                <div class="col-12 col-md-3">
+                    <span class="{% if balance_due > 0 %}text-danger{% else %}text-muted{% endif %} small text-uppercase fw-semibold" style="font-size: 0.7rem;">OUTSTANDING BALANCE</span>
+                    <h3 class="fw-bold font-monospace {% if balance_due > 0 %}text-danger{% else %}text-muted{% endif %} mb-0">${{ balance_due|floatformat:2 }}</h3>
+                    <small class="text-muted">{% if balance_due > 0 %}Immediate balance due{% else %}Account fully up to date{% endif %}</small>
+                </div>
+                <div class="col-12 col-md-3">
+                    {% if subsidy %}
+                        <div class="p-3 bg-info bg-opacity-10 border border-info border-opacity-25 rounded-3">
+                            <div class="fw-bold text-info small"><i class="bi bi-shield-check me-1"></i> CWELCC Enrolled</div>
+                            <div class="text-slate-800 small">{{ subsidy.subsidy_rate }}% Fee Reduction Active</div>
+                            <div class="text-muted small" style="font-size: 0.7rem;">Co-pay: ${{ subsidy.parent_co_pay_amount|floatformat:2 }}/mo</div>
+                        </div>
+                    {% else %}
+                        <div class="p-3 bg-light border rounded-3 text-muted small">
+                            <i class="bi bi-info-circle me-1"></i> Standard Full Tuition Rate
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Receipts Ledger Table -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-transparent fw-bold d-flex justify-content-between align-items-center py-3">
+            <span class="d-inline-flex align-items-center gap-2">
+                <i class="bi bi-receipt-cutoff text-success fs-5"></i>
+                <span class="fs-6">Official Payment Receipts</span>
+                <span class="badge bg-secondary rounded-pill">{{ payments|length }}</span>
+            </span>
+            <span class="text-muted small">Completed child tuition and fee transactions</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light text-muted small text-uppercase">
+                    <tr>
+                        <th class="ps-4">Receipt #</th>
+                        <th>Payment Date</th>
+                        <th>Invoice Reference</th>
+                        <th>Payment Method</th>
+                        <th>Transaction Ref</th>
+                        <th>Payer</th>
+                        <th class="text-end">Amount Paid</th>
+                        <th class="text-end pe-4">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for pay in payments %}
+                    <tr>
+                        <td class="ps-4">
+                            <span class="font-monospace fw-bold text-primary">{{ pay.receipt_number|default:pay.transaction_reference|default:pay.id|stringformat:".10s" }}</span>
+                        </td>
+                        <td>{{ pay.payment_date|date:"M d, Y" }}</td>
+                        <td>
+                            <a href="{% url 'daycare_invoice_detail' pay.invoice.id %}" class="font-monospace text-decoration-none fw-semibold">
+                                {{ pay.invoice.invoice_number }}
+                            </a>
+                        </td>
+                        <td>
+                            <span class="badge bg-light text-dark border">
+                                {% if 'etransfer' in pay.payment_method|lower %}
+                                    <i class="bi bi-arrow-left-right text-info me-1"></i> Interac e-Transfer
+                                {% elif 'credit' in pay.payment_method|lower %}
+                                    <i class="bi bi-credit-card text-primary me-1"></i> Credit Card
+                                {% else %}
+                                    {{ pay.payment_method|title }}
+                                {% endif %}
+                            </span>
+                        </td>
+                        <td class="font-monospace small text-muted">{{ pay.transaction_reference|default:"-" }}</td>
+                        <td class="small">{% if pay.payer_name %}{{ pay.payer_name }}{% elif primary_guardian %}{{ primary_guardian.guardian.first_name }} {{ primary_guardian.guardian.last_name }}{% else %}Parent{% endif %}</td>
+                        <td class="text-end font-monospace fw-bold text-success fs-6">${{ pay.amount|floatformat:2 }}</td>
+                        <td class="text-end pe-4">
+                            <button type="button" class="btn btn-sm btn-outline-primary py-1 px-2 d-inline-flex align-items-center gap-1"
+                                    data-bs-toggle="modal" data-bs-target="#receiptModal{{ pay.id }}">
+                                <i class="bi bi-printer"></i> View Receipt
+                            </button>
+                        </td>
+                    </tr>
+
+                    <!-- Printable Payment Receipt Modal for {{ pay.id }} -->
+                    <div class="modal fade" id="receiptModal{{ pay.id }}" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content border-0 shadow-lg rounded-4">
+                                <div class="modal-header bg-light border-bottom py-3">
+                                    <h5 class="modal-title fw-bold text-slate-800">
+                                        <i class="bi bi-receipt text-success me-1"></i> Childcare Fee Payment Receipt
+                                    </h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body p-4" id="printableReceipt{{ pay.id }}">
+                                    <!-- Receipt Header -->
+                                    <div class="text-center pb-3 border-bottom mb-3">
+                                        <h5 class="fw-bold text-slate-900 mb-0">{{ child.daycare.name }}</h5>
+                                        <div class="text-muted small">Licensed Child Care Center</div>
+                                        <div class="badge bg-success bg-opacity-10 text-success mt-2 px-3 py-1 fw-bold fs-6">
+                                            PAYMENT COMPLETED
+                                        </div>
+                                    </div>
+
+                                    <div class="row g-2 mb-3 small">
+                                        <div class="col-6">
+                                            <span class="text-muted d-block">Receipt Number:</span>
+                                            <strong class="font-monospace text-slate-800">{{ pay.receipt_number|default:pay.transaction_reference|default:pay.id|stringformat:".12s" }}</strong>
+                                        </div>
+                                        <div class="col-6 text-end">
+                                            <span class="text-muted d-block">Payment Date:</span>
+                                            <strong class="text-slate-800">{{ pay.payment_date|date:"F d, Y" }}</strong>
+                                        </div>
+                                        <div class="col-6">
+                                            <span class="text-muted d-block">Child / Student:</span>
+                                            <strong class="text-slate-800">{{ child.first_name }} {{ child.last_name }}</strong>
+                                        </div>
+                                        <div class="col-6 text-end">
+                                            <span class="text-muted d-block">Payer:</span>
+                                            <strong class="text-slate-800">{{ pay.payer_name|default:"David Miller" }}</strong>
+                                        </div>
+                                    </div>
+
+                                    <div class="table-responsive mb-3">
+                                        <table class="table table-bordered small mb-0">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>Description</th>
+                                                    <th class="text-end">Amount</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td>
+                                                        {{ pay.invoice.notes|default:"Monthly Childcare Tuition Services" }}
+                                                        <div class="text-muted" style="font-size: 0.72rem;">Invoice #{{ pay.invoice.invoice_number }}</div>
+                                                    </td>
+                                                    <td class="text-end font-monospace fw-bold">${{ pay.amount|floatformat:2 }}</td>
+                                                </tr>
+                                                <tr class="table-light">
+                                                    <td class="fw-bold">Total Paid (CAD):</td>
+                                                    <td class="text-end font-monospace fw-bold text-success fs-6">${{ pay.amount|floatformat:2 }}</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                    <div class="p-3 bg-light rounded-3 small">
+                                        <div class="d-flex justify-content-between mb-1">
+                                            <span class="text-muted">Payment Method:</span>
+                                            <span class="fw-semibold">{{ pay.payment_method|title }}</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between">
+                                            <span class="text-muted">Transaction Reference:</span>
+                                            <span class="font-monospace">{{ pay.transaction_reference|default:"Verified" }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="modal-footer border-top-0 pt-0">
+                                    <button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">Close</button>
+                                    <button type="button" class="btn btn-primary btn-sm d-inline-flex align-items-center gap-1" onclick="window.print()">
+                                        <i class="bi bi-printer"></i> Print Receipt
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center py-5 text-muted">
+                            <i class="bi bi-receipt fs-1 text-secondary opacity-50 d-block mb-2"></i>
+                            No payment receipts recorded for this child or family yet.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Invoices & Billing Statements Table -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-transparent fw-bold d-flex justify-content-between align-items-center py-3">
+            <span class="d-inline-flex align-items-center gap-2">
+                <i class="bi bi-file-earmark-text text-primary fs-5"></i>
+                <span class="fs-6">Invoices & Billing Statements</span>
+                <span class="badge bg-secondary rounded-pill">{{ invoices|length }}</span>
+            </span>
+            <a href="{% url 'daycare_invoices' %}" class="btn btn-outline-secondary btn-sm">All Daycare Invoices</a>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light text-muted small text-uppercase">
+                    <tr>
+                        <th class="ps-4">Statement #</th>
+                        <th>Billing Period / Notes</th>
+                        <th>Issue Date</th>
+                        <th>Due Date</th>
+                        <th>Total Amount</th>
+                        <th>Amount Paid</th>
+                        <th>Balance Due</th>
+                        <th>Status</th>
+                        <th class="text-end pe-4">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for inv in invoices %}
+                    <tr>
+                        <td class="ps-4">
+                            <span class="font-monospace fw-bold text-dark">#{{ inv.invoice_number }}</span>
+                        </td>
+                        <td>
+                            <div class="fw-semibold text-slate-800">{{ inv.notes|default:"Monthly Childcare Tuition" }}</div>
+                            {% if inv.billing_period_start %}
+                                <small class="text-muted">{{ inv.billing_period_start|date:"M d" }} &ndash; {{ inv.billing_period_end|date:"M d, Y" }}</small>
+                            {% endif %}
+                        </td>
+                        <td class="small">{{ inv.issue_date|date:"M d, Y" }}</td>
+                        <td class="small">{{ inv.due_date|date:"M d, Y" }}</td>
+                        <td class="fw-bold font-monospace">${{ inv.total_amount|floatformat:2 }}</td>
+                        <td class="text-success font-monospace">${{ inv.amount_paid|floatformat:2 }}</td>
+                        <td class="font-monospace fw-bold {% if inv.balance_due > 0 %}text-danger{% else %}text-muted{% endif %}">
+                            ${{ inv.balance_due|floatformat:2 }}
+                        </td>
+                        <td>
+                            {% if inv.status|lower == 'paid' %}
+                                <span class="badge badge-soft-success"><i class="bi bi-check-circle-fill me-1"></i>Paid</span>
+                            {% elif inv.status|lower == 'overdue' %}
+                                <span class="badge badge-soft-danger"><i class="bi bi-exclamation-triangle-fill me-1"></i>Overdue</span>
+                            {% else %}
+                                <span class="badge badge-soft-warning">{{ inv.status|title }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end pe-4">
+                            <a href="{% url 'daycare_invoice_detail' inv.id %}" class="btn btn-sm btn-outline-secondary py-1 px-2">
+                                <i class="bi bi-eye"></i> Details
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="9" class="text-center py-5 text-muted">
+                            No billing statements generated for this child.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- ========================================== -->
+<!-- TAB: DAILY REPORTS -->
+<!-- ========================================== -->
+{% elif active_tab == 'reports' %}
+<div class="row g-4">
+    <div class="col-12 col-lg-8">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold text-slate-800 mb-0">Daily Activity Logs & Educator Reports</h5>
+            <span class="badge bg-secondary">{{ recent_reports|length }} Reports</span>
+        </div>
+
+        {% for r in recent_reports %}
+        <div class="card border-0 shadow-sm mb-4 rounded-4 overflow-hidden">
+            <div class="card-header bg-light d-flex justify-content-between align-items-center py-3 border-bottom">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="rounded-circle bg-primary bg-opacity-10 text-primary p-2 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+                        <i class="bi bi-calendar-event"></i>
+                    </div>
+                    <div>
+                        <h6 class="fw-bold text-slate-800 mb-0">{{ r.report_date|date:"l, F d, Y" }}</h6>
+                        <span class="text-muted small">Reported by <strong>{{ r.teacher.get_full_name|default:"Lead RECE Educator" }}</strong></span>
+                    </div>
+                </div>
+                <span class="badge badge-soft-success">Published to Family</span>
+            </div>
+            <div class="card-body p-4">
+                <!-- Meals -->
+                <div class="mb-4">
+                    <h6 class="fw-bold small text-muted text-uppercase mb-2 d-flex align-items-center gap-1" style="font-size: 0.72rem; letter-spacing: 0.05em;">
+                        <i class="bi bi-cup-hot text-warning"></i> Meals & Nutrition
+                    </h6>
+                    <div class="row g-2">
+                        {% for m in r.meals.all %}
+                        <div class="col-12 col-md-4">
+                            <div class="p-3 bg-light rounded-3 border h-100">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span class="fw-bold text-slate-800">{{ m.meal_type }}</span>
+                                    <span class="badge badge-soft-success">{{ m.amount_eaten }}</span>
+                                </div>
+                                <p class="text-muted small mb-0">{{ m.food_provided }}</p>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="col-12 text-muted small">No specific meals logged.</div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Naps -->
+                <div class="mb-4">
+                    <h6 class="fw-bold small text-muted text-uppercase mb-2 d-flex align-items-center gap-1" style="font-size: 0.72rem; letter-spacing: 0.05em;">
+                        <i class="bi bi-moon-stars text-info"></i> Nap & Rest Times
+                    </h6>
+                    <div class="row g-2">
+                        {% for n in r.naps.all %}
+                        <div class="col-12 col-md-6">
+                            <div class="p-3 bg-light rounded-3 border">
+                                <div class="fw-bold text-slate-800">{{ n.start_time|time:"g:i A" }} &ndash; {{ n.end_time|time:"g:i A" }} ({{ n.duration_minutes }} mins)</div>
+                                <div class="text-muted small">{{ n.quality|default:"Peaceful rest" }}</div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="col-12 text-muted small">No nap logged.</div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Educator Note -->
+                {% if r.notes %}
+                <div class="p-3 bg-primary bg-opacity-10 rounded-3 border border-primary border-opacity-25">
+                    <div class="fw-bold text-primary small mb-1"><i class="bi bi-chat-left-quote me-1"></i> Educator's Daily Reflection</div>
+                    <p class="text-slate-800 small mb-0">{{ r.notes }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% empty %}
+        <div class="card border-0 shadow-sm p-5 text-center text-muted">
+            <i class="bi bi-journal-text fs-1 opacity-50 mb-2"></i>
+            <h5>No Daily Reports Published Yet</h5>
+            <p class="small">Daily reports created by room educators will be archived here.</p>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Right Sidebar Quick Notes -->
+    <div class="col-12 col-lg-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-transparent fw-bold py-3">
+                <i class="bi bi-info-circle text-primary me-1"></i> Daily Routine Highlights
+            </div>
+            <div class="card-body small">
+                <p class="text-muted">Our licensed early childhood educators document daily meals, naps, potty activities, and developmental moments every day before 5:00 PM.</p>
+                <div class="alert alert-light border small">
+                    <strong>Program:</strong> {{ current_classroom.age_group.name|default:"Toddler Room" }}<br>
+                    <strong>Scheduled Nap:</strong> 12:30 PM &ndash; 2:30 PM<br>
+                    <strong>Outdoor Play:</strong> 10:00 AM & 3:30 PM
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ========================================== -->
+<!-- TAB: MEDICAL & HEALTH -->
+<!-- ========================================== -->
+{% elif active_tab == 'medical' %}
+<div class="row g-4">
+    <div class="col-12 col-lg-7">
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-transparent fw-bold py-3">
+                <i class="bi bi-shield-plus text-danger me-1"></i> Health & Allergy Profile
+            </div>
+            <div class="card-body p-4">
+                <dl class="row mb-0">
+                    <dt class="col-sm-4 text-muted small">Allergies</dt>
+                    <dd class="col-sm-8 small">
+                        {% if child.allergies %}
+                            <div class="alert alert-danger p-2 mb-0 fw-semibold">{{ child.allergies }}</div>
+                        {% else %}
+                            <span class="text-muted">None registered</span>
+                        {% endif %}
+                    </dd>
+
+                    <dt class="col-sm-4 text-muted small mt-3">Dietary Restrictions</dt>
+                    <dd class="col-sm-8 small mt-3">{{ child.dietary_restrictions|default:"Standard meal program" }}</dd>
+
+                    <dt class="col-sm-4 text-muted small mt-3">Medical Conditions</dt>
+                    <dd class="col-sm-8 small mt-3">{{ child.medical_conditions|default:"None reported" }}</dd>
+
+                    <dt class="col-sm-4 text-muted small mt-3">Medications on File</dt>
+                    <dd class="col-sm-8 small mt-3">{{ child.medication|default:"None" }}</dd>
+
+                    <dt class="col-sm-4 text-muted small mt-3">Special Accommodations</dt>
+                    <dd class="col-sm-8 small mt-3">{{ child.special_needs|default:"Standard program" }}</dd>
+                </dl>
+            </div>
+        </div>
+
+        <!-- Incident Reports -->
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-transparent fw-bold d-flex justify-content-between align-items-center py-3">
+                <span>Incident & First-Aid Reports</span>
+                <span class="badge bg-secondary">{{ incident_reports|length }}</span>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0 small">
+                    <thead class="table-light text-muted">
+                        <tr>
+                            <th>Date</th>
+                            <th>Incident</th>
+                            <th>Severity</th>
+                            <th>Action Taken</th>
+                            <th>Reported By</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for inc in incident_reports %}
+                        <tr>
+                            <td class="fw-semibold">{{ inc.activity_date|date:"M d, Y" }}</td>
+                            <td>{{ inc.incident_type }}</td>
+                            <td><span class="badge badge-soft-warning">{{ inc.severity }}</span></td>
+                            <td>{{ inc.action_taken }}</td>
+                            <td>{{ inc.reporting_employee.get_full_name|default:"Staff" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="5" class="text-center py-4 text-muted">No safety incidents on file.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Emergency Medical Contacts -->
+    <div class="col-12 col-lg-5">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-transparent fw-bold py-3">
+                <i class="bi bi-hospital text-primary me-1"></i> Emergency Medical Contacts
+            </div>
+            <div class="card-body p-4">
+                <dl class="row mb-0">
+                    <dt class="col-sm-4 text-muted small">Pediatrician</dt>
+                    <dd class="col-sm-8 small fw-semibold text-slate-800">{{ child.doctor_name|default:"Not specified" }}</dd>
+
+                    <dt class="col-sm-4 text-muted small mt-2">Clinic Phone</dt>
+                    <dd class="col-sm-8 small mt-2">
+                        {% if child.doctor_phone %}
+                            <a href="tel:{{ child.doctor_phone }}" class="text-decoration-none fw-semibold">{{ child.doctor_phone }}</a>
+                        {% else %}
+                            <span class="text-muted">-</span>
+                        {% endif %}
+                    </dd>
+
+                    <dt class="col-sm-4 text-muted small mt-2">Preferred Hospital</dt>
+                    <dd class="col-sm-8 small mt-2">{{ child.hospital_name|default:"SickKids / General Pediatric Emergency" }}</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ========================================== -->
+<!-- TAB: ATTENDANCE HISTORY -->
+<!-- ========================================== -->
+{% elif active_tab == 'attendance' %}
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-transparent fw-bold d-flex justify-content-between align-items-center py-3">
+        <span>Complete Attendance History</span>
+        <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#recordAttendanceModal">
+            <i class="bi bi-calendar-check me-1"></i> Record Attendance
+        </button>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light text-muted small text-uppercase">
+                <tr>
+                    <th class="ps-4">Date</th>
+                    <th>Classroom</th>
+                    <th>Status</th>
+                    <th>Check In Time</th>
+                    <th>Check Out Time</th>
+                    <th class="pe-4">Notes</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for att in recent_attendance %}
+                <tr>
+                    <td class="ps-4 fw-semibold">{{ att.attendance_date|date:"M d, Y" }}</td>
+                    <td>{{ att.classroom.room_name|default:current_classroom.room_name|default:"-" }}</td>
+                    <td>
+                        {% if att.attendance_status|lower == 'present' or att.attendance_status|lower == 'checked_in' %}
+                            <span class="badge badge-soft-success"><i class="bi bi-check2 me-1"></i>Present</span>
+                        {% elif att.attendance_status|lower == 'absent' %}
+                            <span class="badge badge-soft-danger"><i class="bi bi-x-circle me-1"></i>Absent</span>
+                        {% else %}
+                            <span class="badge badge-soft-warning">{{ att.attendance_status|title }}</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ att.check_in_time|default:"-" }}</td>
+                    <td>{{ att.check_out_time|default:"-" }}</td>
+                    <td class="pe-4 text-muted small">{{ att.notes|default:"-" }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="6" class="text-center py-5 text-muted">No attendance logs available.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- ========================================== -->
+<!-- TAB: CONSENTS & DOCUMENTS -->
+<!-- ========================================== -->
+{% elif active_tab == 'documents' %}
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-transparent fw-bold py-3">
+        <i class="bi bi-file-earmark-check text-primary me-1"></i> Signed Consents & Permissions
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light text-muted small text-uppercase">
+                <tr>
+                    <th class="ps-4">Document / Consent Form</th>
+                    <th>Description</th>
+                    <th>Due Date</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ca in consent_assignments %}
+                <tr>
+                    <td class="ps-4 fw-bold text-slate-800">{{ ca.consent_form.title }}</td>
+                    <td class="small text-muted">{{ ca.consent_form.description|default:"Annual childcare program agreement" }}</td>
+                    <td class="small">{{ ca.due_date|date:"M d, Y"|default:"-" }}</td>
+                    <td>
+                        {% if ca.status|lower == 'signed' %}
+                            <span class="badge badge-soft-success"><i class="bi bi-check-circle-fill me-1"></i>Signed & On File</span>
+                        {% else %}
+                            <span class="badge badge-soft-warning">Signature Pending</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="4" class="text-center py-5 text-muted">No consent forms assigned yet.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- ========================================== -->
+<!-- TAB: PERSONAL INFO EDIT FORM -->
+<!-- ========================================== -->
+{% elif active_tab == 'personal' %}
+<form method="post" class="card border-0 shadow-sm rounded-4" style="max-width: 900px;">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="update_personal">
+    <input type="hidden" name="tab" value="personal">
+    <div class="card-body p-4">
+        <h5 class="fw-bold text-slate-800 mb-4">Edit Child Profile & Information</h5>
+        <div class="row g-3">
+            <div class="col-12 col-md-4">
+                <label class="form-label small fw-semibold">First Name <span class="text-danger">*</span></label>
+                <input type="text" name="first_name" class="form-control form-control-sm" value="{{ child.first_name }}" required>
+            </div>
+            <div class="col-12 col-md-4">
+                <label class="form-label small fw-semibold">Last Name <span class="text-danger">*</span></label>
+                <input type="text" name="last_name" class="form-control form-control-sm" value="{{ child.last_name }}" required>
+            </div>
+            <div class="col-12 col-md-4">
+                <label class="form-label small fw-semibold">Preferred Name</label>
+                <input type="text" name="preferred_name" class="form-control form-control-sm" value="{{ child.preferred_name|default:'' }}">
+            </div>
+            <div class="col-12 col-md-4">
+                <label class="form-label small fw-semibold">Date of Birth</label>
+                <input type="date" name="date_of_birth" class="form-control form-control-sm" value="{{ child.date_of_birth|date:'Y-m-d' }}">
+            </div>
+            <div class="col-12 col-md-4">
+                <label class="form-label small fw-semibold">Gender</label>
+                <select name="gender" class="form-select form-select-sm">
+                    <option value="male" {% if child.gender == 'male' %}selected{% endif %}>Male</option>
+                    <option value="female" {% if child.gender == 'female' %}selected{% endif %}>Female</option>
+                    <option value="other" {% if child.gender == 'other' %}selected{% endif %}>Other</option>
+                    <option value="unspecified" {% if child.gender == 'unspecified' %}selected{% endif %}>Unspecified</option>
+                </select>
+            </div>
+            <div class="col-12 col-md-4">
+                <label class="form-label small fw-semibold">Admission / Roster ID</label>
+                <input type="text" name="admission_number" class="form-control form-control-sm" value="{{ child.admission_number|default:'' }}">
+            </div>
+
+            <div class="col-12 pt-3 border-top">
+                <h6 class="fw-bold small text-muted text-uppercase mb-3">Medical & Care Instructions</h6>
+            </div>
+            <div class="col-12 col-md-6">
+                <label class="form-label small fw-semibold">Allergies & Medical Alerts</label>
+                <textarea name="allergies" class="form-control form-control-sm" rows="3">{{ child.allergies|default:'' }}</textarea>
+            </div>
+            <div class="col-12 col-md-6">
+                <label class="form-label small fw-semibold">Dietary Restrictions</label>
+                <textarea name="dietary_restrictions" class="form-control form-control-sm" rows="3">{{ child.dietary_restrictions|default:'' }}</textarea>
+            </div>
+            <div class="col-12 col-md-4">
+                <label class="form-label small fw-semibold">Pediatrician / Doctor</label>
+                <input type="text" name="doctor_name" class="form-control form-control-sm" value="{{ child.doctor_name|default:'' }}">
+            </div>
+            <div class="col-12 col-md-4">
+                <label class="form-label small fw-semibold">Doctor Phone</label>
+                <input type="text" name="doctor_phone" class="form-control form-control-sm" value="{{ child.doctor_phone|default:'' }}">
+            </div>
+            <div class="col-12 col-md-4">
+                <label class="form-label small fw-semibold">Preferred Emergency Hospital</label>
+                <input type="text" name="hospital_name" class="form-control form-control-sm" value="{{ child.hospital_name|default:'' }}">
+            </div>
+        </div>
+        <div class="mt-4 pt-3 border-top text-end">
+            <button type="submit" class="btn btn-primary px-4 fw-semibold">Save Profile Changes</button>
+        </div>
+    </div>
+</form>
+{% endif %}
+
+<!-- ========================================== -->
+<!-- MODALS -->
+<!-- ========================================== -->
+
+<!-- Modal: Allocate / Switch Classroom -->
+<div class="modal fade" id="switchClassroomModal" tabindex="-1" aria-labelledby="switchClassroomModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="change_classroom">
+                <input type="hidden" name="tab" value="{{ active_tab }}">
+                <div class="modal-header border-bottom py-3">
+                    <h5 class="modal-title fw-bold text-slate-800" id="switchClassroomModalLabel">
+                        <i class="bi bi-door-open text-primary me-1"></i> Allocate Classroom for {{ child.first_name }}
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Target Classroom</label>
+                        <select name="classroom_id" class="form-select form-select-sm" required>
+                            {% for room in classrooms %}
+                            <option value="{{ room.id }}" {% if current_classroom.id == room.id %}selected{% endif %}>
+                                {{ room.room_name }} (Cap: {{ room.capacity|default:"15" }} &bull; {{ room.age_group.name|default:room.age_group|default:"Toddler" }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0 pt-0">
+                    <button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary btn-sm fw-semibold">Confirm Allocation</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Add Parent / Guardian -->
+<div class="modal fade" id="addGuardianModal" tabindex="-1" aria-labelledby="addGuardianModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="add_guardian">
+                <input type="hidden" name="tab" value="{{ active_tab }}">
+                <div class="modal-header border-bottom py-3">
+                    <h5 class="modal-title fw-bold text-slate-800" id="addGuardianModalLabel">
+                        <i class="bi bi-person-plus text-primary me-1"></i> Add Parent / Legal Guardian
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold">First Name <span class="text-danger">*</span></label>
+                            <input type="text" name="first_name" class="form-control form-control-sm" required>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold">Last Name <span class="text-danger">*</span></label>
+                            <input type="text" name="last_name" class="form-control form-control-sm" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Relationship</label>
+                        <select name="relationship" class="form-select form-select-sm">
+                            <option value="Mother">Mother</option>
+                            <option value="Father">Father</option>
+                            <option value="Guardian">Legal Guardian</option>
+                            <option value="Foster Parent">Foster Parent</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold">Phone Number</label>
+                            <input type="text" name="phone" class="form-control form-control-sm" placeholder="(416) 555-0100">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold">Email Address</label>
+                            <input type="email" name="email" class="form-control form-control-sm" placeholder="parent@example.com">
+                        </div>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="is_primary" id="isPrimaryCheck" checked>
+                        <label class="form-check-label small" for="isPrimaryCheck">
+                            Designate as Primary Contact for Center Communications
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0 pt-0">
+                    <button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary btn-sm fw-semibold">Save Guardian</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Record Attendance -->
+<div class="modal fade" id="recordAttendanceModal" tabindex="-1" aria-labelledby="recordAttendanceModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="record_attendance">
+                <input type="hidden" name="tab" value="{{ active_tab }}">
+                <div class="modal-header border-bottom py-3">
+                    <h5 class="modal-title fw-bold text-slate-800" id="recordAttendanceModalLabel">
+                        <i class="bi bi-calendar-check text-primary me-1"></i> Record Attendance for {{ child.first_name }}
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Date</label>
+                        <input type="date" name="attendance_date" class="form-control form-control-sm" value="{% now 'Y-m-d' %}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Attendance Status</label>
+                        <select name="attendance_status" class="form-select form-select-sm">
+                            <option value="PRESENT" selected>Present / Checked In</option>
+                            <option value="ABSENT">Absent</option>
+                            <option value="LATE">Tardy / Late Arrival</option>
+                            <option value="EXCUSED">Excused Absence</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Check-in Time (Optional)</label>
+                        <input type="time" name="check_in_time" class="form-control form-control-sm" value="08:30">
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0 pt-0">
+                    <button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary btn-sm fw-semibold">Save Record</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

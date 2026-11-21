@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}Staff & Educators{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="h4 fw-bold text-slate-800 mb-1">Staff Tasks & Educator Directory</h2>
+        <p class="text-muted small mb-0">Roster of daycare educators, support staff, and administrative personnel</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{% url 'daycare_scheduling' %}" class="btn btn-outline-info d-inline-flex align-items-center gap-2">
+            <i class="bi bi-calendar3"></i> Shift Schedule
+        </a>
+        <a href="{% url 'daycare_staff_attendance' %}" class="btn btn-outline-warning d-inline-flex align-items-center gap-2">
+            <i class="bi bi-clock-history"></i> Time Clock
+        </a>
+        <a href="{% url 'daycare_credentials' %}" class="btn btn-outline-secondary d-inline-flex align-items-center gap-2">
+            <i class="bi bi-award"></i> Credentials
+        </a>
+        <a href="{% url 'daycare_employee_new' %}" class="btn btn-primary d-inline-flex align-items-center gap-2">
+            <i class="bi bi-person-plus"></i> Add Educator
+        </a>
+    </div>
+</div>
+
+<!-- Search & Filtering Toolbar -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body p-3">
+        <form method="get" class="row g-2 align-items-center">
+            <div class="col-12 col-md-8">
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-search"></i></span>
+                    <input type="text" class="form-control border-start-0 ps-0" name="q" value="{{ q|default:'' }}" placeholder="Search staff name, email, phone...">
+                </div>
+            </div>
+            <div class="col-12 col-md-4 d-flex gap-2">
+                <button type="submit" class="btn btn-primary flex-grow-1">Search</button>
+                <a href="{% url 'daycare_employees' %}" class="btn btn-light border">Reset</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Staff Member</th>
+                    <th>Role / Title</th>
+                    <th>Email Address</th>
+                    <th>Phone</th>
+                    <th>Status</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for emp in page_obj %}
+                <tr>
+                    <td>
+                        <div class="fw-bold text-slate-800">
+                            <a href="{% url 'daycare_employee_detail' emp.id %}" class="text-decoration-none text-slate-800">
+                                {{ emp.first_name }} {{ emp.last_name }}
+                            </a>
+                        </div>
+                        <div class="text-muted small font-monospace">{{ emp.employee_number|default:emp.id|slice:":8" }}</div>
+                    </td>
+                    <td>
+                        <span class="badge badge-soft-primary">{{ emp.employee_type.name|default:"Educator" }}</span>
+                    </td>
+                    <td class="small">{{ emp.email|default:"-" }}</td>
+                    <td class="small text-muted">{{ emp.phone_number|default:"-" }}</td>
+                    <td>
+                        <span class="badge {% if emp.status == 'active' %}badge-soft-success{% else %}badge-soft-secondary{% endif %}">
+                            {{ emp.status|title }}
+                        </span>
+                    </td>
+                    <td class="text-end">
+                        <a href="{% url 'daycare_employee_detail' emp.id %}" class="btn btn-sm btn-outline-primary py-1 px-2" title="View Profile">
+                            <i class="bi bi-person-lines-fill me-1"></i> Profile
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center py-5 text-muted">No staff members found matching criteria.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="card-footer bg-transparent py-3">
+        {% include "includes/pagination.html" %}
+    </div>
+</div>
+{% endblock %}
+
