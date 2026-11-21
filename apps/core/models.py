@@ -650,6 +650,16 @@ class Student(models.Model):
     def medical_info(self, val):
         self.medical_notes = val
 
+    @property
+    def family_set(self):
+        from core.models import Family
+        return Family.objects.filter(family_children__student=self)
+
+    @property
+    def primary_family(self):
+        fc = self.child_families.select_related('family').first()
+        return fc.family if fc else None
+
 class StudentEmergencyContact(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='emergency_contacts')
@@ -660,6 +670,14 @@ class StudentEmergencyContact(models.Model):
     is_primary = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    @property
+    def contact_name(self):
+        return self.name
+
+    @contact_name.setter
+    def contact_name(self, val):
+        self.name = val
 
     @property
     def phone_number(self):
@@ -1972,6 +1990,16 @@ class Family(models.Model):
     daycare = models.ForeignKey('Daycare', models.CASCADE)
     secondary_phone = models.CharField(max_length=100, blank=True, null=True)
 
+    @property
+    def guardians(self):
+        from core.models import Guardian
+        return Guardian.objects.filter(guardian_families__family=self)
+
+    @property
+    def children(self):
+        from core.models import Student
+        return Student.objects.filter(child_families__family=self)
+
 
 class FamilyAuditLog(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -2162,6 +2190,83 @@ class RegistrationApplication(models.Model):
     @property
     def gender(self):
         return (self.application_data or {}).get('gender', 'unspecified')
+
+    @property
+    def preferred_start_date(self):
+        return (self.application_data or {}).get('preferred_start_date', '')
+
+    @property
+    def birth_reg_number(self):
+        return (self.application_data or {}).get('birth_reg_number', '')
+
+    @property
+    def birth_document_url(self):
+        return (self.application_data or {}).get('birth_document_url', '')
+
+    @property
+    def birth_document_name(self):
+        return (self.application_data or {}).get('birth_document_name', '')
+
+    @property
+    def immunization_document_url(self):
+        return (self.application_data or {}).get('immunization_document_url', '')
+
+    @property
+    def immunization_document_name(self):
+        return (self.application_data or {}).get('immunization_document_name', '')
+
+    @property
+    def emergency_contact_name(self):
+        return (self.application_data or {}).get('emergency_contact_name', '')
+
+    @property
+    def emergency_contact_phone(self):
+        return (self.application_data or {}).get('emergency_contact_phone', '')
+
+    @property
+    def emergency_contact_relation(self):
+        return (self.application_data or {}).get('emergency_contact_relation', 'Emergency Contact')
+
+    @property
+    def dietary_restrictions(self):
+        return (self.application_data or {}).get('dietary_restrictions', '')
+
+    @property
+    def doctor_name(self):
+        return (self.application_data or {}).get('doctor_name', '')
+
+    @property
+    def doctor_phone(self):
+        return (self.application_data or {}).get('doctor_phone', '')
+
+    @property
+    def consent_medical(self):
+        return (self.application_data or {}).get('consent_medical', True)
+
+    @property
+    def consent_walks(self):
+        return (self.application_data or {}).get('consent_walks', True)
+
+    @property
+    def consent_photos(self):
+        return (self.application_data or {}).get('consent_photos', True)
+
+    @property
+    def consent_topical(self):
+        return (self.application_data or {}).get('consent_topical', True)
+
+    @property
+    def age_in_months(self):
+        dob_str = self.date_of_birth
+        if not dob_str:
+            return None
+        try:
+            from datetime import datetime
+            dob_date = datetime.strptime(str(dob_str)[:10], '%Y-%m-%d').date()
+            today = timezone.now().date()
+            return max(0, (today.year - dob_date.year) * 12 + today.month - dob_date.month)
+        except Exception:
+            return None
 
 
 class StaffAttendance(models.Model):
@@ -2471,6 +2576,26 @@ class WaitlistEntry(models.Model):
     updated_at = models.DateTimeField()
     application = models.OneToOneField('RegistrationApplication', models.CASCADE, blank=True, null=True)
     daycare = models.ForeignKey('Daycare', models.CASCADE)
+
+    @property
+    def parent_name(self):
+        return self.applicant_name
+
+    @property
+    def parent_email(self):
+        return self.applicant_email
+
+    @property
+    def parent_phone(self):
+        return self.applicant_phone
+
+    @property
+    def desired_start_date(self):
+        return self.requested_start_date
+
+    @property
+    def date_of_birth(self):
+        return self.child_dob
 
 class EmploymentHistory(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -3166,6 +3291,14 @@ class FeeStructure(models.Model):
     def __str__(self):
         return f"{self.name} - {self.amount} {self.currency} ({self.get_fee_type_display()}) [v{self.version}]"
 
+    @property
+    def start_date(self):
+        return self.effective_from
+
+    @start_date.setter
+    def start_date(self, val):
+        self.effective_from = val
+
     def is_effective_on(self, target_date):
         if self.effective_from and target_date < self.effective_from:
             return False
@@ -3217,6 +3350,14 @@ class ChildFeeAssignment(models.Model):
             discount_mult = Decimal('1.00') - (Decimal(str(self.discount_percentage)) / Decimal('100.00'))
             return (base * discount_mult).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
         return base
+
+    @property
+    def start_date(self):
+        return self.effective_from
+
+    @start_date.setter
+    def start_date(self, val):
+        self.effective_from = val
 
     def is_effective_on(self, target_date):
         if self.effective_from and target_date < self.effective_from:
@@ -3379,6 +3520,14 @@ class DiscountRule(models.Model):
         val_str = f"{self.value}%" if self.discount_type == 'PERCENTAGE' else f"{self.value} {self.currency}"
         return f"Discount: {self.name} ({val_str}) [v{self.version}]"
 
+    @property
+    def start_date(self):
+        return self.effective_from
+
+    @start_date.setter
+    def start_date(self, val):
+        self.effective_from = val
+
     def is_effective_on(self, target_date):
         if not self.is_active:
             return False
@@ -3449,6 +3598,14 @@ class SiblingDiscountRule(models.Model):
     def __str__(self):
         val_str = f"{self.value}%" if self.discount_type == 'PERCENTAGE' else f"{self.value} {self.currency}"
         return f"Sibling Discount: {self.name} ({val_str} on {self.get_applies_to_target_display()}) [v{self.version}]"
+
+    @property
+    def start_date(self):
+        return self.effective_from
+
+    @start_date.setter
+    def start_date(self, val):
+        self.effective_from = val
 
     def is_effective_on(self, target_date):
         if not self.is_active:
@@ -3554,6 +3711,14 @@ class LateFeeRule(models.Model):
     def __str__(self):
         val_str = f"{self.amount}%" if self.fee_type == 'PERCENTAGE' else f"{self.amount} {self.currency}"
         return f"Late Fee Rule: {self.name} ({val_str}, Grace: {self.grace_period_days}d) [v{self.version}]"
+
+    @property
+    def start_date(self):
+        return self.effective_from
+
+    @start_date.setter
+    def start_date(self, val):
+        self.effective_from = val
 
     def is_effective_on(self, target_date):
         if not self.is_active:
@@ -3668,6 +3833,14 @@ class ChildSubsidyProfile(models.Model):
     def __str__(self):
         val = f"{self.subsidy_rate}%" if self.subsidy_type == 'PERCENTAGE' else f"{self.subsidy_rate} {self.currency}"
         return f"Subsidy: {self.student.first_name} {self.student.last_name} -> {self.program_name} ({val})"
+
+    @property
+    def start_date(self):
+        return self.effective_from
+
+    @start_date.setter
+    def start_date(self, val):
+        self.effective_from = val
 
     def is_effective_on(self, target_date):
         if not self.is_active:

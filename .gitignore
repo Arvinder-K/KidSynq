@@ -36,6 +36,7 @@ ENV/
 backend/venv/
 backend/staticfiles/
 staticfiles/
+media/
 *.sqlite3
 
 # Node.js

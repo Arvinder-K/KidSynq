@@ -19,6 +19,7 @@ urlpatterns = [
     path('children/new/', views_ui.ChildCreateView.as_view(), name='daycare_child_new'),
     path('children/<uuid:pk>/', views_ui.ChildDetailView.as_view(), name='daycare_child_detail'),
     path('admissions/', views_ui.AdmissionsListView.as_view(), name='daycare_admissions'),
+    path('admissions/<uuid:pk>/', views_ui.AdmissionDetailView.as_view(), name='daycare_admission_detail'),
     path('waitlist/', views_ui.WaitlistListView.as_view(), name='daycare_waitlist'),
 
     # Staff & Scheduling

@@ -407,7 +407,7 @@
                             <tbody>
                                 {% for pay in payments|slice:":3" %}
                                 <tr>
-                                    <td class="font-monospace fw-bold text-primary">{{ pay.receipt_number|default:pay.transaction_reference|default:pay.id|stringformat:".10s" }}</td>
+                                    <td class="font-monospace fw-bold text-primary">{{ pay.receipt_number|default:pay.transaction_reference|default:pay.id }}</td>
                                     <td>{{ pay.payment_date|date:"M d, Y" }}</td>
                                     <td><span class="badge bg-light text-dark border">{{ pay.payment_method|title }}</span></td>
                                     <td class="text-end font-monospace fw-bold text-success">${{ pay.amount|floatformat:2 }}</td>
@@ -901,7 +901,7 @@
                     {% for pay in payments %}
                     <tr>
                         <td class="ps-4">
-                            <span class="font-monospace fw-bold text-primary">{{ pay.receipt_number|default:pay.transaction_reference|default:pay.id|stringformat:".10s" }}</span>
+                            <span class="font-monospace fw-bold text-primary">{{ pay.receipt_number|default:pay.transaction_reference|default:pay.id }}</span>
                         </td>
                         <td>{{ pay.payment_date|date:"M d, Y" }}</td>
                         <td>
@@ -954,7 +954,7 @@
                                     <div class="row g-2 mb-3 small">
                                         <div class="col-6">
                                             <span class="text-muted d-block">Receipt Number:</span>
-                                            <strong class="font-monospace text-slate-800">{{ pay.receipt_number|default:pay.transaction_reference|default:pay.id|stringformat:".12s" }}</strong>
+                                            <strong class="font-monospace text-slate-800">{{ pay.receipt_number|default:pay.transaction_reference|default:pay.id }}</strong>
                                         </div>
                                         <div class="col-6 text-end">
                                             <span class="text-muted d-block">Payment Date:</span>

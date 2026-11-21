@@ -21,7 +21,7 @@ from core.models import (
 
 # --- Re-export domain views from modular apps ---
 from apps.children.views import (
-    ChildListView, ChildCreateView, ChildDetailView, AdmissionsListView, WaitlistListView
+    ChildListView, ChildCreateView, ChildDetailView, AdmissionsListView, AdmissionDetailView, WaitlistListView
 )
 from apps.staff.views import (
     EmployeeListView, EmployeeCreateView, EmployeeDetailView, StaffDashboardView,

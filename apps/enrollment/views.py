@@ -1,6 +1,9 @@
+import os
 import uuid
 import secrets
+from django.conf import settings
 from django.contrib import messages
+from django.core.files.storage import FileSystemStorage
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views import View
 from django.utils import timezone
@@ -75,6 +78,31 @@ class RegistrationWizardView(View):
         dob = request.POST.get('date_of_birth')
         gender = request.POST.get('gender', 'unspecified')
         program_id = request.POST.get('program')
+        preferred_start_date = request.POST.get('preferred_start_date') or timezone.now().date()
+        birth_reg_number = request.POST.get('birth_reg_number', '').strip()
+
+        # Document Uploads
+        birth_doc_url = ''
+        birth_doc_name = ''
+        if 'birth_document' in request.FILES:
+            b_file = request.FILES['birth_document']
+            doc_dir = os.path.join(settings.MEDIA_ROOT, 'registration_documents')
+            os.makedirs(doc_dir, exist_ok=True)
+            fs = FileSystemStorage(location=doc_dir)
+            fname = fs.save(f"birth_{uuid.uuid4().hex[:8]}_{b_file.name}", b_file)
+            birth_doc_url = f"{settings.MEDIA_URL}registration_documents/{fname}"
+            birth_doc_name = b_file.name
+
+        immun_doc_url = ''
+        immun_doc_name = ''
+        if 'immunization_document' in request.FILES:
+            i_file = request.FILES['immunization_document']
+            doc_dir = os.path.join(settings.MEDIA_ROOT, 'registration_documents')
+            os.makedirs(doc_dir, exist_ok=True)
+            fs = FileSystemStorage(location=doc_dir)
+            fname = fs.save(f"immun_{uuid.uuid4().hex[:8]}_{i_file.name}", i_file)
+            immun_doc_url = f"{settings.MEDIA_URL}registration_documents/{fname}"
+            immun_doc_name = i_file.name
 
         # Parent / Guardian information
         guardian_fname = request.POST.get('guardian_first_name', '').strip()
@@ -91,11 +119,20 @@ class RegistrationWizardView(View):
         guardian_relation = request.POST.get('guardian_relationship', 'Parent')
         guardian_address = request.POST.get('guardian_address', '').strip()
 
-        # Medical & Dietary
+        # Medical, Health & Emergency Contacts
         medical_notes = request.POST.get('medical_notes', '').strip()
         dietary_restrictions = request.POST.get('dietary_restrictions', '').strip()
+        doctor_name = request.POST.get('doctor_name', '').strip()
+        doctor_phone = request.POST.get('doctor_phone', '').strip()
         emergency_contact_name = request.POST.get('emergency_contact_name', '').strip()
         emergency_contact_phone = request.POST.get('emergency_contact_phone', '').strip()
+        emergency_contact_relation = request.POST.get('emergency_contact_relation', 'Emergency Contact').strip()
+
+        # Consents
+        consent_medical = request.POST.get('consent_medical') in ['true', 'on', '1', True]
+        consent_walks = request.POST.get('consent_walks') in ['true', 'on', '1', True]
+        consent_photos = request.POST.get('consent_photos') in ['true', 'on', '1', True]
+        consent_topical = request.POST.get('consent_topical') in ['true', 'on', '1', True]
 
         if not child_fname or not child_lname or not guardian_email or not (guardian_fname or guardian_legacy_name):
             messages.error(request, "Please fill in all required fields (Child Name, Parent Name, Email, and Phone).")
@@ -114,6 +151,12 @@ class RegistrationWizardView(View):
             'gender': gender,
             'program_id': str(selected_program.id) if selected_program else '',
             'program_name': selected_program.name if selected_program else 'General Childcare Program',
+            'preferred_start_date': str(preferred_start_date),
+            'birth_reg_number': birth_reg_number,
+            'birth_document_url': birth_doc_url,
+            'birth_document_name': birth_doc_name,
+            'immunization_document_url': immun_doc_url,
+            'immunization_document_name': immun_doc_name,
             'parent_first_name': guardian_fname,
             'parent_last_name': guardian_lname,
             'parent_email': guardian_email,
@@ -122,8 +165,15 @@ class RegistrationWizardView(View):
             'parent_address': guardian_address,
             'medical_notes': medical_notes,
             'dietary_restrictions': dietary_restrictions,
+            'doctor_name': doctor_name,
+            'doctor_phone': doctor_phone,
             'emergency_contact_name': emergency_contact_name,
             'emergency_contact_phone': emergency_contact_phone,
+            'emergency_contact_relation': emergency_contact_relation,
+            'consent_medical': consent_medical,
+            'consent_walks': consent_walks,
+            'consent_photos': consent_photos,
+            'consent_topical': consent_topical,
             'submitted_via': 'Public Registration Portal'
         }
 
