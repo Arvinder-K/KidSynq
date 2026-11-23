@@ -310,18 +310,163 @@ class StaffAttendanceView(StaffRequiredMixin, View):
     def get(self, request):
         daycare = get_user_daycare(request.user)
         today = timezone.now().date()
-        date_query = request.GET.get('date', today.strftime('%Y-%m-%d'))
+        date_query = request.GET.get('date', today.strftime('%Y-%m-%d')).strip()
+        
+        try:
+            target_date = datetime.strptime(date_query, '%Y-%m-%d').date()
+        except (ValueError, TypeError):
+            target_date = today
+            date_query = today.strftime('%Y-%m-%d')
         
         staff_attendance = StaffAttendance.objects.filter(
-            daycare=daycare, date=date_query
-        ).select_related('employee')
-        employees = Employee.objects.filter(daycare=daycare, status='active')
+            daycare=daycare, date=target_date
+        ).select_related('employee', 'classroom', 'logged_by').order_by('-clock_in', '-check_in_time')
+        
+        employees = Employee.objects.filter(daycare=daycare, status='active').order_by('first_name', 'last_name')
+        classrooms = Classroom.objects.filter(daycare=daycare, deleted_at__isnull=True).order_by('room_name')
+
+        # Schedules for this target date
+        schedules = StaffSchedule.objects.filter(daycare=daycare, date=target_date).select_related('employee', 'classroom')
+        scheduled_emp_map = {s.employee_id: s for s in schedules}
+
+        # Attendance counts and stats
+        on_duty_count = staff_attendance.filter(status__in=['CLOCKED_IN', 'checked_in', 'present']).count()
+        on_break_count = staff_attendance.filter(status='ON_BREAK').count()
+        clocked_out_count = staff_attendance.filter(status__in=['CLOCKED_OUT', 'checked_out']).count()
+        
+        total_hours = sum(record.total_duration_hours or 0.0 for record in staff_attendance)
+
+        # Unclocked active employees available for quick punch
+        clocked_emp_ids = set(staff_attendance.values_list('employee_id', flat=True))
+        unclocked_employees = [e for e in employees if e.id not in clocked_emp_ids]
 
         return render(request, self.template_name, {
             'staff_attendance': staff_attendance,
             'employees': employees,
+            'unclocked_employees': unclocked_employees,
+            'classrooms': classrooms,
             'selected_date': date_query,
+            'target_date': target_date,
+            'today': today,
+            'on_duty_count': on_duty_count,
+            'on_break_count': on_break_count,
+            'clocked_out_count': clocked_out_count,
+            'total_hours': round(total_hours, 2),
+            'scheduled_emp_map': scheduled_emp_map,
         })
+
+    def post(self, request):
+        daycare = get_user_daycare(request.user)
+        action = request.POST.get('action')
+        date_str = request.POST.get('date', timezone.now().strftime('%Y-%m-%d')).strip()
+        
+        try:
+            target_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+        except (ValueError, TypeError):
+            target_date = timezone.now().date()
+            date_str = target_date.strftime('%Y-%m-%d')
+
+        redirect_url = f"/daycare/staff/attendance/?date={date_str}"
+
+        if action == 'clock_in':
+            employee_id = request.POST.get('employee_id')
+            classroom_id = request.POST.get('classroom_id')
+            notes = request.POST.get('notes', '').strip()
+
+            if not employee_id:
+                messages.error(request, "Please select an educator to clock in.")
+            else:
+                emp = get_object_or_404(Employee, pk=employee_id, daycare=daycare)
+                classroom = Classroom.objects.filter(pk=classroom_id, daycare=daycare).first() if classroom_id else None
+
+                existing = StaffAttendance.objects.filter(
+                    daycare=daycare, employee=emp, date=target_date, status__in=['CLOCKED_IN', 'ON_BREAK']
+                ).first()
+                if existing:
+                    messages.warning(request, f"{emp.first_name} {emp.last_name} is already clocked in today.")
+                else:
+                    now = timezone.now()
+                    StaffAttendance.objects.create(
+                        daycare=daycare,
+                        employee=emp,
+                        classroom=classroom,
+                        date=target_date,
+                        clock_in=now,
+                        check_in_time=now.time(),
+                        status='CLOCKED_IN',
+                        approval_status='APPROVED',
+                        logged_by=request.user,
+                        created_by=request.user,
+                        notes=notes or None
+                    )
+                    messages.success(request, f"{emp.first_name} {emp.last_name} clocked in successfully at {now.strftime('%I:%M %p')}.")
+
+        elif action == 'clock_out':
+            record_id = request.POST.get('record_id')
+            record = get_object_or_404(StaffAttendance, pk=record_id, daycare=daycare)
+            now = timezone.now()
+            record.clock_out = now
+            record.check_out_time = now.time()
+            record.status = 'CLOCKED_OUT'
+            record.updated_by = request.user
+            record.save()
+            messages.success(request, f"{record.employee.first_name} {record.employee.last_name} clocked out successfully at {now.strftime('%I:%M %p')}. Total: {record.total_duration_hours} hrs.")
+
+        elif action == 'toggle_break':
+            record_id = request.POST.get('record_id')
+            record = get_object_or_404(StaffAttendance, pk=record_id, daycare=daycare)
+            if record.status == 'ON_BREAK':
+                record.status = 'CLOCKED_IN'
+                messages.success(request, f"{record.employee.first_name} {record.employee.last_name} resumed duty from break.")
+            else:
+                record.status = 'ON_BREAK'
+                messages.info(request, f"{record.employee.first_name} {record.employee.last_name} is now on break.")
+            record.updated_by = request.user
+            record.save()
+
+        elif action == 'manual_entry':
+            employee_id = request.POST.get('employee_id')
+            classroom_id = request.POST.get('classroom_id')
+            in_time_str = request.POST.get('clock_in_time', '').strip()
+            out_time_str = request.POST.get('clock_out_time', '').strip()
+            status_val = request.POST.get('status', 'CLOCKED_IN').strip()
+            notes = request.POST.get('notes', '').strip()
+
+            if not employee_id or not in_time_str:
+                messages.error(request, "Educator and clock-in time are required.")
+            else:
+                emp = get_object_or_404(Employee, pk=employee_id, daycare=daycare)
+                classroom = Classroom.objects.filter(pk=classroom_id, daycare=daycare).first() if classroom_id else None
+
+                t_in = datetime.strptime(in_time_str, '%H:%M').time()
+                dt_in = timezone.make_aware(datetime.combine(target_date, t_in)) if timezone.is_naive(datetime.combine(target_date, t_in)) else datetime.combine(target_date, t_in)
+
+                dt_out = None
+                t_out = None
+                if out_time_str:
+                    t_out = datetime.strptime(out_time_str, '%H:%M').time()
+                    dt_out = timezone.make_aware(datetime.combine(target_date, t_out)) if timezone.is_naive(datetime.combine(target_date, t_out)) else datetime.combine(target_date, t_out)
+                    if status_val == 'CLOCKED_IN':
+                        status_val = 'CLOCKED_OUT'
+
+                StaffAttendance.objects.create(
+                    daycare=daycare,
+                    employee=emp,
+                    classroom=classroom,
+                    date=target_date,
+                    clock_in=dt_in,
+                    check_in_time=t_in,
+                    clock_out=dt_out,
+                    check_out_time=t_out,
+                    status=status_val,
+                    approval_status='APPROVED',
+                    logged_by=request.user,
+                    created_by=request.user,
+                    notes=notes or None
+                )
+                messages.success(request, f"Attendance record saved for {emp.first_name} {emp.last_name}.")
+
+        return redirect(redirect_url)
 
 class StaffTimesheetsView(StaffRequiredMixin, View):
     template_name = 'staff/timesheets.html'
