@@ -37,6 +37,10 @@ class UserLoginView(View):
             })
 
         user = authenticate(request, username=username, password=password)
+        if user is None and '@' in username:
+            matched_user = User.objects.filter(email__iexact=username).first()
+            if matched_user:
+                user = authenticate(request, username=matched_user.username, password=password)
 
         if user is not None:
             if not user.is_active:
@@ -128,7 +132,15 @@ class FamilyActivateView(View):
     def get(self, request, token=None, *args, **kwargs):
         if not token:
             token = request.GET.get('token', '')
-        return render(request, self.template_name, {'token': token})
+        invitation = GuardianInvitation.objects.filter(token=token).first()
+        guardian = None
+        if invitation:
+            guardian = Guardian.objects.filter(email__iexact=invitation.email, daycare=invitation.daycare).first()
+        return render(request, self.template_name, {
+            'token': token,
+            'invitation': invitation,
+            'guardian': guardian
+        })
 
     def post(self, request, token=None, *args, **kwargs):
         if not token:
@@ -144,24 +156,61 @@ class FamilyActivateView(View):
             messages.error(request, "Passwords do not match.")
             return render(request, self.template_name, {'token': token})
 
-        invitation = GuardianInvitation.objects.filter(token=token, is_accepted=False).first()
+        invitation = GuardianInvitation.objects.filter(token=token).first()
         if not invitation:
             messages.error(request, "Invalid or expired invitation token.")
             return render(request, self.template_name, {'token': token})
 
-        # Set user password and activate
-        user = invitation.guardian.user
-        if user:
-            user.set_password(password)
-            user.is_active = True
-            user.save()
-            invitation.is_accepted = True
-            invitation.save()
-            messages.success(request, "Your account has been activated! Please log in.")
+        if invitation.status == 'accepted':
+            messages.info(request, "This invitation has already been accepted. Please log in.")
             return redirect(reverse('login') + '?type=family')
 
-        messages.error(request, "Unable to activate account. Guardian profile missing.")
-        return render(request, self.template_name, {'token': token})
+        if invitation.is_expired() or invitation.status == 'expired':
+            messages.error(request, "This invitation link has expired. Please request a new activation link.")
+            return render(request, self.template_name, {'token': token})
+
+        from core.models import Guardian
+        daycare = invitation.daycare
+        email = invitation.email
+        guardian = Guardian.objects.filter(email__iexact=email, daycare=daycare).first()
+
+        # Find or create User
+        user = User.objects.filter(email__iexact=email).first()
+        if not user:
+            user = User.objects.create(
+                username=email,
+                email=email,
+                first_name=guardian.first_name if guardian else '',
+                last_name=guardian.last_name if guardian else '',
+                daycare=daycare,
+                is_staff=False,
+                is_active=True
+            )
+        user.set_password(password)
+        user.is_active = True
+        user.save()
+
+        if guardian:
+            guardian.user = user
+            guardian.status = 'Active'
+            guardian.save()
+
+        invitation.status = 'accepted'
+        invitation.save()
+
+        # Automatically log parent in safely
+        if not hasattr(user, 'backend') or not user.backend:
+            user.backend = 'django.contrib.auth.backends.ModelBackend'
+        try:
+            login(request, user)
+        except Exception:
+            from django.contrib.auth import SESSION_KEY, BACKEND_SESSION_KEY, HASH_SESSION_KEY
+            request.session[SESSION_KEY] = user._meta.pk.value_to_string(user)
+            request.session[BACKEND_SESSION_KEY] = user.backend
+            request.session[HASH_SESSION_KEY] = user.get_session_auth_hash()
+            request.user = user
+        messages.success(request, f"Welcome to KidSynq, {user.first_name or 'Parent'}! Your family portal account is activated.")
+        return redirect('family_dashboard')
 
 
 class FamilyForgotPasswordView(View):
