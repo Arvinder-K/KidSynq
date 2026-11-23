@@ -299,11 +299,11 @@
             class="sidebar-link {% if 'family_children' in request.resolver_match.url_name %}active{% endif %}">
             <i class="bi bi-emoji-smile"></i> <span>My Children</span>
         </a>
-        <a href="{% url 'family_profile' %}"
+        <a href="{% url 'family_profile_page' %}"
             class="sidebar-link {% if 'family_profile' in request.resolver_match.url_name %}active{% endif %}">
             <i class="bi bi-person-lines-fill"></i> <span>Family Profile</span>
         </a>
-        <a href="{% url 'family_guardians' %}"
+        <a href="{% url 'family_guardians_page' %}"
             class="sidebar-link {% if 'family_guardians' in request.resolver_match.url_name %}active{% endif %}">
             <i class="bi bi-shield-check"></i> <span>Authorized Pickups</span>
         </a>

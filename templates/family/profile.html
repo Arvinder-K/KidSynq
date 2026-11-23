@@ -3,41 +3,310 @@
 {% block title %}Family Profile - KidSynq{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-4">
     <div>
-        <h2 class="h4 fw-bold text-slate-800 mb-1">Parent / Guardian Profile</h2>
-        <p class="text-muted small mb-0">Manage contact information and emergency phone numbers</p>
+        <div class="d-flex align-items-center gap-2 mb-1">
+            <span class="badge bg-teal-subtle text-teal text-uppercase fw-bold" style="background-color: #f0fdfa; color: #0d9488; border: 1px solid #ccfbf1;">Parent Portal</span>
+            <span class="badge bg-success-subtle text-success">Active Account</span>
+        </div>
+        <h2 class="h4 fw-bold text-slate-800 mb-0">Family & Account Profile</h2>
+        <p class="text-muted small mb-0">Manage household contact information, emergency communications, and login credentials</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{% url 'family_guardians_page' %}" class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-2">
+            <i class="bi bi-shield-check"></i>
+            <span>Authorized Pickups</span>
+            {% if pickups_count %}
+            <span class="badge bg-secondary-subtle text-secondary rounded-pill ms-1">{{ pickups_count }}</span>
+            {% endif %}
+        </a>
+        <a href="{% url 'family_children' %}" class="btn btn-primary btn-sm d-flex align-items-center gap-2">
+            <i class="bi bi-emoji-smile"></i>
+            <span>My Children</span>
+            <span class="badge bg-white text-primary rounded-pill ms-1">{{ children.count }}</span>
+        </a>
     </div>
 </div>
 
-<div class="row g-4">
-    <div class="col-12 col-lg-8">
-        <div class="card border-0 shadow-sm">
-            <div class="card-header bg-white border-bottom py-3">
-                <h5 class="card-title mb-0 fw-semibold">Personal & Contact Info</h5>
+<!-- Key Household Highlights -->
+<div class="row g-3 mb-4">
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body p-3 d-flex align-items-center gap-3">
+                <div class="rounded-circle d-flex align-items-center justify-content-center text-primary" style="width: 44px; height: 44px; background: #eff6ff;">
+                    <i class="bi bi-house-door fs-5"></i>
+                </div>
+                <div>
+                    <div class="text-muted small fw-medium">Family / Household</div>
+                    <div class="fw-bold text-slate-800 text-truncate" style="max-width: 170px;">{{ family.family_name|default:"Davis Family" }}</div>
+                </div>
             </div>
-            <div class="card-body p-4">
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <label class="form-label text-muted small fw-semibold text-uppercase">First Name</label>
-                        <p class="fs-6 fw-bold text-slate-800">{{ user.first_name }}</p>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label text-muted small fw-semibold text-uppercase">Last Name</label>
-                        <p class="fs-6 fw-bold text-slate-800">{{ user.last_name }}</p>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label text-muted small fw-semibold text-uppercase">Email Address</label>
-                        <p class="fs-6 fw-bold text-slate-800">{{ user.email }}</p>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label text-muted small fw-semibold text-uppercase">Role</label>
-                        <div><span class="badge bg-primary-subtle text-primary text-uppercase">{{ user.role }}</span></div>
+        </div>
+    </div>
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body p-3 d-flex align-items-center gap-3">
+                <div class="rounded-circle d-flex align-items-center justify-content-center text-success" style="width: 44px; height: 44px; background: #f0fdf4;">
+                    <i class="bi bi-people fs-5"></i>
+                </div>
+                <div>
+                    <div class="text-muted small fw-medium">Enrolled Children</div>
+                    <div class="fw-bold text-slate-800">{{ children.count }} Registered</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body p-3 d-flex align-items-center gap-3">
+                <div class="rounded-circle d-flex align-items-center justify-content-center text-warning" style="width: 44px; height: 44px; background: #fffbeb;">
+                    <i class="bi bi-person-badge fs-5"></i>
+                </div>
+                <div>
+                    <div class="text-muted small fw-medium">Primary Contact</div>
+                    <div class="fw-bold text-slate-800 text-truncate" style="max-width: 170px;">
+                        {% if guardian %}{{ guardian.first_name }} {{ guardian.last_name }}{% else %}{{ user.first_name }} {{ user.last_name }}{% endif %}
                     </div>
                 </div>
             </div>
         </div>
     </div>
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body p-3 d-flex align-items-center gap-3">
+                <div class="rounded-circle d-flex align-items-center justify-content-center text-info" style="width: 44px; height: 44px; background: #f0fdfa;">
+                    <i class="bi bi-shield-check fs-5"></i>
+                </div>
+                <div>
+                    <div class="text-muted small fw-medium">Pickup Approvals</div>
+                    <div class="fw-bold text-slate-800">{{ pickups_count }} Authorized</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Left Column: Details & Edit Forms -->
+    <div class="col-12 col-lg-7">
+        <!-- Household & Primary Contact Card -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-person-lines-fill text-primary"></i>
+                    <h5 class="card-title mb-0 fw-bold text-slate-800">Household & Contact Information</h5>
+                </div>
+                <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="collapse" data-bs-target="#editProfileForm" aria-expanded="false" aria-controls="editProfileForm">
+                    <i class="bi bi-pencil-square me-1"></i> Edit Details
+                </button>
+            </div>
+            <div class="card-body p-4">
+                <div class="row g-3 mb-3">
+                    <div class="col-12 col-md-6">
+                        <span class="text-muted small fw-semibold text-uppercase d-block mb-1">Family / Household Name</span>
+                        <div class="fs-6 fw-bold text-slate-800">{{ family.family_name|default:"Not specified" }}</div>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <span class="text-muted small fw-semibold text-uppercase d-block mb-1">Relationship</span>
+                        <div>
+                            <span class="badge bg-primary-subtle text-primary text-uppercase px-2 py-1">Parent / Legal Guardian</span>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <span class="text-muted small fw-semibold text-uppercase d-block mb-1">Primary Guardian Name</span>
+                        <div class="fs-6 fw-bold text-slate-800">
+                            {% if guardian %}{{ guardian.first_name }} {{ guardian.last_name }}{% else %}{{ user.first_name }} {{ user.last_name }}{% endif %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <span class="text-muted small fw-semibold text-uppercase d-block mb-1">Primary Contact Phone</span>
+                        <div class="fs-6 fw-semibold text-slate-800">
+                            <i class="bi bi-telephone me-1 text-muted"></i>
+                            {{ guardian.phone|default:family.primary_phone|default:"(416) 555-7788" }}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <span class="text-muted small fw-semibold text-uppercase d-block mb-1">Email Address</span>
+                        <div class="fs-6 fw-semibold text-slate-800">
+                            <i class="bi bi-envelope me-1 text-muted"></i>
+                            {{ user.email }}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <span class="text-muted small fw-semibold text-uppercase d-block mb-1">Account Role</span>
+                        <div class="fs-6 fw-medium text-slate-800">
+                            <span class="badge bg-secondary-subtle text-secondary">{{ user.role|default:"Guardian" }}</span>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <span class="text-muted small fw-semibold text-uppercase d-block mb-1">Residential Address</span>
+                        <div class="fs-6 text-slate-800">
+                            <i class="bi bi-geo-alt me-1 text-muted"></i>
+                            {{ family.address|default:"742 Evergreen Terrace, Toronto, ON" }}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Collapsible Edit Profile Form -->
+                <div class="collapse pt-3 border-top" id="editProfileForm">
+                    <form method="POST" action="{% url 'family_profile_page' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="update_profile">
+                        <h6 class="fw-bold text-slate-800 mb-3">Update Contact Information</h6>
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">First Name</label>
+                                <input type="text" name="first_name" class="form-control form-control-sm" value="{% if guardian %}{{ guardian.first_name }}{% else %}{{ user.first_name }}{% endif %}" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Last Name</label>
+                                <input type="text" name="last_name" class="form-control form-control-sm" value="{% if guardian %}{{ guardian.last_name }}{% else %}{{ user.last_name }}{% endif %}" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Family / Household Name</label>
+                                <input type="text" name="family_name" class="form-control form-control-sm" value="{{ family.family_name|default:'' }}">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Contact Phone</label>
+                                <input type="text" name="phone" class="form-control form-control-sm" value="{{ guardian.phone|default:family.primary_phone|default:'' }}">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label small fw-semibold">Residential Address</label>
+                                <textarea name="address" class="form-control form-control-sm" rows="2">{{ family.address|default:'' }}</textarea>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-end gap-2">
+                            <button type="button" class="btn btn-light btn-sm" data-bs-toggle="collapse" data-bs-target="#editProfileForm">Cancel</button>
+                            <button type="submit" class="btn btn-primary btn-sm px-3">Save Changes</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Security & Portal Credentials Card -->
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-bottom py-3">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-shield-lock text-primary"></i>
+                    <h5 class="card-title mb-0 fw-bold text-slate-800">Security & Portal Password</h5>
+                </div>
+            </div>
+            <div class="card-body p-4">
+                <form method="POST" action="{% url 'family_profile_page' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="change_password">
+                    <div class="row g-3">
+                        <div class="col-12 col-md-4">
+                            <label class="form-label small fw-semibold text-muted text-uppercase">Current Password</label>
+                            <input type="password" name="current_password" class="form-control form-control-sm" placeholder="Enter current password" required>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <label class="form-label small fw-semibold text-muted text-uppercase">New Password</label>
+                            <input type="password" name="new_password" class="form-control form-control-sm" placeholder="At least 6 characters" minlength="6" required>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <label class="form-label small fw-semibold text-muted text-uppercase">Confirm New Password</label>
+                            <input type="password" name="confirm_password" class="form-control form-control-sm" placeholder="Re-type new password" minlength="6" required>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
+                        <small class="text-muted"><i class="bi bi-info-circle me-1"></i>You will remain logged into this session upon changing your password.</small>
+                        <button type="submit" class="btn btn-outline-primary btn-sm px-3">Update Password</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column: Registered Children & Pickups -->
+    <div class="col-12 col-lg-5">
+        <!-- Registered Children Card -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-emoji-smile text-primary"></i>
+                    <h5 class="card-title mb-0 fw-bold text-slate-800">Registered Children</h5>
+                </div>
+                <span class="badge bg-primary-subtle text-primary rounded-pill">{{ children.count }}</span>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for child in children %}
+                    <div class="list-group-item p-3">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="rounded-circle bg-teal-subtle text-teal d-flex align-items-center justify-content-center fw-bold" style="width: 44px; height: 44px; background: #e0f2fe; color: #0284c7; flex-shrink: 0;">
+                                {{ child.first_name|first|upper }}{{ child.last_name|first|upper }}
+                            </div>
+                            <div class="flex-grow-1 min-w-0">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <h6 class="mb-0 fw-bold text-slate-800 text-truncate">{{ child.first_name }} {{ child.last_name }}</h6>
+                                    <span class="badge bg-success-subtle text-success ms-2">Enrolled</span>
+                                </div>
+                                <div class="text-muted small d-flex flex-wrap gap-2">
+                                    <span><i class="bi bi-building me-1"></i>{{ child.classroom.room_name|default:child.classroom.name|default:"Sunshine Toddlers" }}</span>
+                                    <span>&bull;</span>
+                                    <span><i class="bi bi-calendar3 me-1"></i>{{ child.date_of_birth|date:"M d, Y"|default:"Apr 10, 2024" }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="p-4 text-center">
+                        <i class="bi bi-person-x fs-1 text-muted opacity-50 mb-2 d-block"></i>
+                        <p class="text-muted small mb-0">No active children currently linked to your family profile.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Registered Guardians on File -->
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-people text-primary"></i>
+                    <h5 class="card-title mb-0 fw-bold text-slate-800">Parents & Guardians</h5>
+                </div>
+                <a href="{% url 'family_guardians_page' %}" class="btn btn-sm btn-link text-decoration-none p-0">View All</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for fg in family_guardians %}
+                    <div class="list-group-item p-3">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="rounded-circle bg-light text-slate-800 d-flex align-items-center justify-content-center fw-bold border" style="width: 40px; height: 40px; flex-shrink: 0;">
+                                {{ fg.guardian.first_name|first|upper }}{{ fg.guardian.last_name|first|upper }}
+                            </div>
+                            <div class="flex-grow-1 min-w-0">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="fw-bold text-slate-800 text-truncate">{{ fg.guardian.first_name }} {{ fg.guardian.last_name }}</span>
+                                    {% if fg.is_primary %}
+                                    <span class="badge bg-success-subtle text-success" style="font-size: 0.7rem;">Primary</span>
+                                    {% endif %}
+                                </div>
+                                <div class="text-muted small">
+                                    <span>{{ fg.relationship|default:"Guardian" }}</span>
+                                    {% if fg.guardian.phone %}
+                                    <span class="ms-2"><i class="bi bi-telephone me-1"></i>{{ fg.guardian.phone }}</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="p-4 text-center">
+                        <p class="text-muted small mb-0">Your primary guardian account is registered on file.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="card-footer bg-light border-0 py-2 text-center">
+                <a href="{% url 'family_guardians_page' %}" class="small text-decoration-none fw-semibold">
+                    <i class="bi bi-shield-check me-1"></i>Manage Authorized Pickups & Emergency Contacts &rarr;
+                </a>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}
-

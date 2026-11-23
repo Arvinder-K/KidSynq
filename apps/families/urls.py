@@ -4,8 +4,8 @@ from . import views
 urlpatterns = [
     path('dashboard/', views.FamilyDashboardView.as_view(), name='family_dashboard'),
     path('children/', views.FamilyChildrenView.as_view(), name='family_children'),
-    path('profile/', views.FamilyProfileView.as_view(), name='family_profile'),
-    path('guardians/', views.FamilyGuardiansView.as_view(), name='family_guardians'),
+    path('profile/', views.FamilyProfileView.as_view(), name='family_profile_page'),
+    path('guardians/', views.FamilyGuardiansView.as_view(), name='family_guardians_page'),
     path('daily-reports/', views.FamilyDailyReportsView.as_view(), name='family_daily_reports'),
     path('attendance/', views.FamilyAttendanceView.as_view(), name='family_attendance'),
     path('billing/', views.FamilyBillingView.as_view(), name='family_billing'),

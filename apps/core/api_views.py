@@ -2335,8 +2335,15 @@ class FamilyProfileView(APIView):
     permission_classes = [IsAuthenticatedGuardian]
 
     def get(self, request):
-        guardian = request.user.guardian_profile
-        family_guardian = guardian.guardian_families.first()
+        if (getattr(request, 'accepted_renderer', None) and request.accepted_renderer.format == 'html') or 'text/html' in request.META.get('HTTP_ACCEPT', ''):
+            from django.shortcuts import redirect
+            return redirect('family_profile_page')
+        guardian = getattr(request.user, 'guardian_profile', None)
+        if not guardian:
+            guardian = Guardian.objects.filter(user=request.user).first()
+        if not guardian and getattr(request.user, 'email', None):
+            guardian = Guardian.objects.filter(email=request.user.email).first()
+        family_guardian = guardian.guardian_families.first() if guardian else None
         if not family_guardian:
             return Response({"detail": "Family relationship not found."}, status=status.HTTP_404_NOT_FOUND)
         
@@ -2345,8 +2352,12 @@ class FamilyProfileView(APIView):
         return Response(serializer.data)
 
     def patch(self, request):
-        guardian = request.user.guardian_profile
-        family_guardian = guardian.guardian_families.first()
+        guardian = getattr(request.user, 'guardian_profile', None)
+        if not guardian:
+            guardian = Guardian.objects.filter(user=request.user).first()
+        if not guardian and getattr(request.user, 'email', None):
+            guardian = Guardian.objects.filter(email=request.user.email).first()
+        family_guardian = guardian.guardian_families.first() if guardian else None
         if not family_guardian:
             return Response({"detail": "Family relationship not found."}, status=status.HTTP_404_NOT_FOUND)
 
@@ -2361,8 +2372,15 @@ class FamilyGuardiansView(APIView):
     permission_classes = [IsAuthenticatedGuardian]
 
     def get(self, request):
-        guardian = request.user.guardian_profile
-        family_guardian = guardian.guardian_families.first()
+        if (getattr(request, 'accepted_renderer', None) and request.accepted_renderer.format == 'html') or 'text/html' in request.META.get('HTTP_ACCEPT', ''):
+            from django.shortcuts import redirect
+            return redirect('family_guardians_page')
+        guardian = getattr(request.user, 'guardian_profile', None)
+        if not guardian:
+            guardian = Guardian.objects.filter(user=request.user).first()
+        if not guardian and getattr(request.user, 'email', None):
+            guardian = Guardian.objects.filter(email=request.user.email).first()
+        family_guardian = guardian.guardian_families.first() if guardian else None
         if not family_guardian:
             return Response({"detail": "Family relationship not found."}, status=status.HTTP_404_NOT_FOUND)
 
