@@ -132,24 +132,37 @@
                             <span class="p-1.5 rounded-2" style="background-color: rgba(13, 148, 136, 0.1); color: #0d9488;"><i class="bi bi-people fs-6"></i></span>
                         </div>
                         <div>
-                            <h6 class="fw-bold text-slate-900 mb-0 text-truncate">
-                                {% if primary_guardian %}
-                                    {{ primary_guardian.guardian.first_name }} {{ primary_guardian.guardian.last_name }} ({{ primary_guardian.relationship|default:"Guardian" }})
-                                {% elif families %}
-                                    {{ families.0.family_name }}
+                            <div class="d-flex align-items-center justify-content-between">
+                                <h6 class="fw-bold text-slate-900 mb-0 text-truncate">
+                                    {% if primary_guardian %}
+                                        {{ primary_guardian.guardian.first_name }} {{ primary_guardian.guardian.last_name }}
+                                    {% elif families %}
+                                        {{ families.0.family_name }}
+                                    {% else %}
+                                        No Parent Linked
+                                    {% endif %}
+                                </h6>
+                                {% if primary_guardian.guardian.user %}
+                                    <span class="badge bg-success-subtle text-success py-0 px-1.5" style="font-size: 0.65rem;"><i class="bi bi-check-circle me-1"></i>Active</span>
                                 {% else %}
-                                    No Parent Linked
+                                    <span class="badge bg-secondary-subtle text-muted py-0 px-1.5" style="font-size: 0.65rem;">Pending</span>
                                 {% endif %}
-                            </h6>
+                            </div>
                             <small class="text-muted d-block text-truncate mt-0.5">
-                                {% if primary_guardian.guardian.phone %}
+                                {% if primary_guardian.guardian.email %}
+                                    <i class="bi bi-envelope me-1"></i>{{ primary_guardian.guardian.email }}
+                                {% elif primary_guardian.guardian.phone %}
                                     <i class="bi bi-telephone me-1"></i>{{ primary_guardian.guardian.phone }}
-                                {% elif families.0.primary_phone %}
-                                    <i class="bi bi-telephone me-1"></i>{{ families.0.primary_phone }}
                                 {% else %}
-                                    {{ primary_guardian.guardian.email|default:"No phone on file" }}
+                                    No contact on file
                                 {% endif %}
                             </small>
+                            <div class="mt-1 pt-1 border-top d-flex align-items-center justify-content-between" style="font-size: 0.72rem;">
+                                <span class="text-muted">Portal URL:</span>
+                                <a href="/login/?type=family" target="_blank" class="text-primary text-decoration-none fw-semibold">
+                                    /login/?type=family <i class="bi bi-box-arrow-up-right ms-0.5" style="font-size: 0.62rem;"></i>
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -370,6 +383,57 @@
                                     <a href="mailto:{{ fg.guardian.email }}" class="text-decoration-none text-truncate d-inline-block align-bottom" style="max-width: 180px;">{{ fg.guardian.email }}</a>
                                 {% else %}
                                     <span class="text-muted">No email</span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Family Portal Access & Login Details -->
+                        <div class="p-2.5 mt-2 bg-light rounded-2 border small">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="fw-bold text-slate-700" style="font-size: 0.74rem;">
+                                    <i class="bi bi-shield-lock-fill text-primary me-1"></i>Parent Portal Login
+                                </span>
+                                {% if fg.guardian.user %}
+                                    <span class="badge bg-success-subtle text-success py-0.5 px-2" style="font-size: 0.7rem;">
+                                        <i class="bi bi-check-circle me-1"></i>Active
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-secondary-subtle text-secondary py-0.5 px-2" style="font-size: 0.7rem;">Invite Pending</span>
+                                {% endif %}
+                            </div>
+                            <div class="d-flex flex-column gap-1">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="text-muted" style="font-size: 0.72rem;">Portal URL:</span>
+                                    <div class="d-flex align-items-center gap-1">
+                                        <a href="/login/?type=family" target="_blank" class="font-monospace text-primary text-decoration-none fw-semibold" style="font-size: 0.72rem;" title="Open Parent Login Portal">
+                                            /login/?type=family <i class="bi bi-box-arrow-up-right ms-0.5" style="font-size: 0.62rem;"></i>
+                                        </a>
+                                        <button type="button" class="btn btn-xs btn-outline-secondary py-0 px-1.5" style="font-size: 0.65rem;" onclick="navigator.clipboard.writeText(window.location.origin + '/login/?type=family'); alert('Parent Portal URL copied!');" title="Copy Portal URL">
+                                            <i class="bi bi-clipboard"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="text-muted" style="font-size: 0.72rem;">Username / Email:</span>
+                                    <div class="d-flex align-items-center gap-1">
+                                        <code class="text-slate-800 fw-bold" style="font-size: 0.72rem;">{{ fg.guardian.user.username|default:fg.guardian.email|default:"Not assigned" }}</code>
+                                        {% if fg.guardian.user.username or fg.guardian.email %}
+                                        <button type="button" class="btn btn-xs btn-outline-secondary py-0 px-1.5" style="font-size: 0.65rem;" onclick="navigator.clipboard.writeText('{{ fg.guardian.user.username|default:fg.guardian.email }}'); alert('Username copied!');" title="Copy Username">
+                                            <i class="bi bi-clipboard"></i>
+                                        </button>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {% if fg.guardian.user %}
+                                <div class="d-flex justify-content-between align-items-center mt-1 pt-1 border-top">
+                                    <span class="text-muted" style="font-size: 0.72rem;">Default Password:</span>
+                                    <div class="d-flex align-items-center gap-1">
+                                        <span class="font-monospace text-slate-700 fw-semibold" style="font-size: 0.72rem;">Parent2026!</span>
+                                        <button type="button" class="btn btn-xs btn-outline-success py-0 px-1.5" style="font-size: 0.65rem;" onclick="copyParentCredentials('{{ fg.guardian.first_name }} {{ fg.guardian.last_name }}', '{{ fg.guardian.user.username|default:fg.guardian.email }}', 'Parent2026!');" title="Copy All Login Details">
+                                            <i class="bi bi-clipboard-check"></i> Copy
+                                        </button>
+                                    </div>
+                                </div>
                                 {% endif %}
                             </div>
                         </div>
@@ -760,31 +824,82 @@
                                         {% endif %}
                                     </dd>
 
-                                    <dt class="col-4 text-muted">Portal Login:</dt>
-                                    <dd class="col-8 mb-0">
+                                </dl>
+
+                                <!-- Dedicated Family Portal Login Details & URL Section -->
+                                <div class="mt-3 pt-3 border-top">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span class="text-uppercase fw-bold text-slate-700 small" style="font-size: 0.72rem; letter-spacing: 0.05em;">
+                                            <i class="bi bi-shield-lock-fill text-primary me-1"></i>Family Portal Access
+                                        </span>
                                         {% if fg.guardian.user %}
-                                            <div class="d-flex align-items-center justify-content-between flex-wrap gap-1">
-                                                <span class="badge badge-soft-success"><i class="bi bi-check-circle me-1"></i>Active</span>
-                                                <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2" style="font-size: 0.75rem;" data-bs-toggle="modal" data-bs-target="#resetGuardianModal{{ fg.guardian.id }}">
-                                                    <i class="bi bi-key me-1"></i>Reset Password
+                                            <span class="badge badge-soft-success"><i class="bi bi-check-circle me-1"></i>Active</span>
+                                        {% else %}
+                                            <span class="badge badge-soft-secondary">Invite Pending</span>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="p-3 bg-light rounded-3 border">
+                                        <!-- Portal URL Row -->
+                                        <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
+                                            <span class="text-muted fw-semibold small" style="font-size: 0.74rem;">Portal URL:</span>
+                                            <div class="d-flex align-items-center gap-1.5">
+                                                <a href="/login/?type=family" target="_blank" class="font-monospace text-primary text-decoration-none fw-semibold small" style="font-size: 0.74rem;" title="Open Parent Portal in New Tab">
+                                                    /login/?type=family <i class="bi bi-box-arrow-up-right ms-0.5" style="font-size: 0.65rem;"></i>
+                                                </a>
+                                                <button type="button" class="btn btn-xs btn-outline-secondary py-0 px-1.5 rounded-1" style="font-size: 0.68rem;" onclick="navigator.clipboard.writeText(window.location.origin + '/login/?type=family'); alert('Parent Portal URL copied to clipboard!');" title="Copy Portal URL">
+                                                    <i class="bi bi-clipboard"></i>
                                                 </button>
                                             </div>
-                                            <div class="small text-muted mt-1">Username: <code>{{ fg.guardian.user.username }}</code></div>
-                                        {% else %}
-                                            <div class="d-flex align-items-center justify-content-between flex-wrap gap-1">
-                                                <span class="badge badge-soft-secondary">Invite Pending</span>
-                                                <div class="btn-group btn-group-sm">
-                                                    <button type="button" class="btn btn-sm btn-success py-0 px-2 text-white" style="font-size: 0.75rem;" data-bs-toggle="modal" data-bs-target="#activateGuardianModal{{ fg.guardian.id }}" title="Immediately activate login with password">
-                                                        <i class="bi bi-lightning-charge-fill me-1"></i>Activate Login
-                                                    </button>
-                                                    <button type="button" class="btn btn-sm btn-outline-primary py-0 px-2" style="font-size: 0.75rem;" data-bs-toggle="modal" data-bs-target="#inviteGuardianModal{{ fg.guardian.id }}" title="Send or generate invite link">
-                                                        <i class="bi bi-send me-1"></i>Invite Link
-                                                    </button>
-                                                </div>
+                                        </div>
+
+                                        <!-- Login Username / Email Row -->
+                                        <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
+                                            <span class="text-muted fw-semibold small" style="font-size: 0.74rem;">Login Username:</span>
+                                            <div class="d-flex align-items-center gap-1.5">
+                                                <code class="text-slate-900 fw-bold small" style="font-size: 0.74rem;">{{ fg.guardian.user.username|default:fg.guardian.email|default:fg.guardian.phone }}</code>
+                                                {% if fg.guardian.user.username or fg.guardian.email %}
+                                                <button type="button" class="btn btn-xs btn-outline-secondary py-0 px-1.5 rounded-1" style="font-size: 0.68rem;" onclick="navigator.clipboard.writeText('{{ fg.guardian.user.username|default:fg.guardian.email }}'); alert('Username copied!');" title="Copy Username">
+                                                    <i class="bi bi-clipboard"></i>
+                                                </button>
+                                                {% endif %}
                                             </div>
+                                        </div>
+
+                                        {% if fg.guardian.user %}
+                                        <!-- Password / Active Controls -->
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <span class="text-muted fw-semibold small" style="font-size: 0.74rem;">Password:</span>
+                                            <div class="d-flex align-items-center gap-1.5">
+                                                <span class="font-monospace text-slate-700 small" style="font-size: 0.74rem;">•••••••• <small class="text-muted">(Default: Parent2026!)</small></span>
+                                                <button type="button" class="btn btn-xs btn-outline-primary py-0 px-2 rounded-1" style="font-size: 0.72rem;" data-bs-toggle="modal" data-bs-target="#resetGuardianModal{{ fg.guardian.id }}">
+                                                    <i class="bi bi-key me-1"></i>Reset
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <!-- Copy All Credentials Button -->
+                                        <div class="d-grid gap-1 mt-2">
+                                            <button type="button" class="btn btn-sm btn-outline-success py-1 fw-semibold d-inline-flex align-items-center justify-content-center gap-1.5" style="font-size: 0.78rem;" onclick="copyParentCredentials('{{ fg.guardian.first_name }} {{ fg.guardian.last_name }}', '{{ fg.guardian.user.username|default:fg.guardian.email }}', 'Parent2026!');">
+                                                <i class="bi bi-clipboard-check"></i> Copy Parent Login Details
+                                            </button>
+                                        </div>
+                                        {% else %}
+                                        <!-- Invite Pending Action Controls -->
+                                        <div class="mt-2 pt-1 text-center">
+                                            <div class="text-muted small mb-2" style="font-size: 0.73rem;">Parent login is not activated yet.</div>
+                                            <div class="btn-group btn-group-sm w-100">
+                                                <button type="button" class="btn btn-sm btn-success text-white py-1 fw-semibold" style="font-size: 0.76rem;" data-bs-toggle="modal" data-bs-target="#activateGuardianModal{{ fg.guardian.id }}" title="Set password & activate login">
+                                                    <i class="bi bi-lightning-charge-fill me-1"></i>Activate Login Now
+                                                </button>
+                                                <button type="button" class="btn btn-sm btn-outline-primary py-1" style="font-size: 0.76rem;" data-bs-toggle="modal" data-bs-target="#inviteGuardianModal{{ fg.guardian.id }}" title="Generate invitation link">
+                                                    <i class="bi bi-send me-1"></i>Invite Link
+                                                </button>
+                                            </div>
+                                        </div>
                                         {% endif %}
-                                    </dd>
-                                </dl>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -1961,6 +2076,24 @@ function onPaymentInvoiceChange() {
     if (bal) {
         const amtInput = document.getElementById('modalPaymentAmount');
         if (amtInput) amtInput.value = parseFloat(bal).toFixed(2);
+    }
+}
+
+function copyParentCredentials(parentName, username, defaultPass) {
+    const url = window.location.origin + '/login/?type=family';
+    const text = 'KidSynq Family Portal Login Details:\n' +
+                 'Parent / Guardian: ' + parentName + '\n' +
+                 'Portal URL: ' + url + '\n' +
+                 'Username / Email: ' + username + '\n' +
+                 'Default Password: ' + defaultPass;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function() {
+            alert('Parent Login Details & Portal URL copied to clipboard!\n\n' + text);
+        }).catch(function() {
+            prompt('Copy Parent Login Credentials:', text);
+        });
+    } else {
+        prompt('Copy Parent Login Credentials:', text);
     }
 }
 
