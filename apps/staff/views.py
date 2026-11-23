@@ -53,6 +53,16 @@ class EmployeeCreateView(StaffRequiredMixin, View):
         email = request.POST.get('email', '').strip()
         phone = request.POST.get('phone', request.POST.get('phone_number', '')).strip()
         emp_type = request.POST.get('employee_type', 'Full-Time')
+        role = request.POST.get('role', '').strip()
+        if not role:
+            emp_type_id = request.POST.get('employee_type_id')
+            if emp_type_id:
+                et = EmployeeType.objects.filter(pk=emp_type_id).first()
+                if et:
+                    role = et.name
+        if not role:
+            role = 'RECE Educator'
+
         hire_date = request.POST.get('hire_date') or timezone.now().date()
 
         if not first_name or not last_name:
@@ -66,11 +76,12 @@ class EmployeeCreateView(StaffRequiredMixin, View):
             email=email,
             phone=phone,
             employment_type=emp_type,
-            role=emp_type,
+            role=role,
+            job_title=role,
             start_date=hire_date
         )
 
-        messages.success(request, f"Employee '{first_name} {last_name}' added successfully.")
+        messages.success(request, f"Employee '{first_name} {last_name}' added successfully as {role}.")
         return redirect('daycare_employee_detail', pk=emp.id)
 
 class EmployeeDetailView(StaffRequiredMixin, View):

@@ -39,12 +39,39 @@
         <h5 class="fw-bold text-primary mb-3"><i class="bi bi-briefcase me-2"></i> Employment Role & Start Date</h5>
         <div class="row g-3 mb-4">
             <div class="col-12 col-md-6">
-                <label class="form-label small fw-semibold">Staff Role / Category</label>
-                <select name="employee_type_id" class="form-select">
-                    <option value="">Standard Educator</option>
-                    {% for et in emp_types %}
-                    <option value="{{ et.id }}">{{ et.name }}</option>
-                    {% endfor %}
+                <label class="form-label small fw-semibold">Role / Position <span class="text-danger">*</span></label>
+                <select name="role" class="form-select" required>
+                    <optgroup label="Early Childhood Educators & Teaching">
+                        <option value="Lead RECE Educator">Lead RECE Educator</option>
+                        <option value="RECE Educator" selected>RECE Educator (Registered ECE)</option>
+                        <option value="ECE Assistant">ECE Assistant / Childcare Assistant</option>
+                        <option value="Infant Care Specialist">Infant Care Specialist</option>
+                        <option value="Toddler Lead Teacher">Toddler Lead Teacher</option>
+                        <option value="Preschool Teacher">Preschool Teacher</option>
+                        <option value="School-Age Educator">School-Age Educator</option>
+                        <option value="Supply / Relief Educator">Supply / Relief Educator</option>
+                    </optgroup>
+                    <optgroup label="Center Leadership & Administration">
+                        <option value="Daycare Supervisor / Director">Daycare Supervisor / Director</option>
+                        <option value="Assistant Director">Assistant Director</option>
+                        <option value="Program Coordinator">Program Coordinator</option>
+                        <option value="Center Administrator">Center Administrator</option>
+                    </optgroup>
+                    <optgroup label="Support & Center Operations">
+                        <option value="Cook / Dietary Planner">Cook / Dietary Planner</option>
+                        <option value="Receptionist">Receptionist</option>
+                        <option value="Facilities / Cleaner">Facilities / Cleaner</option>
+                        <option value="Transportation / Driver">Transportation / Driver</option>
+                    </optgroup>
+                </select>
+            </div>
+            <div class="col-12 col-md-6">
+                <label class="form-label small fw-semibold">Employment Type</label>
+                <select name="employee_type" class="form-select">
+                    <option value="Full-Time" selected>Full-Time</option>
+                    <option value="Part-Time">Part-Time</option>
+                    <option value="Casual">Casual / Relief</option>
+                    <option value="Contract">Contract</option>
                 </select>
             </div>
             <div class="col-12 col-md-6">

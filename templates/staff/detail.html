@@ -398,7 +398,36 @@
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-semibold">Role / Position *</label>
-                            <input type="text" name="role" class="form-control" value="{{ employee.role }}" required>
+                            <select name="role" class="form-select" required>
+                                <optgroup label="Early Childhood Educators & Teaching">
+                                    <option value="Lead RECE Educator" {% if employee.role == 'Lead RECE Educator' %}selected{% endif %}>Lead RECE Educator</option>
+                                    <option value="RECE Educator" {% if employee.role == 'RECE Educator' %}selected{% endif %}>RECE Educator (Registered ECE)</option>
+                                    <option value="ECE Assistant" {% if employee.role == 'ECE Assistant' %}selected{% endif %}>ECE Assistant / Childcare Assistant</option>
+                                    <option value="Infant Care Specialist" {% if employee.role == 'Infant Care Specialist' %}selected{% endif %}>Infant Care Specialist</option>
+                                    <option value="Toddler Lead Teacher" {% if employee.role == 'Toddler Lead Teacher' %}selected{% endif %}>Toddler Lead Teacher</option>
+                                    <option value="Preschool Teacher" {% if employee.role == 'Preschool Teacher' %}selected{% endif %}>Preschool Teacher</option>
+                                    <option value="School-Age Educator" {% if employee.role == 'School-Age Educator' %}selected{% endif %}>School-Age Educator</option>
+                                    <option value="Supply / Relief Educator" {% if employee.role == 'Supply / Relief Educator' %}selected{% endif %}>Supply / Relief Educator</option>
+                                    <option value="Teacher" {% if employee.role == 'Teacher' %}selected{% endif %}>Teacher</option>
+                                </optgroup>
+                                <optgroup label="Center Leadership & Administration">
+                                    <option value="Daycare Supervisor / Director" {% if employee.role == 'Daycare Supervisor / Director' %}selected{% endif %}>Daycare Supervisor / Director</option>
+                                    <option value="Assistant Director" {% if employee.role == 'Assistant Director' %}selected{% endif %}>Assistant Director</option>
+                                    <option value="Program Coordinator" {% if employee.role == 'Program Coordinator' %}selected{% endif %}>Program Coordinator</option>
+                                    <option value="Center Administrator" {% if employee.role == 'Center Administrator' or employee.role == 'Administrator' %}selected{% endif %}>Center Administrator</option>
+                                </optgroup>
+                                <optgroup label="Support & Center Operations">
+                                    <option value="Cook / Dietary Planner" {% if employee.role == 'Cook / Dietary Planner' or employee.role == 'Cook' %}selected{% endif %}>Cook / Dietary Planner</option>
+                                    <option value="Receptionist" {% if employee.role == 'Receptionist' %}selected{% endif %}>Receptionist</option>
+                                    <option value="Facilities / Cleaner" {% if employee.role == 'Facilities / Cleaner' or employee.role == 'Cleaner' %}selected{% endif %}>Facilities / Cleaner</option>
+                                    <option value="Driver" {% if employee.role == 'Driver' %}selected{% endif %}>Transportation / Driver</option>
+                                </optgroup>
+                                {% if employee.role and employee.role != 'Lead RECE Educator' and employee.role != 'RECE Educator' and employee.role != 'ECE Assistant' and employee.role != 'Infant Care Specialist' and employee.role != 'Toddler Lead Teacher' and employee.role != 'Preschool Teacher' and employee.role != 'School-Age Educator' and employee.role != 'Supply / Relief Educator' and employee.role != 'Teacher' and employee.role != 'Daycare Supervisor / Director' and employee.role != 'Assistant Director' and employee.role != 'Program Coordinator' and employee.role != 'Center Administrator' and employee.role != 'Administrator' and employee.role != 'Cook / Dietary Planner' and employee.role != 'Cook' and employee.role != 'Receptionist' and employee.role != 'Facilities / Cleaner' and employee.role != 'Cleaner' and employee.role != 'Driver' %}
+                                <optgroup label="Custom Assigned Role">
+                                    <option value="{{ employee.role }}" selected>{{ employee.role }} (Current)</option>
+                                </optgroup>
+                                {% endif %}
+                            </select>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-semibold">Email Address *</label>
