@@ -2,7 +2,7 @@ import uuid
 from decimal import Decimal
 from django.contrib import messages
 from django.core.paginator import Paginator
-from django.db.models import Q, Sum, Count
+from django.db.models import Q, Sum
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.utils import timezone
