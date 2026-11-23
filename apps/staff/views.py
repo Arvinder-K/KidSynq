@@ -1,15 +1,18 @@
 from datetime import datetime, timedelta
+import uuid
 from django.contrib import messages
 from django.core.paginator import Paginator
 from django.db.models import Q
 from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
 from django.utils import timezone
 from django.views import View
 
 from core.decorators import StaffRequiredMixin
 from core.models import (
     Daycare, Employee, EmployeeType, ECECredential,
-    StaffSchedule, StaffAttendance, LeaveRequest, Classroom
+    StaffSchedule, StaffAttendance, LeaveRequest, Classroom,
+    CredentialType, User, ClassroomTeacherAssignment
 )
 
 def get_user_daycare(user):
@@ -76,16 +79,224 @@ class EmployeeDetailView(StaffRequiredMixin, View):
     def get(self, request, pk):
         daycare = get_user_daycare(request.user)
         emp = get_object_or_404(Employee, pk=pk, daycare=daycare)
-        credentials = ECECredential.objects.filter(employee=emp)
-        schedules = StaffSchedule.objects.filter(employee=emp).order_by('-date')[:10]
-        attendance = StaffAttendance.objects.filter(employee=emp).order_by('-date')[:10]
+        credentials = ECECredential.objects.filter(employee=emp).select_related('credential_type', 'province').order_by('-issue_date')
+        credential_types = CredentialType.objects.all().order_by('category', 'name')
+        classrooms = Classroom.objects.filter(daycare=daycare, deleted_at__isnull=True).order_by('room_name')
+        assignments = ClassroomTeacherAssignment.objects.filter(employee=emp, status='Active').select_related('classroom')
+        primary_assignment = assignments.first()
+        schedules = StaffSchedule.objects.filter(employee=emp).select_related('classroom').order_by('-date')[:10]
+        attendance = StaffAttendance.objects.filter(employee=emp).select_related('classroom').order_by('-date')[:10]
+
+        # Login status check
+        has_login = emp.user is not None
+        linked_user = emp.user
+        if not has_login and emp.email:
+            linked_user = User.objects.filter(email=emp.email).first()
+
+        # Compliance checks
+        today = timezone.now().date()
+        valid_creds = []
+        for c in credentials:
+            is_expired = c.expiry_date and c.expiry_date < today
+            expiring_soon = c.expiry_date and not is_expired and (c.expiry_date - today).days <= 60
+            valid_creds.append({
+                'obj': c,
+                'is_expired': is_expired,
+                'expiring_soon': expiring_soon,
+            })
 
         return render(request, self.template_name, {
             'employee': emp,
             'credentials': credentials,
+            'credential_items': valid_creds,
+            'credential_types': credential_types,
+            'classrooms': classrooms,
+            'assignments': assignments,
+            'primary_assignment': primary_assignment,
             'schedules': schedules,
-            'attendance': attendance
+            'attendance': attendance,
+            'has_login': has_login,
+            'linked_user': linked_user,
+            'today': today,
         })
+
+    def post(self, request, pk):
+        daycare = get_user_daycare(request.user)
+        emp = get_object_or_404(Employee, pk=pk, daycare=daycare)
+        action = request.POST.get('action')
+
+        if action == 'add_credential':
+            credential_type_id = request.POST.get('credential_type_id')
+            certificate_number = request.POST.get('certificate_number', '').strip()
+            issuing_org = request.POST.get('issuing_organization', '').strip()
+            issue_date_str = request.POST.get('issue_date', '').strip()
+            expiry_date_str = request.POST.get('expiry_date', '').strip()
+            doc_status = request.POST.get('document_status', 'verified').strip()
+
+            if not credential_type_id or not issue_date_str:
+                messages.error(request, "Credential type and issue date are required.")
+            else:
+                cred_type = get_object_or_404(CredentialType, pk=credential_type_id)
+                try:
+                    issue_date = datetime.strptime(issue_date_str, '%Y-%m-%d').date()
+                except ValueError:
+                    issue_date = timezone.now().date()
+
+                expiry_date = None
+                if expiry_date_str:
+                    try:
+                        expiry_date = datetime.strptime(expiry_date_str, '%Y-%m-%d').date()
+                    except ValueError:
+                        pass
+                
+                ECECredential.objects.create(
+                    daycare=daycare,
+                    employee=emp,
+                    credential_type=cred_type,
+                    certificate_number=certificate_number or None,
+                    issuing_organization=issuing_org or None,
+                    issue_date=issue_date,
+                    expiry_date=expiry_date,
+                    document_status=doc_status
+                )
+                messages.success(request, f"Certificate '{cred_type.name}' recorded successfully.")
+
+        elif action == 'delete_credential':
+            cred_id = request.POST.get('credential_id')
+            ECECredential.objects.filter(pk=cred_id, employee=emp).delete()
+            messages.success(request, "Certificate record removed.")
+
+        elif action == 'update_info':
+            first_name = request.POST.get('first_name', '').strip()
+            last_name = request.POST.get('last_name', '').strip()
+            preferred_name = request.POST.get('preferred_name', '').strip()
+            email = request.POST.get('email', '').strip()
+            phone = request.POST.get('phone', '').strip()
+            role = request.POST.get('role', '').strip()
+            job_title = request.POST.get('job_title', '').strip()
+            employment_type = request.POST.get('employment_type', 'Full-Time').strip()
+            hire_date_str = request.POST.get('hire_date', '').strip()
+            dob_str = request.POST.get('date_of_birth', '').strip()
+            classroom_id = request.POST.get('classroom_id')
+
+            if first_name:
+                emp.first_name = first_name
+            if last_name:
+                emp.last_name = last_name
+            emp.preferred_name = preferred_name or None
+            if email:
+                emp.email = email
+            if phone:
+                emp.phone = phone
+            if role:
+                emp.role = role
+            emp.job_title = job_title or role
+            emp.employment_type = employment_type
+
+            if hire_date_str:
+                try:
+                    emp.start_date = datetime.strptime(hire_date_str, '%Y-%m-%d').date()
+                except ValueError:
+                    pass
+            if dob_str:
+                try:
+                    emp.date_of_birth = datetime.strptime(dob_str, '%Y-%m-%d').date()
+                except ValueError:
+                    pass
+            emp.save()
+
+            if classroom_id:
+                classroom = Classroom.objects.filter(pk=classroom_id, daycare=daycare).first()
+                if classroom:
+                    ClassroomTeacherAssignment.objects.update_or_create(
+                        daycare=daycare,
+                        employee=emp,
+                        defaults={'classroom': classroom, 'status': 'Active', 'assignment_type': 'Primary'}
+                    )
+
+            if emp.user:
+                if first_name:
+                    emp.user.first_name = first_name
+                if last_name:
+                    emp.user.last_name = last_name
+                if email:
+                    emp.user.email = email
+                emp.user.save()
+
+            messages.success(request, f"Staff details for {emp.first_name} {emp.last_name} updated successfully.")
+
+        elif action == 'activate_login':
+            password = request.POST.get('password', '').strip() or 'Staff2026!'
+            
+            if emp.user:
+                emp.user.set_password(password)
+                emp.user.is_active = True
+                emp.user.save()
+            else:
+                linked_user = User.objects.filter(email=emp.email).first() if emp.email else None
+                if linked_user:
+                    linked_user.set_password(password)
+                    linked_user.is_active = True
+                    linked_user.save()
+                    emp.user = linked_user
+                    emp.save()
+                else:
+                    base_username = (emp.email.split('@')[0] if emp.email else f"{emp.first_name.lower()}.{emp.last_name.lower()}").strip()
+                    username = base_username
+                    counter = 1
+                    while User.objects.filter(username=username).exists():
+                        username = f"{base_username}_{counter}"
+                        counter += 1
+
+                    user = User.objects.create(
+                        username=username,
+                        email=emp.email or f"{username}@sunnydays.example.com",
+                        first_name=emp.first_name,
+                        last_name=emp.last_name,
+                        daycare=daycare,
+                        is_active=True,
+                        is_staff=False
+                    )
+                    user.set_password(password)
+                    user.save()
+                    emp.user = user
+                    emp.save()
+
+            messages.success(request, f"Staff login activated for {emp.first_name}! Email: {emp.user.email} | Temporary Password: {password}")
+
+        elif action == 'reset_password':
+            new_password = request.POST.get('new_password', '').strip() or 'Staff2026!'
+            
+            if not emp.user:
+                linked_user = User.objects.filter(email=emp.email).first() if emp.email else None
+                if linked_user:
+                    emp.user = linked_user
+                    emp.save()
+                else:
+                    base_username = (emp.email.split('@')[0] if emp.email else f"{emp.first_name.lower()}.{emp.last_name.lower()}").strip()
+                    username = base_username
+                    counter = 1
+                    while User.objects.filter(username=username).exists():
+                        username = f"{base_username}_{counter}"
+                        counter += 1
+                    user = User.objects.create(
+                        username=username,
+                        email=emp.email or f"{username}@sunnydays.example.com",
+                        first_name=emp.first_name,
+                        last_name=emp.last_name,
+                        daycare=daycare,
+                        is_active=True,
+                        is_staff=False
+                    )
+                    emp.user = user
+                    emp.save()
+
+            emp.user.set_password(new_password)
+            emp.user.is_active = True
+            emp.user.save()
+            messages.success(request, f"Password for {emp.first_name} {emp.last_name} reset to '{new_password}'.")
+
+        return redirect(reverse('daycare_employee_detail', kwargs={'pk': pk}))
 
 class StaffDashboardView(StaffRequiredMixin, View):
     template_name = 'staff/dashboard.html'

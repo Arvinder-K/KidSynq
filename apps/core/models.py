@@ -288,6 +288,14 @@ class Employee(models.Model):
     start_date = models.DateField(null=True, blank=True)
 
     @property
+    def hire_date(self):
+        return self.start_date
+
+    @hire_date.setter
+    def hire_date(self, val):
+        self.start_date = val
+
+    @property
     def phone_number(self):
         return self.phone
 

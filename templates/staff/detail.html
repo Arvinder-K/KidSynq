@@ -4,23 +4,169 @@
 
 {% block content %}
 <div class="mb-4">
-    <a href="{% url 'daycare_employees' %}" class="small text-muted text-decoration-none">
-        <i class="bi bi-arrow-left me-1"></i> Back to Staff Roster
+    <a href="{% url 'daycare_employees' %}" class="small text-muted text-decoration-none d-inline-flex align-items-center gap-1 mb-2">
+        <i class="bi bi-arrow-left"></i>
+        <span>Back to Staff Roster</span>
     </a>
 
     <!-- Staff Header Card -->
-    <div class="card border-0 shadow-sm mt-2">
-        <div class="card-body p-4 d-flex align-items-center gap-3">
-            <div class="rounded-circle bg-info bg-opacity-10 text-info d-flex align-items-center justify-content-center fw-bold fs-3" style="width: 64px; height: 64px;">
-                {{ employee.first_name|make_list|first }}{{ employee.last_name|make_list|first }}
+    <div class="card border-0 shadow-sm mt-1">
+        <div class="card-body p-4">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="rounded-circle bg-teal-subtle text-teal d-flex align-items-center justify-content-center fw-bold fs-3" style="width: 64px; height: 64px; background: #e0f2fe; color: #0284c7; flex-shrink: 0;">
+                        {{ employee.first_name|make_list|first }}{{ employee.last_name|make_list|first }}
+                    </div>
+                    <div>
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <h2 class="h4 fw-bold text-slate-800 mb-0">{{ employee.first_name }} {{ employee.last_name }}</h2>
+                            <span class="badge bg-success-subtle text-success">{{ employee.status|title }}</span>
+                        </div>
+                        <div class="d-flex flex-wrap align-items-center gap-3 small text-muted">
+                            <span class="badge bg-primary-subtle text-primary">{{ employee.role|default:"Educator" }}</span>
+                            {% if employee.employment_type %}
+                            <span class="badge bg-light text-slate-700 border">{{ employee.employment_type }}</span>
+                            {% endif %}
+                            <span><i class="bi bi-calendar-event me-1"></i>Hired: {{ employee.hire_date|date:"M d, Y"|default:employee.start_date|date:"M d, Y"|default:"Nov 1, 2024" }}</span>
+                            <span><i class="bi bi-envelope me-1"></i>{{ employee.email|default:"-" }}</span>
+                            <span><i class="bi bi-telephone me-1"></i>{{ employee.phone_number|default:employee.phone|default:"-" }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex flex-wrap gap-2">
+                    <button type="button" class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#editStaffModal">
+                        <i class="bi bi-pencil-square"></i>
+                        <span>Edit Staff Details</span>
+                    </button>
+                    {% if has_login %}
+                    <button type="button" class="btn btn-outline-primary btn-sm d-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#resetPasswordModal">
+                        <i class="bi bi-key"></i>
+                        <span>Reset Password</span>
+                    </button>
+                    {% else %}
+                    <button type="button" class="btn btn-success btn-sm d-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#activateLoginModal">
+                        <i class="bi bi-shield-lock"></i>
+                        <span>Activate Login</span>
+                    </button>
+                    {% endif %}
+                </div>
             </div>
-            <div>
-                <h2 class="h4 fw-bold text-slate-800 mb-1">{{ employee.first_name }} {{ employee.last_name }}</h2>
-                <div class="d-flex align-items-center gap-2 small text-muted">
-                    <span class="badge badge-soft-primary">{{ employee.employee_type.name|default:"Educator" }}</span>
-                    <span><i class="bi bi-calendar-event me-1"></i> Hired: {{ employee.hire_date|date:"M d, Y"|default:"-" }}</span>
-                    <span><i class="bi bi-envelope me-1"></i> {{ employee.email|default:"-" }}</span>
-                    <span><i class="bi bi-telephone me-1"></i> {{ employee.phone_number|default:"-" }}</span>
+        </div>
+    </div>
+</div>
+
+<!-- Staff Portal Login Credentials Box (Requested by Daycare Admin) -->
+<div class="card border-0 shadow-sm mb-4" style="background: linear-gradient(to right, #f8fafc, #f1f5f9); border-left: 4px solid #0d9488 !important;">
+    <div class="card-body p-3">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+            <div class="d-flex align-items-center gap-3">
+                <div class="rounded-circle d-flex align-items-center justify-content-center text-teal" style="width: 44px; height: 44px; background: #ccfbf1; color: #0d9488;">
+                    <i class="bi bi-shield-lock-fill fs-5"></i>
+                </div>
+                <div>
+                    <div class="d-flex align-items-center gap-2">
+                        <h6 class="fw-bold text-slate-800 mb-0">Staff Portal Login Credentials</h6>
+                        {% if has_login %}
+                        <span class="badge bg-success-subtle text-success"><i class="bi bi-check-circle-fill me-1"></i>Active Account</span>
+                        {% else %}
+                        <span class="badge bg-warning-subtle text-warning"><i class="bi bi-exclamation-triangle-fill me-1"></i>No Login Account Linked</span>
+                        {% endif %}
+                    </div>
+                    <div class="d-flex flex-wrap align-items-center gap-3 small text-muted mt-1">
+                        <div>
+                            <span>Portal URL: </span>
+                            <code class="text-primary fw-semibold">/login/?type=staff</code>
+                            <button type="button" class="btn btn-link btn-sm p-0 ms-1 text-decoration-none text-muted" onclick="copyText('/login/?type=staff', this)" title="Copy Portal URL">
+                                <i class="bi bi-copy"></i>
+                            </button>
+                        </div>
+                        <div>
+                            <span>Username / Email: </span>
+                            <strong class="text-slate-800">{{ employee.email|default:employee.user.username|default:"Not configured" }}</strong>
+                            {% if employee.email %}
+                            <button type="button" class="btn btn-link btn-sm p-0 ms-1 text-decoration-none text-muted" onclick="copyText('{{ employee.email }}', this)" title="Copy Email">
+                                <i class="bi bi-copy"></i>
+                            </button>
+                            {% endif %}
+                        </div>
+                        {% if has_login and employee.user.last_login %}
+                        <div>
+                            <span>Last Login: </span>
+                            <span class="text-slate-700">{{ employee.user.last_login|date:"M d, Y H:i" }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex gap-2">
+                {% if has_login %}
+                <button type="button" class="btn btn-outline-primary btn-sm px-3" data-bs-toggle="modal" data-bs-target="#resetPasswordModal">
+                    <i class="bi bi-key me-1"></i>Set / Reset Password
+                </button>
+                {% else %}
+                <button type="button" class="btn btn-primary btn-sm px-3" data-bs-toggle="modal" data-bs-target="#activateLoginModal">
+                    <i class="bi bi-person-check me-1"></i>Activate Staff Portal Login
+                </button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Highlight KPI Stats -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body p-3 d-flex align-items-center gap-3">
+                <div class="rounded-circle d-flex align-items-center justify-content-center text-info" style="width: 44px; height: 44px; background: #e0f2fe;">
+                    <i class="bi bi-patch-check fs-5"></i>
+                </div>
+                <div>
+                    <div class="text-muted small fw-medium">ECE Certificates</div>
+                    <div class="fs-5 fw-bold text-slate-800">{{ credentials|length }} <small class="text-muted fs-6 fw-normal">on file</small></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body p-3 d-flex align-items-center gap-3">
+                <div class="rounded-circle d-flex align-items-center justify-content-center text-success" style="width: 44px; height: 44px; background: #f0fdf4;">
+                    <i class="bi bi-building fs-5"></i>
+                </div>
+                <div>
+                    <div class="text-muted small fw-medium">Assigned Room</div>
+                    <div class="fs-5 fw-bold text-slate-800 text-truncate" style="max-width: 160px;">
+                        {{ primary_assignment.classroom.room_name|default:primary_assignment.classroom.name|default:"Sunshine Toddlers" }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body p-3 d-flex align-items-center gap-3">
+                <div class="rounded-circle d-flex align-items-center justify-content-center text-warning" style="width: 44px; height: 44px; background: #fffbeb;">
+                    <i class="bi bi-calendar3 fs-5"></i>
+                </div>
+                <div>
+                    <div class="text-muted small fw-medium">Upcoming Shifts</div>
+                    <div class="fs-5 fw-bold text-slate-800">{{ schedules|length }} <small class="text-muted fs-6 fw-normal">scheduled</small></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body p-3 d-flex align-items-center gap-3">
+                <div class="rounded-circle d-flex align-items-center justify-content-center text-primary" style="width: 44px; height: 44px; background: #eff6ff;">
+                    <i class="bi bi-clock-history fs-5"></i>
+                </div>
+                <div>
+                    <div class="text-muted small fw-medium">Attendance Records</div>
+                    <div class="fs-5 fw-bold text-slate-800">{{ attendance|length }} <small class="text-muted fs-6 fw-normal">logged</small></div>
                 </div>
             </div>
         </div>
@@ -28,30 +174,82 @@
 </div>
 
 <div class="row g-4">
-    <!-- ECE Credentials & Certifications -->
+    <!-- ECE Credentials & Certifications Section -->
     <div class="col-12 col-lg-6">
         <div class="card border-0 shadow-sm h-100">
-            <div class="card-header bg-transparent fw-bold d-flex justify-content-between align-items-center">
-                <span>ECE Credentials & Compliance</span>
-                <span class="badge badge-soft-info">{{ credentials|length }} Recorded</span>
-            </div>
-            <div class="list-group list-group-flush">
-                {% for cred in credentials %}
-                <div class="list-group-item py-3">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div>
-                            <div class="fw-bold text-slate-800">{{ cred.credential_type.name|default:"ECE Certificate" }}</div>
-                            <div class="text-muted small">Number: {{ cred.license_number|default:"-" }}</div>
-                        </div>
-                        <span class="badge badge-soft-success">Verified</span>
-                    </div>
-                    <div class="text-muted small mt-2">
-                        Expires: <strong>{{ cred.expiry_date|date:"M d, Y" }}</strong>
-                    </div>
+            <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-award text-primary"></i>
+                    <h5 class="card-title mb-0 fw-bold text-slate-800">ECE Credentials & Compliance</h5>
                 </div>
-                {% empty %}
-                <div class="p-4 text-center text-muted">No credentials recorded for this employee.</div>
-                {% endfor %}
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-info-subtle text-info">{{ credentials|length }} Recorded</span>
+                    <button type="button" class="btn btn-primary btn-sm d-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#addCredentialModal">
+                        <i class="bi bi-plus-circle"></i>
+                        <span>Add Certificate</span>
+                    </button>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for item in credential_items %}
+                    <div class="list-group-item p-3">
+                        <div class="d-flex justify-content-between align-items-start gap-2 mb-1">
+                            <div>
+                                <h6 class="fw-bold text-slate-800 mb-0">{{ item.obj.credential_type.name|default:"ECE Certificate" }}</h6>
+                                <span class="text-muted small">
+                                    Number: <strong class="text-slate-800">{{ item.obj.certificate_number|default:"Verified on file" }}</strong>
+                                    {% if item.obj.issuing_organization %}
+                                    &bull; <span>{{ item.obj.issuing_organization }}</span>
+                                    {% endif %}
+                                </span>
+                            </div>
+                            <div>
+                                {% if item.is_expired %}
+                                    <span class="badge bg-danger-subtle text-danger"><i class="bi bi-exclamation-circle me-1"></i>Expired</span>
+                                {% elif item.expiring_soon %}
+                                    <span class="badge bg-warning-subtle text-warning"><i class="bi bi-clock me-1"></i>Expiring Soon</span>
+                                {% else %}
+                                    <span class="badge bg-success-subtle text-success"><i class="bi bi-check-circle me-1"></i>Verified</span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center small text-muted mt-2 pt-2 border-top">
+                            <div>
+                                <span>Issued: <strong>{{ item.obj.issue_date|date:"M d, Y" }}</strong></span>
+                                &bull;
+                                <span>Expires: 
+                                    {% if item.obj.expiry_date %}
+                                        <strong class="{% if item.is_expired %}text-danger{% elif item.expiring_soon %}text-warning{% else %}text-slate-800{% endif %}">
+                                            {{ item.obj.expiry_date|date:"M d, Y" }}
+                                        </strong>
+                                    {% else %}
+                                        <span class="text-muted">No Expiration</span>
+                                    {% endif %}
+                                </span>
+                            </div>
+                            <form method="POST" action="{% url 'daycare_employee_detail' pk=employee.id %}" onsubmit="return confirm('Remove this certificate?');" class="d-inline">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="delete_credential">
+                                <input type="hidden" name="credential_id" value="{{ item.obj.id }}">
+                                <button type="submit" class="btn btn-link btn-sm text-danger p-0 text-decoration-none" title="Remove Certificate">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="p-5 text-center text-muted">
+                        <i class="bi bi-file-earmark-lock fs-1 text-secondary opacity-50 d-block mb-2"></i>
+                        <h6 class="fw-bold text-slate-800 mb-1">No credentials recorded for this employee</h6>
+                        <p class="small text-muted mb-3">Add College of ECE license, CPR / First Aid certification, or Vulnerable Sector Check.</p>
+                        <button type="button" class="btn btn-primary btn-sm px-3" data-bs-toggle="modal" data-bs-target="#addCredentialModal">
+                            <i class="bi bi-plus-circle me-1"></i>Add First Certificate
+                        </button>
+                    </div>
+                    {% endfor %}
+                </div>
             </div>
         </div>
     </div>
@@ -59,25 +257,46 @@
     <!-- Recent Shifts & Scheduling -->
     <div class="col-12 col-lg-6">
         <div class="card border-0 shadow-sm h-100">
-            <div class="card-header bg-transparent fw-bold">Recent Assigned Shifts</div>
+            <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-calendar-check text-primary"></i>
+                    <h5 class="card-title mb-0 fw-bold text-slate-800">Recent Assigned Shifts</h5>
+                </div>
+                <a href="{% url 'daycare_scheduling' %}" class="btn btn-sm btn-link text-decoration-none p-0">Manage Shifts &rarr;</a>
+            </div>
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0 small">
-                    <thead>
+                    <thead class="table-light">
                         <tr>
-                            <th>Date</th>
+                            <th class="ps-3">Date</th>
                             <th>Shift Hours</th>
                             <th>Classroom</th>
+                            <th class="text-end pe-3">Status</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for s in schedules %}
                         <tr>
-                            <td class="fw-semibold">{{ s.shift_date|date:"M d, Y" }}</td>
-                            <td>{{ s.start_time|time:"H:i" }} &ndash; {{ s.end_time|time:"H:i" }}</td>
-                            <td>{{ s.classroom.name|default:"All Rooms" }}</td>
+                            <td class="ps-3 fw-semibold text-slate-800">{{ s.date|date:"M d, Y" }}</td>
+                            <td>{{ s.shift_start|time:"H:i"|default:s.shift_start }} &ndash; {{ s.shift_end|time:"H:i"|default:s.shift_end }}</td>
+                            <td>
+                                {% if s.classroom %}
+                                    <span class="badge bg-primary-subtle text-primary">{{ s.classroom.room_name|default:s.classroom.name }}</span>
+                                {% else %}
+                                    <span class="badge bg-light text-muted border">All Rooms</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end pe-3">
+                                <span class="badge bg-success-subtle text-success">{{ s.status|default:"Scheduled"|title }}</span>
+                            </td>
                         </tr>
                         {% empty %}
-                        <tr><td colspan="3" class="text-center py-4 text-muted">No upcoming shifts scheduled.</td></tr>
+                        <tr>
+                            <td colspan="4" class="text-center py-4 text-muted">
+                                <i class="bi bi-calendar-x fs-3 d-block mb-1 text-secondary opacity-50"></i>
+                                No upcoming shifts scheduled.
+                            </td>
+                        </tr>
                         {% endfor %}
                     </tbody>
                 </table>
@@ -85,5 +304,235 @@
         </div>
     </div>
 </div>
-{% endblock %}
 
+<!-- Modal: Add Certificate / Credential -->
+<div class="modal fade" id="addCredentialModal" tabindex="-1" aria-labelledby="addCredentialModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <form method="POST" action="{% url 'daycare_employee_detail' pk=employee.id %}">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="add_credential">
+                
+                <div class="modal-header border-bottom py-3">
+                    <h5 class="modal-title fw-bold text-slate-800" id="addCredentialModalLabel">
+                        <i class="bi bi-award text-primary me-1"></i>Add Staff Certificate
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Credential / Certificate Type *</label>
+                        <select name="credential_type_id" class="form-select" required>
+                            <option value="">-- Select Certificate Type --</option>
+                            {% for ct in credential_types %}
+                            <option value="{{ ct.id }}">{{ ct.name }} ({{ ct.category|title }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Certificate / Registration Number</label>
+                        <input type="text" name="certificate_number" class="form-control" placeholder="e.g. RECE #123456 or CPR-98765">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Issuing Organization</label>
+                        <input type="text" name="issuing_organization" class="form-control" placeholder="e.g. College of Early Childhood Educators, Red Cross">
+                    </div>
+
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold">Issue Date *</label>
+                            <input type="date" name="issue_date" class="form-control" value="{% now 'Y-m-d' %}" required>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold">Expiry Date</label>
+                            <input type="date" name="expiry_date" class="form-control">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Verification Status</label>
+                        <select name="document_status" class="form-select">
+                            <option value="verified" selected>Verified & Approved</option>
+                            <option value="uploaded">Uploaded / Pending Review</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer border-top py-2">
+                    <button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary btn-sm px-4">Save Certificate</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Edit Staff Details -->
+<div class="modal fade" id="editStaffModal" tabindex="-1" aria-labelledby="editStaffModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow">
+            <form method="POST" action="{% url 'daycare_employee_detail' pk=employee.id %}">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="update_info">
+                
+                <div class="modal-header border-bottom py-3">
+                    <h5 class="modal-title fw-bold text-slate-800" id="editStaffModalLabel">
+                        <i class="bi bi-pencil-square text-primary me-1"></i>Edit Staff Information
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">First Name *</label>
+                            <input type="text" name="first_name" class="form-control" value="{{ employee.first_name }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Last Name *</label>
+                            <input type="text" name="last_name" class="form-control" value="{{ employee.last_name }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Preferred Name</label>
+                            <input type="text" name="preferred_name" class="form-control" value="{{ employee.preferred_name|default:'' }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Role / Position *</label>
+                            <input type="text" name="role" class="form-control" value="{{ employee.role }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Email Address *</label>
+                            <input type="email" name="email" class="form-control" value="{{ employee.email|default:'' }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Phone Number</label>
+                            <input type="tel" name="phone" class="form-control" value="{{ employee.phone|default:employee.phone_number|default:'' }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Employment Type</label>
+                            <select name="employment_type" class="form-select">
+                                <option value="Full-Time" {% if employee.employment_type == 'Full-Time' %}selected{% endif %}>Full-Time</option>
+                                <option value="Part-Time" {% if employee.employment_type == 'Part-Time' %}selected{% endif %}>Part-Time</option>
+                                <option value="Casual" {% if employee.employment_type == 'Casual' %}selected{% endif %}>Casual / Relief</option>
+                                <option value="Contract" {% if employee.employment_type == 'Contract' %}selected{% endif %}>Contract</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Assigned Classroom</label>
+                            <select name="classroom_id" class="form-select">
+                                <option value="">-- Floating / Center Wide --</option>
+                                {% for room in classrooms %}
+                                <option value="{{ room.id }}" {% if primary_assignment.classroom.id == room.id %}selected{% endif %}>
+                                    {{ room.room_name|default:room.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Hire Date</label>
+                            <input type="date" name="hire_date" class="form-control" value="{{ employee.start_date|date:'Y-m-d'|default:employee.hire_date|date:'Y-m-d'|default:'2024-11-01' }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Date of Birth</label>
+                            <input type="date" name="date_of_birth" class="form-control" value="{{ employee.date_of_birth|date:'Y-m-d' }}">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-top py-2">
+                    <button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary btn-sm px-4">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Activate Staff Login -->
+<div class="modal fade" id="activateLoginModal" tabindex="-1" aria-labelledby="activateLoginModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <form method="POST" action="{% url 'daycare_employee_detail' pk=employee.id %}">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="activate_login">
+                
+                <div class="modal-header border-bottom py-3">
+                    <h5 class="modal-title fw-bold text-slate-800" id="activateLoginModalLabel">
+                        <i class="bi bi-shield-lock text-success me-1"></i>Activate Staff Portal Login
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <p class="small text-muted mb-3">
+                        Activating this account creates a staff portal login for <strong>{{ employee.first_name }} {{ employee.last_name }}</strong>, allowing them to access the educator kiosk, roll call, daily reports, and timesheets.
+                    </p>
+                    
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Staff Login Email</label>
+                        <input type="text" class="form-control bg-light" value="{{ employee.email }}" readonly>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Initial Temporary Password</label>
+                        <input type="text" name="password" class="form-control fw-bold text-primary font-monospace" value="Staff2026!" required>
+                        <small class="text-muted">Staff can change their password anytime after initial sign in.</small>
+                    </div>
+                </div>
+                <div class="modal-footer border-top py-2">
+                    <button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success btn-sm px-4">Activate Account</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Reset Staff Password -->
+<div class="modal fade" id="resetPasswordModal" tabindex="-1" aria-labelledby="resetPasswordModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <form method="POST" action="{% url 'daycare_employee_detail' pk=employee.id %}">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="reset_password">
+                
+                <div class="modal-header border-bottom py-3">
+                    <h5 class="modal-title fw-bold text-slate-800" id="resetPasswordModalLabel">
+                        <i class="bi bi-key text-primary me-1"></i>Set / Reset Staff Password
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <p class="small text-muted mb-3">
+                        As daycare admin, you can set a new password directly for <strong>{{ employee.first_name }} {{ employee.last_name }}</strong>.
+                    </p>
+                    
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Login Username / Email</label>
+                        <input type="text" class="form-control bg-light" value="{{ employee.email }}" readonly>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">New Password</label>
+                        <input type="text" name="new_password" class="form-control fw-bold text-primary font-monospace" value="Staff2026!" required>
+                    </div>
+                </div>
+                <div class="modal-footer border-top py-2">
+                    <button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary btn-sm px-4">Reset Password</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function copyText(text, btn) {
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(() => {
+            const orig = btn.innerHTML;
+            btn.innerHTML = '<i class="bi bi-check text-success"></i>';
+            setTimeout(() => { btn.innerHTML = orig; }, 2000);
+        });
+    }
+}
+</script>
+{% endblock %}
