@@ -787,17 +787,56 @@ class ChildDetailView(StaffRequiredMixin, View):
         elif action == 'reset_guardian_password':
             guardian_id = request.POST.get('guardian_id')
             guardian = get_object_or_404(Guardian, pk=guardian_id, daycare=daycare)
-            new_password = request.POST.get('password', '').strip()
+            new_password = request.POST.get('password', '').strip() or 'Parent2026!'
+            tab = request.POST.get('tab', 'overview')
 
-            if not guardian.user:
-                messages.error(request, f"No login account is linked to {guardian.full_name} yet. Please activate login first.")
-            elif not new_password:
-                messages.error(request, "Password cannot be blank.")
+            login_email = (guardian.email or '').strip()
+            username = login_email if login_email else f"guardian_{str(guardian.id)[:8]}"
+
+            user = guardian.user
+            if not user and login_email:
+                user = User.objects.filter(email__iexact=login_email).first()
+            if not user:
+                user = User.objects.filter(username__iexact=username).first()
+
+            if not user:
+                user = User.objects.create(
+                    username=username,
+                    email=login_email,
+                    first_name=guardian.first_name,
+                    last_name=guardian.last_name,
+                    daycare=daycare,
+                    is_staff=False,
+                    is_active=True
+                )
             else:
-                guardian.user.set_password(new_password)
-                guardian.user.save()
-                messages.success(request, f"Password for {guardian.full_name} ({guardian.user.username}) updated successfully to '{new_password}'.")
-            return redirect(f"{request.path}?tab=family")
+                user.is_active = True
+                if login_email and not user.email:
+                    user.email = login_email
+                if not user.first_name:
+                    user.first_name = guardian.first_name
+                if not user.last_name:
+                    user.last_name = guardian.last_name
+
+            user.set_password(new_password)
+            user.save()
+
+            guardian.user = user
+            guardian.status = 'Active'
+            guardian.save()
+
+            if login_email:
+                GuardianInvitation.objects.filter(
+                    email__iexact=login_email,
+                    daycare=daycare,
+                    status='pending'
+                ).update(status='accepted', updated_at=timezone.now())
+
+            messages.success(
+                request,
+                f"Password for {guardian.full_name} ({user.username}) set successfully to '{new_password}'! Portal login is now active."
+            )
+            return redirect(f"{request.path}?tab={tab}")
 
         return redirect(f"{request.path}?tab={request.POST.get('tab', 'overview')}")
 

@@ -424,17 +424,30 @@
                                         {% endif %}
                                     </div>
                                 </div>
-                                {% if fg.guardian.user %}
                                 <div class="d-flex justify-content-between align-items-center mt-1 pt-1 border-top">
-                                    <span class="text-muted" style="font-size: 0.72rem;">Default Password:</span>
+                                    <span class="text-muted" style="font-size: 0.72rem;">Password:</span>
                                     <div class="d-flex align-items-center gap-1">
-                                        <span class="font-monospace text-slate-700 fw-semibold" style="font-size: 0.72rem;">Parent2026!</span>
-                                        <button type="button" class="btn btn-xs btn-outline-success py-0 px-1.5" style="font-size: 0.65rem;" onclick="copyParentCredentials('{{ fg.guardian.first_name }} {{ fg.guardian.last_name }}', '{{ fg.guardian.user.username|default:fg.guardian.email }}', 'Parent2026!');" title="Copy All Login Details">
-                                            <i class="bi bi-clipboard-check"></i> Copy
-                                        </button>
+                                        <span class="font-monospace text-slate-700 fw-semibold" style="font-size: 0.72rem;">
+                                            {% if fg.guardian.user %}•••••••• <small class="text-muted">(Default: Parent2026!)</small>{% else %}<span class="text-muted">Not set yet</span>{% endif %}
+                                        </span>
                                     </div>
                                 </div>
-                                {% endif %}
+
+                                <!-- Action Buttons: Reset / Set Password & Copy -->
+                                <div class="d-flex align-items-center gap-1.5 mt-2 pt-1.5 border-top">
+                                    <button type="button" class="btn btn-xs btn-outline-primary py-1 px-2.5 rounded-2 d-inline-flex align-items-center gap-1 flex-grow-1 justify-content-center fw-semibold" style="font-size: 0.74rem;" data-bs-toggle="modal" data-bs-target="#resetGuardianModal{{ fg.guardian.id }}" title="Set or reset parent portal login password">
+                                        <i class="bi bi-key-fill text-warning"></i> Reset / Set Password
+                                    </button>
+                                    {% if fg.guardian.user %}
+                                    <button type="button" class="btn btn-xs btn-outline-success py-1 px-2 rounded-2 d-inline-flex align-items-center gap-1 justify-content-center" style="font-size: 0.74rem;" onclick="copyParentCredentials('{{ fg.guardian.first_name }} {{ fg.guardian.last_name }}', '{{ fg.guardian.user.username|default:fg.guardian.email }}', 'Parent2026!');" title="Copy All Login Details">
+                                        <i class="bi bi-clipboard-check"></i> Copy Details
+                                    </button>
+                                    {% else %}
+                                    <button type="button" class="btn btn-xs btn-outline-secondary py-1 px-2 rounded-2 d-inline-flex align-items-center gap-1 justify-content-center" style="font-size: 0.74rem;" data-bs-toggle="modal" data-bs-target="#inviteGuardianModal{{ fg.guardian.id }}" title="Generate Invitation Link">
+                                        <i class="bi bi-send"></i> Invite Link
+                                    </button>
+                                    {% endif %}
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -899,117 +912,6 @@
                                         </div>
                                         {% endif %}
                                     </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Modal: Activate Guardian Login -->
-                        <div class="modal fade" id="activateGuardianModal{{ fg.guardian.id }}" tabindex="-1" aria-hidden="true">
-                            <div class="modal-dialog modal-dialog-centered">
-                                <div class="modal-content border-0 shadow">
-                                    <form method="post">
-                                        {% csrf_token %}
-                                        <input type="hidden" name="action" value="activate_guardian_login">
-                                        <input type="hidden" name="guardian_id" value="{{ fg.guardian.id }}">
-                                        <input type="hidden" name="tab" value="family">
-                                        <div class="modal-header border-bottom">
-                                            <h6 class="modal-title fw-bold text-slate-800">
-                                                <i class="bi bi-lightning-charge-fill text-success me-2"></i>Activate Parent Login
-                                            </h6>
-                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                        </div>
-                                        <div class="modal-body p-4">
-                                            <p class="small text-muted mb-3">
-                                                Instantly activate the Family Portal login account for <strong>{{ fg.guardian.first_name }} {{ fg.guardian.last_name }}</strong>.
-                                            </p>
-                                            <div class="mb-3">
-                                                <label class="form-label small fw-semibold text-muted">Login Email / Username</label>
-                                                <input type="text" class="form-control form-control-sm bg-light" value="{{ fg.guardian.email|default:fg.guardian.phone }}" readonly>
-                                            </div>
-                                            <div class="mb-3">
-                                                <label class="form-label small fw-semibold text-muted">Initial / Temporary Password</label>
-                                                <input type="text" name="password" class="form-control form-control-sm" value="Parent2026!" required>
-                                                <div class="form-text small">The parent can log in immediately with their email and this password at <code>/login/?type=family</code>.</div>
-                                            </div>
-                                        </div>
-                                        <div class="modal-footer border-top bg-light">
-                                            <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                                            <button type="submit" class="btn btn-sm btn-success text-white">
-                                                <i class="bi bi-check-circle me-1"></i>Activate Now
-                                            </button>
-                                        </div>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Modal: Invite Guardian Link -->
-                        <div class="modal fade" id="inviteGuardianModal{{ fg.guardian.id }}" tabindex="-1" aria-hidden="true">
-                            <div class="modal-dialog modal-dialog-centered">
-                                <div class="modal-content border-0 shadow">
-                                    <form method="post">
-                                        {% csrf_token %}
-                                        <input type="hidden" name="action" value="invite_guardian">
-                                        <input type="hidden" name="guardian_id" value="{{ fg.guardian.id }}">
-                                        <input type="hidden" name="tab" value="family">
-                                        <input type="hidden" name="relationship" value="{{ fg.relationship|default:'Parent' }}">
-                                        <div class="modal-header border-bottom">
-                                            <h6 class="modal-title fw-bold text-slate-800">
-                                                <i class="bi bi-send-fill text-primary me-2"></i>Send / Generate Activation Invite
-                                            </h6>
-                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                        </div>
-                                        <div class="modal-body p-4">
-                                            <p class="small text-muted mb-3">
-                                                Create a secure 14-day invitation link for <strong>{{ fg.guardian.first_name }} {{ fg.guardian.last_name }}</strong> to set their own password and activate their account.
-                                            </p>
-                                            <div class="mb-3">
-                                                <label class="form-label small fw-semibold text-muted">Guardian Email</label>
-                                                <input type="email" name="email" class="form-control form-control-sm" value="{{ fg.guardian.email }}" required>
-                                            </div>
-                                        </div>
-                                        <div class="modal-footer border-top bg-light">
-                                            <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                                            <button type="submit" class="btn btn-sm btn-primary">
-                                                <i class="bi bi-send me-1"></i>Generate Invite
-                                            </button>
-                                        </div>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Modal: Reset Guardian Password -->
-                        <div class="modal fade" id="resetGuardianModal{{ fg.guardian.id }}" tabindex="-1" aria-hidden="true">
-                            <div class="modal-dialog modal-dialog-centered">
-                                <div class="modal-content border-0 shadow">
-                                    <form method="post">
-                                        {% csrf_token %}
-                                        <input type="hidden" name="action" value="reset_guardian_password">
-                                        <input type="hidden" name="guardian_id" value="{{ fg.guardian.id }}">
-                                        <input type="hidden" name="tab" value="family">
-                                        <div class="modal-header border-bottom">
-                                            <h6 class="modal-title fw-bold text-slate-800">
-                                                <i class="bi bi-key-fill text-warning me-2"></i>Reset Parent Password
-                                            </h6>
-                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                        </div>
-                                        <div class="modal-body p-4">
-                                            <p class="small text-muted mb-3">
-                                                Set a new password for <strong>{{ fg.guardian.first_name }} {{ fg.guardian.last_name }}</strong> (<code>{{ fg.guardian.user.username }}</code>).
-                                            </p>
-                                            <div class="mb-3">
-                                                <label class="form-label small fw-semibold text-muted">New Password</label>
-                                                <input type="text" name="password" class="form-control form-control-sm" value="Parent2026!" required minlength="6">
-                                            </div>
-                                        </div>
-                                        <div class="modal-footer border-top bg-light">
-                                            <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                                            <button type="submit" class="btn btn-sm btn-primary">
-                                                <i class="bi bi-check-lg me-1"></i>Update Password
-                                            </button>
-                                        </div>
-                                    </form>
                                 </div>
                             </div>
                         </div>
@@ -2028,6 +1930,122 @@
         </div>
     </div>
 </div>
+
+<!-- ========================================== -->
+<!-- GUARDIAN LOGIN, ACTIVATION & PASSWORD RESET MODALS -->
+{% for fg in family_guardians %}
+<div class="modal fade" id="resetGuardianModal{{ fg.guardian.id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="reset_guardian_password">
+                <input type="hidden" name="guardian_id" value="{{ fg.guardian.id }}">
+                <input type="hidden" name="tab" value="{{ active_tab|default:'overview' }}">
+                <div class="modal-header border-bottom py-3">
+                    <h6 class="modal-title fw-bold text-slate-800">
+                        <i class="bi bi-key-fill text-warning me-2"></i>Reset / Set Parent Password
+                    </h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <p class="small text-muted mb-3">
+                        Set login password for <strong>{{ fg.guardian.first_name }} {{ fg.guardian.last_name }}</strong> (<code>{{ fg.guardian.user.username|default:fg.guardian.email }}</code>).
+                        {% if not fg.guardian.user %}
+                            <span class="d-block text-primary mt-1"><i class="bi bi-info-circle me-1"></i> This will immediately activate the parent portal account.</span>
+                        {% endif %}
+                    </p>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold text-muted">Password <span class="text-danger">*</span></label>
+                        <input type="text" name="password" class="form-control" value="Parent2026!" required minlength="6">
+                        <div class="form-text small">Parent can log in at <code>/login/?type=family</code> using their email (<code>{{ fg.guardian.email }}</code>) and this password.</div>
+                    </div>
+                </div>
+                <div class="modal-footer border-top bg-light">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-sm btn-primary fw-semibold px-3">
+                        <i class="bi bi-check-lg me-1"></i>Save & Activate Password
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="activateGuardianModal{{ fg.guardian.id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="activate_guardian_login">
+                <input type="hidden" name="guardian_id" value="{{ fg.guardian.id }}">
+                <input type="hidden" name="tab" value="{{ active_tab|default:'overview' }}">
+                <div class="modal-header border-bottom py-3">
+                    <h6 class="modal-title fw-bold text-slate-800">
+                        <i class="bi bi-lightning-charge-fill text-success me-2"></i>Activate Parent Login
+                    </h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <p class="small text-muted mb-3">
+                        Instantly activate the Family Portal login account for <strong>{{ fg.guardian.first_name }} {{ fg.guardian.last_name }}</strong>.
+                    </p>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold text-muted">Login Email / Username</label>
+                        <input type="text" class="form-control form-control-sm bg-light" value="{{ fg.guardian.email|default:fg.guardian.phone }}" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold text-muted">Initial / Temporary Password <span class="text-danger">*</span></label>
+                        <input type="text" name="password" class="form-control" value="Parent2026!" required>
+                        <div class="form-text small">The parent can log in immediately with their email and this password at <code>/login/?type=family</code>.</div>
+                    </div>
+                </div>
+                <div class="modal-footer border-top bg-light">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-sm btn-success text-white fw-semibold px-3">
+                        <i class="bi bi-check-circle me-1"></i>Activate Now
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="inviteGuardianModal{{ fg.guardian.id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="invite_guardian">
+                <input type="hidden" name="guardian_id" value="{{ fg.guardian.id }}">
+                <input type="hidden" name="tab" value="{{ active_tab|default:'overview' }}">
+                <input type="hidden" name="relationship" value="{{ fg.relationship|default:'Parent' }}">
+                <div class="modal-header border-bottom py-3">
+                    <h6 class="modal-title fw-bold text-slate-800">
+                        <i class="bi bi-send-fill text-primary me-2"></i>Send / Generate Activation Invite
+                    </h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <p class="small text-muted mb-3">
+                        Create a secure 14-day invitation link for <strong>{{ fg.guardian.first_name }} {{ fg.guardian.last_name }}</strong> to set their own password and activate their account.
+                    </p>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold text-muted">Guardian Email <span class="text-danger">*</span></label>
+                        <input type="email" name="email" class="form-control" value="{{ fg.guardian.email }}" required>
+                    </div>
+                </div>
+                <div class="modal-footer border-top bg-light">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-sm btn-primary fw-semibold px-3">
+                        <i class="bi bi-send me-1"></i>Generate Invite
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endfor %}
 
 <script>
 function onModalFeeStructureChange() {
