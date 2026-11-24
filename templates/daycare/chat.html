@@ -1,0 +1,1306 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>KidSynq Copilot · Childcare Operations Assistant</title>
+    <meta name="description" content="Intelligent Childcare Operations & Student Intelligence Assistant" />
+
+    <!-- Google Font: DM Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet" />
+
+    <style>
+        :root {
+            color-scheme: dark;
+            --primary: #112642;
+            --ink: #f7f9fc;
+            --muted: #e8eff8a8;
+            --glass: #0a142266;
+            --border: #ffffff1a;
+            --soft-border: #ffffff12;
+            --font-dm-sans: "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html, body {
+            min-height: 100%;
+            color: var(--ink);
+            font-family: var(--font-dm-sans);
+            background: #07111d;
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            min-height: 100vh;
+        }
+
+        button, input, textarea {
+            font: inherit;
+        }
+
+        button, a {
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible {
+            outline-offset: 3px;
+            outline: 2px solid #8fc7ffbf;
+        }
+
+        /* Ambient Background Page */
+        .ambient-page {
+            background: radial-gradient(circle at 50% 38%, #1a34528c, transparent 42%), 
+                        linear-gradient(145deg, #06101b 0%, var(--primary) 55%, #07101b 100%);
+            width: 100vw;
+            height: 100dvh;
+            min-height: 100dvh;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Glowing Floating Ambient Orbs */
+        .ambient-orbs {
+            pointer-events: none;
+            position: absolute;
+            inset: -8%;
+            overflow: hidden;
+        }
+
+        .ambient-orb {
+            opacity: 0.72;
+            filter: blur(2px) saturate(110%);
+            will-change: transform;
+            box-shadow: none;
+            border-radius: 50%;
+            position: absolute;
+            transform: translate3d(0, 0, 0) scale(1);
+        }
+
+        .orb-a {
+            aspect-ratio: 1;
+            background: radial-gradient(circle at 34% 28%, #62e4ff 0 17%, #2b83d7 38%, #174979 70%, #1749792e 100%);
+            width: min(46vw, 620px);
+            top: -12%;
+            left: -8%;
+        }
+
+        .orb-b {
+            aspect-ratio: 1;
+            background: radial-gradient(circle at 35% 33%, #ff8a54 0 15%, #ff376d 35%, #8f2ccc 66%, #8f2ccc26 100%);
+            width: min(40vw, 560px);
+            top: -4%;
+            right: -7%;
+        }
+
+        .orb-c {
+            aspect-ratio: 1;
+            background: radial-gradient(circle at 42% 34%, #ffd15a 0 16%, #ff7a45 37%, #d43a7b 68%, #d43a7b26 100%);
+            width: min(44vw, 590px);
+            bottom: -21%;
+            left: 12%;
+        }
+
+        .orb-d {
+            aspect-ratio: 1;
+            background: radial-gradient(circle at 37% 31%, #72f1d5 0 15%, #2bbbc3 38%, #2164a6 69%, #2164a624 100%);
+            width: min(36vw, 500px);
+            bottom: -18%;
+            right: 16%;
+        }
+
+        /* Centered Frosted Glass Frame */
+        .glass-frame {
+            isolation: isolate;
+            border-radius: 20px;
+            width: min(920px, 100vw - 40px);
+            height: min(82dvh, 720px);
+            min-height: 530px;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 22px 70px #00000057;
+            z-index: 10;
+        }
+
+        .glass-panel {
+            border: 1px solid var(--border);
+            background: linear-gradient(145deg, #ffffff17, #ffffff05), var(--glass);
+            -webkit-backdrop-filter: blur(16px) saturate(125%);
+            backdrop-filter: blur(16px) saturate(125%);
+            border-radius: 20px;
+            grid-template-rows: 56px minmax(0, 1fr);
+            width: 100%;
+            height: 100%;
+            display: grid;
+            position: relative;
+            overflow: hidden;
+            box-shadow: inset 0 1px #ffffff1f, inset 0 -1px #ffffff06;
+        }
+
+        /* Minimal Header */
+        .minimal-header {
+            border-bottom: 1px solid var(--soft-border);
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            min-height: 56px;
+            padding: 11px 20px;
+            display: flex;
+        }
+
+        .brand-lockup {
+            align-items: center;
+            gap: 10px;
+            font-size: 13.5px;
+            font-weight: 700;
+            letter-spacing: -0.01em;
+            display: flex;
+        }
+
+        .brand-dot {
+            background: #9bc7ff;
+            border-radius: 50%;
+            width: 7px;
+            height: 7px;
+            box-shadow: 0 0 10px #9bc7ffbf, 0 0 18px #62e4ff99;
+            animation: pulseGlow 2.4s infinite ease-in-out;
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% { transform: scale(1); opacity: 0.9; }
+            50% { transform: scale(1.25); opacity: 1; }
+        }
+
+        .header-meta {
+            align-items: center;
+            gap: 10px;
+            min-width: 0;
+            display: flex;
+        }
+
+        .staff-label {
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .learner-chip {
+            border: 1px solid var(--border);
+            max-width: min(52vw, 360px);
+            height: 38px;
+            color: var(--ink);
+            cursor: pointer;
+            background: #ffffff0d;
+            border-radius: 999px;
+            align-items: center;
+            gap: 10px;
+            padding: 0 14px;
+            display: flex;
+            transition: all 0.18s ease;
+        }
+
+        .learner-chip:hover {
+            background: #ffffff18;
+            border-color: rgba(255, 255, 255, 0.25);
+        }
+
+        .learner-chip span {
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-size: 13px;
+            font-weight: 600;
+            line-height: 1;
+            display: block;
+            overflow: hidden;
+        }
+
+        .learner-chip small {
+            color: #d7e6f6bd;
+            font-size: 11px;
+            font-weight: 700;
+            line-height: 1;
+            display: block;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .icon-link {
+            border: 1px solid var(--border);
+            color: #ffffffb8;
+            background: #ffffff0a;
+            border-radius: 50%;
+            place-items: center;
+            width: 28px;
+            height: 28px;
+            text-decoration: none;
+            display: grid;
+            transition: all 0.16s ease;
+            font-size: 12px;
+        }
+
+        .icon-link:hover {
+            color: #ffffff;
+            background: #ffffff1a;
+            border-color: rgba(255, 255, 255, 0.3);
+            transform: scale(1.05);
+        }
+
+        /* View Stages & Transitions */
+        .view-stage {
+            min-height: 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .view-layer {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: opacity 0.32s, transform 0.46s cubic-bezier(0.22, 1, 0.36, 1), visibility 0s linear 0.46s;
+            position: absolute;
+            inset: 0;
+            transform: translateY(16px) scale(0.992);
+        }
+
+        .view-layer.is-active {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+            transition: opacity 0.32s, transform 0.46s cubic-bezier(0.22, 1, 0.36, 1), visibility;
+            transform: translate(0, 0) scale(1);
+        }
+
+        .learner-view {
+            display: block;
+            overflow-y: auto;
+        }
+
+        .chat-view {
+            grid-template-rows: minmax(0, 1fr) auto;
+            min-height: 0;
+            display: grid;
+        }
+
+        /* Gate View (Who would you like to check?) */
+        .learner-gate {
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 28px;
+            width: 100%;
+            min-height: 100%;
+            padding: 32px 24px 36px;
+            display: flex;
+        }
+
+        .gate-copy {
+            text-align: center;
+            width: min(620px, 100%);
+        }
+
+        .eyebrow-glass {
+            color: #dbe8f6ad;
+            letter-spacing: 0.13em;
+            text-transform: uppercase;
+            margin: 0 0 10px;
+            font-size: 10.5px;
+            font-weight: 700;
+        }
+
+        .gate-copy h1 {
+            letter-spacing: -0.035em;
+            white-space: nowrap;
+            margin: 0;
+            font-size: clamp(1.75rem, 2.7vw, 2.35rem);
+            font-weight: 700;
+            line-height: 1.15;
+            color: #f7f9fc;
+        }
+
+        .gate-copy p:not(.eyebrow-glass) {
+            color: var(--muted);
+            margin: 12px 0 0;
+            font-size: 13.5px;
+            line-height: 1.5;
+        }
+
+        .learner-form {
+            width: min(560px, 100%);
+        }
+
+        .input-glass, .minimal-composer {
+            border: 1px solid var(--border);
+            background: #07101c85;
+            position: relative;
+            box-shadow: inset 0 1px #ffffff12;
+            transition: border-color 0.18s, box-shadow 0.18s;
+        }
+
+        .input-glass:focus-within, .minimal-composer:focus-within {
+            border-color: rgba(255, 255, 255, 0.28);
+            box-shadow: inset 0 1px #ffffff1f, 0 0 14px rgba(98, 228, 255, 0.15);
+        }
+
+        .input-glass {
+            border-radius: 16px;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 9px 8px 16px;
+            display: flex;
+        }
+
+        .input-glass input {
+            min-width: 0;
+            color: var(--ink);
+            background: transparent;
+            border: 0;
+            outline: 0;
+            flex: 1;
+            font-size: 14px;
+        }
+
+        .input-glass input::placeholder, .minimal-composer textarea::placeholder {
+            color: #e6eef76b;
+        }
+
+        .input-glass button, .minimal-composer button {
+            background: var(--primary);
+            color: #fff;
+            cursor: pointer;
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            border-radius: 10px;
+            flex: none;
+            place-items: center;
+            width: 36px;
+            height: 36px;
+            padding: 0;
+            display: grid;
+            transition: background 0.16s, transform 0.16s;
+        }
+
+        .input-glass button:hover, .minimal-composer button:hover:not(:disabled) {
+            background: #1c3c66;
+            transform: scale(1.03);
+        }
+
+        .button-icon {
+            width: 18px;
+            height: 18px;
+            display: block;
+        }
+
+        .inline-error, .chat-error {
+            color: #ffb9b9;
+            font-size: 11px;
+            margin: 8px 4px 0;
+        }
+
+        /* Quick Suggestion Chips */
+        .gate-suggestions {
+            width: min(580px, 100%);
+            text-align: center;
+        }
+
+        .suggestions-label {
+            font-size: 10.5px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #9cb2cb99;
+            margin-bottom: 9px;
+            display: block;
+            font-weight: 600;
+        }
+
+        .suggestions-pills {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 7px;
+        }
+
+        .suggest-pill {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #dbe8f6d6;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.16s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .suggest-pill:hover {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: rgba(255, 255, 255, 0.25);
+            color: #ffffff;
+            transform: translateY(-1px);
+        }
+
+        .suggest-pill .pill-dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: #62e4ff;
+        }
+
+        /* Chat Scroll Stream */
+        .chat-scroll {
+            scrollbar-width: thin;
+            scrollbar-color: #ffffff29 transparent;
+            min-height: 0;
+            overflow-y: auto;
+        }
+
+        .chat-stream {
+            gap: 20px;
+            width: min(780px, 100%);
+            margin: 0 auto;
+            padding: 26px 24px 20px;
+            display: grid;
+        }
+
+        .chat-message {
+            max-width: 88%;
+            animation: fadeInMsg 0.25s cubic-bezier(0.2, 0.8, 0.4, 1);
+        }
+
+        @keyframes fadeInMsg {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .chat-message.user {
+            text-align: right;
+            justify-self: end;
+        }
+
+        .chat-message.assistant {
+            justify-self: start;
+        }
+
+        .message-role {
+            color: #dbe8f68c;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 6px;
+            font-size: 10px;
+            font-weight: 700;
+        }
+
+        .message-text {
+            color: #f7f9fcf0;
+            font-size: 13.5px;
+            line-height: 1.65;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .chat-message.user .message-text {
+            border: 1px solid var(--soft-border);
+            background: #112642bd;
+            border-radius: 14px 14px 4px 14px;
+            padding: 9px 13px;
+            display: inline-block;
+            text-align: left;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+        }
+
+        .chat-message.assistant .message-text {
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            background: rgba(10, 20, 34, 0.55);
+            border-radius: 14px 14px 14px 4px;
+            padding: 12px 15px;
+            backdrop-filter: blur(8px);
+        }
+
+        /* Typing Dots Indicator */
+        .typing-dots {
+            gap: 5px;
+            padding-top: 4px;
+            display: flex;
+            align-items: center;
+        }
+
+        .typing-dots span {
+            background: #ffffff9e;
+            border-radius: 50%;
+            width: 6px;
+            height: 6px;
+            animation: 0.9s ease-in-out infinite alternate dotPulse;
+        }
+
+        .typing-dots span:nth-child(2) {
+            animation-delay: 0.15s;
+        }
+
+        .typing-dots span:nth-child(3) {
+            animation-delay: 0.3s;
+        }
+
+        @keyframes dotPulse {
+            0% { opacity: 0.28; transform: translateY(1.5px); }
+            100% { opacity: 1; transform: translateY(-1.5px); }
+        }
+
+        /* Copy Button */
+        .copy-message-button {
+            color: #e1ecf794;
+            cursor: pointer;
+            background: linear-gradient(145deg, #ffffff11, #ffffff05);
+            border: 1px solid #ffffff1c;
+            border-radius: 8px;
+            place-items: center;
+            width: 30px;
+            height: 30px;
+            margin-top: 8px;
+            padding: 0;
+            transition: color 0.16s, border-color 0.16s, background 0.16s, transform 0.16s;
+            display: grid;
+            box-shadow: inset 0 1px #ffffff0d;
+        }
+
+        .copy-message-button:hover {
+            color: #f7fafff2;
+            background: #ffffff14;
+            border-color: #ffffff33;
+            transform: translateY(-1px);
+        }
+
+        .copy-message-button:active {
+            transform: translateY(0);
+        }
+
+        .copy-message-button.is-copied {
+            color: #d7ffe5f2;
+            background: #78d2a014;
+            border-color: #94ebb633;
+        }
+
+        .copy-icon {
+            width: 14px;
+            height: 14px;
+            display: block;
+        }
+
+        /* Footer Composer */
+        .minimal-composer-wrap {
+            border-top: 1px solid #ffffff0f;
+            padding: 10px 16px 12px;
+            background: rgba(7, 16, 28, 0.45);
+        }
+
+        .composer-row {
+            align-items: center;
+            gap: 10px;
+            width: min(840px, 100%);
+            margin: 0 auto;
+            display: flex;
+        }
+
+        .minimal-composer {
+            border-radius: 14px;
+            flex: 1;
+            align-items: center;
+            gap: 8px;
+            min-width: 0;
+            padding: 7px 8px 7px 14px;
+            display: flex;
+        }
+
+        .minimal-composer textarea {
+            resize: none;
+            min-width: 0;
+            height: 38px;
+            max-height: 120px;
+            color: var(--ink);
+            background: transparent;
+            border: 0;
+            outline: 0;
+            flex: 1;
+            padding: 8px 2px;
+            font-size: 13.5px;
+            line-height: 20px;
+            overflow-y: auto;
+            font-family: inherit;
+        }
+
+        .minimal-composer button:disabled {
+            opacity: 0.35;
+            cursor: default;
+        }
+
+        /* Help Topics Button and Popover */
+        .topics-help {
+            flex: none;
+            position: relative;
+        }
+
+        .topics-button {
+            border: 1px solid var(--border);
+            color: #f0f7ffd1;
+            cursor: pointer;
+            background: #07101c85;
+            border-radius: 10px;
+            place-items: center;
+            width: 38px;
+            height: 38px;
+            padding: 0;
+            font-size: 14px;
+            font-weight: 700;
+            display: grid;
+            transition: all 0.16s ease;
+        }
+
+        .topics-button:hover {
+            background: #ffffff14;
+            border-color: rgba(255, 255, 255, 0.25);
+        }
+
+        .topics-popover {
+            z-index: 40;
+            border: 1px solid var(--border);
+            background: #0a1422fa;
+            backdrop-filter: blur(14px);
+            border-radius: 14px;
+            width: 290px;
+            padding: 14px;
+            position: absolute;
+            bottom: calc(100% + 12px);
+            right: 0;
+            box-shadow: 0 16px 40px #00000066;
+            animation: fadeInPop 0.18s ease-out;
+        }
+
+        @keyframes fadeInPop {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .topics-title {
+            color: var(--ink);
+            margin: 0 0 10px;
+            font-size: 12.5px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .topics-list {
+            gap: 6px;
+            display: grid;
+        }
+
+        .topics-list button {
+            color: #f0f7ffd1;
+            text-align: left;
+            cursor: pointer;
+            background: #ffffff09;
+            border: 1px solid #ffffff0f;
+            border-radius: 9px;
+            width: 100%;
+            padding: 8px 10px;
+            font-size: 11.5px;
+            transition: all 0.14s ease;
+        }
+
+        .topics-list button:hover {
+            background: #ffffff18;
+            border-color: rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+        }
+
+        .micro-note {
+            color: #dce8f559;
+            text-align: right;
+            width: min(840px, 100%);
+            margin: 6px auto 0;
+            font-size: 9.5px;
+            letter-spacing: 0.02em;
+        }
+
+        /* Responsive Styles */
+        @media (max-width: 720px) {
+            .glass-frame {
+                border-radius: 17px;
+                width: calc(100vw - 20px);
+                height: calc(100dvh - 20px);
+                min-height: 0;
+            }
+            .glass-panel {
+                border-radius: 17px;
+            }
+            .staff-label {
+                display: none;
+            }
+            .gate-copy h1 {
+                white-space: normal;
+                font-size: 1.55rem;
+            }
+            .chat-stream {
+                padding-inline: 14px;
+            }
+            .ambient-orb {
+                opacity: 0.62;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .ambient-orb {
+                transition: none !important;
+            }
+            .typing-dots span {
+                animation: none !important;
+            }
+            .view-layer {
+                transition: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main class="ambient-page">
+        <!-- Floating Ambient Background Orbs with Physics Animation -->
+        <div class="ambient-orbs" aria-hidden="true">
+            <span class="ambient-orb orb-a"></span>
+            <span class="ambient-orb orb-b"></span>
+            <span class="ambient-orb orb-c"></span>
+            <span class="ambient-orb orb-d"></span>
+        </div>
+
+        <!-- Centered Glass Card Frame -->
+        <section class="glass-frame" aria-label="KidSynq Operations Copilot">
+            <div class="glass-panel">
+                <!-- Header -->
+                <header class="minimal-header">
+                    <div class="brand-lockup">
+                        <span class="brand-dot" aria-hidden="true"></span>
+                        <span>KidSynq Copilot</span>
+                    </div>
+
+                    <div class="header-meta">
+                        <!-- Entity Chip (visible when target is selected) -->
+                        <button class="learner-chip" id="entityChip" type="button" style="display: none;" title="Change child or inquiry target">
+                            <span id="entityChipLabel">Loading...</span>
+                            <small>Change</small>
+                        </button>
+
+                        <!-- Staff / Center Label -->
+                        <span class="staff-label" id="staffLabel">{{ daycare.name }} · Operations</span>
+
+                        <!-- Exit to Dashboard Link -->
+                        <a class="icon-link" href="{% url 'daycare_dashboard' %}" aria-label="Exit to Dashboard" title="Exit to KidSynq Dashboard">
+                            ↗
+                        </a>
+                    </div>
+                </header>
+
+                <!-- Two-Stage View Stage -->
+                <div class="view-stage">
+                    <!-- Stage 1: Gate View (Selection) -->
+                    <section class="view-layer learner-view is-active" id="gateView" aria-hidden="false">
+                        <div class="learner-gate">
+                            <div class="gate-copy">
+                                <p class="eyebrow-glass">Childcare Operations Assistant</p>
+                                <h1>Who would you like to check?</h1>
+                                <p>Enter a child's name, parent email, or educator to start querying records.</p>
+                            </div>
+
+                            <form class="learner-form" id="gateForm">
+                                <div class="input-glass">
+                                    <input id="gateInput" 
+                                           placeholder="Child name, parent email, or educator..." 
+                                           type="text" 
+                                           autocomplete="off" 
+                                           autofocus 
+                                           aria-label="Child name or query target" 
+                                           value="{{ preselected_name }}" />
+                                    <button type="submit" aria-label="Continue">
+                                        <svg viewBox="0 0 24 24" aria-hidden="true" class="button-icon">
+                                            <path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                                <p class="inline-error" id="gateError" style="display: none;"></p>
+                            </form>
+
+                            <!-- Quick Suggestion Pills -->
+                            <div class="gate-suggestions">
+                                <span class="suggestions-label">Quick Checks from {{ daycare.name }}:</span>
+                                <div class="suggestions-pills">
+                                    {% for s in suggested_students %}
+                                    <button type="button" class="suggest-pill" onclick="selectQuickEntity('{{ s.first_name }} {{ s.last_name }}')">
+                                        <span class="pill-dot"></span>
+                                        <span>{{ s.first_name }} {{ s.last_name }}</span>
+                                    </button>
+                                    {% endfor %}
+                                    <button type="button" class="suggest-pill" onclick="selectQuickEntity('General Center Summary')">
+                                        <span class="pill-dot" style="background: #ffd15a;"></span>
+                                        <span>Today's Center Attendance</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Stage 2: Chat View (Conversation) -->
+                    <section class="view-layer chat-view is-hidden" id="chatView" aria-hidden="true">
+                        <!-- Scrollable Message Stream -->
+                        <div class="chat-scroll" id="chatScroll" aria-live="polite">
+                            <div class="chat-stream" id="chatStream">
+                                <!-- Dynamic messages populated via JavaScript -->
+                            </div>
+                        </div>
+
+                        <!-- Minimal Composer Footer -->
+                        <footer class="minimal-composer-wrap">
+                            <div class="composer-row">
+                                <form class="minimal-composer" id="composerForm">
+                                    <textarea id="composerTextarea" placeholder="Ask anything about this child, educator, or classroom..." rows="1"></textarea>
+                                    <button type="submit" id="sendButton" disabled aria-label="Send message">
+                                        <svg viewBox="0 0 24 24" aria-hidden="true" class="button-icon">
+                                            <path d="M12 19V5M6 11l6-6 6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                                        </svg>
+                                    </button>
+                                </form>
+
+                                <!-- Topics Popover Help -->
+                                <div class="topics-help">
+                                    <button type="button" class="topics-button" id="topicsButton" aria-label="What can I ask?" aria-expanded="false">i</button>
+                                    <div class="topics-popover" id="topicsPopover" style="display: none;">
+                                        <div class="topics-title">
+                                            <span>What can I ask?</span>
+                                            <span style="font-size: 11px; color: var(--muted);">Click to ask</span>
+                                        </div>
+                                        <div class="topics-list">
+                                            <button type="button" onclick="askTopic('Show attendance and check-in times for today')">Today's Attendance & Punches</button>
+                                            <button type="button" onclick="askTopic('Who are the authorized emergency contacts and pickups?')">Emergency Contacts & Pickups</button>
+                                            <button type="button" onclick="askTopic('Which classroom is assigned and what is the educator ratio?')">Classroom & Educator Ratio</button>
+                                            <button type="button" onclick="askTopic('Does this child have any outstanding tuition fees or invoices?')">Tuition & Invoice Balance</button>
+                                            <button type="button" onclick="askTopic('Show allergy warnings, medical conditions, and dietary alerts')">Allergies & Medical Alerts</button>
+                                            <button type="button" onclick="askTopic('Give me a complete operational overview')">Complete Child Overview</button>
+                                            <button type="button" onclick="askTopic('How many children and staff are in the center today?')">Center-wide Attendance</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <p class="micro-note">Enter to send · Shift + Enter for a new line</p>
+                        </footer>
+                    </section>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Interactive Logic & Ambient Orb Physics Animation -->
+    <script>
+        (function() {
+            // State
+            let currentEntity = "{{ preselected_name|escapejs }}";
+            let conversationId = "conv-" + Math.random().toString(36).substring(2, 10);
+            let isThinking = false;
+            let copiedMessageId = null;
+
+            // Elements
+            const gateView = document.getElementById('gateView');
+            const chatView = document.getElementById('chatView');
+            const gateForm = document.getElementById('gateForm');
+            const gateInput = document.getElementById('gateInput');
+            const gateError = document.getElementById('gateError');
+            const entityChip = document.getElementById('entityChip');
+            const entityChipLabel = document.getElementById('entityChipLabel');
+            const staffLabel = document.getElementById('staffLabel');
+
+            const chatScroll = document.getElementById('chatScroll');
+            const chatStream = document.getElementById('chatStream');
+            const composerForm = document.getElementById('composerForm');
+            const composerTextarea = document.getElementById('composerTextarea');
+            const sendButton = document.getElementById('sendButton');
+            const topicsButton = document.getElementById('topicsButton');
+            const topicsPopover = document.getElementById('topicsPopover');
+
+            // 1. Ambient Orbs Smooth Physics Loop (Exact implementation from CheckOnIt)
+            (function initAmbientOrbs() {
+                const orbElements = Array.from(document.querySelectorAll('.ambient-orb'));
+                if (!orbElements.length) return;
+
+                const orbs = orbElements.map((el, i) => {
+                    const rect = el.getBoundingClientRect();
+                    const w = rect.width;
+                    const h = rect.height;
+                    return {
+                        el: el,
+                        x: 0,
+                        y: 0,
+                        vx: (Math.random() - 0.5) * 0.045,
+                        vy: (Math.random() - 0.5) * 0.036,
+                        targetVx: (Math.random() - 0.5) * 0.045,
+                        targetVy: (Math.random() - 0.5) * 0.036,
+                        scale: 0.96 + 0.08 * Math.random(),
+                        nextChange: performance.now() + 2000 + 3500 * Math.random() + 250 * i,
+                        minX: w / 2 - rect.right,
+                        maxX: window.innerWidth - w / 2 - rect.left,
+                        minY: h / 2 - rect.bottom,
+                        maxY: window.innerHeight - h / 2 - rect.top,
+                        baseRect: rect
+                    };
+                });
+
+                function handleResize() {
+                    orbs.forEach(orb => {
+                        const w = orb.baseRect.width;
+                        const h = orb.baseRect.height;
+                        orb.minX = w / 2 - orb.baseRect.right;
+                        orb.maxX = window.innerWidth - w / 2 - orb.baseRect.left;
+                        orb.minY = h / 2 - orb.baseRect.bottom;
+                        orb.maxY = window.innerHeight - h / 2 - orb.baseRect.top;
+                    });
+                }
+                window.addEventListener('resize', handleResize);
+
+                let lastTime = performance.now();
+                function animateOrbs(currentTime) {
+                    const dt = Math.min(currentTime - lastTime, 32);
+                    lastTime = currentTime;
+
+                    orbs.forEach(orb => {
+                        if (currentTime >= orb.nextChange) {
+                            orb.targetVx = (Math.random() - 0.5) * 0.05;
+                            orb.targetVy = (Math.random() - 0.5) * 0.04;
+                            orb.nextChange = currentTime + 2000 + 4000 * Math.random();
+                        }
+
+                        orb.vx += (orb.targetVx - orb.vx) * 0.02;
+                        orb.vy += (orb.targetVy - orb.vy) * 0.02;
+
+                        orb.x += orb.vx * dt;
+                        orb.y += orb.vy * dt;
+
+                        // Wall bounces
+                        if (orb.x >= orb.maxX) {
+                            orb.x = orb.maxX;
+                            orb.targetVx = -Math.abs(orb.targetVx);
+                            orb.vx = -Math.abs(orb.vx);
+                        }
+                        if (orb.x <= orb.minX) {
+                            orb.x = orb.minX;
+                            orb.targetVx = Math.abs(orb.targetVx);
+                            orb.vx = Math.abs(orb.vx);
+                        }
+                        if (orb.y >= orb.maxY) {
+                            orb.y = orb.maxY;
+                            orb.targetVy = -Math.abs(orb.targetVy);
+                            orb.vy = -Math.abs(orb.vy);
+                        }
+                        if (orb.y <= orb.minY) {
+                            orb.y = orb.minY;
+                            orb.targetVy = Math.abs(orb.targetVy);
+                            orb.vy = Math.abs(orb.vy);
+                        }
+
+                        orb.el.style.transform = `translate3d(${orb.x}px, ${orb.y}px, 0) scale(${orb.scale})`;
+                    });
+
+                    requestAnimationFrame(animateOrbs);
+                }
+                requestAnimationFrame(animateOrbs);
+            })();
+
+            // 2. View Switching: Gate -> Chat
+            function switchToChat(target) {
+                currentEntity = target.trim();
+                entityChipLabel.textContent = currentEntity;
+                entityChip.style.display = 'inline-flex';
+                staffLabel.style.display = 'none';
+
+                gateView.classList.remove('is-active');
+                gateView.classList.add('is-hidden');
+                gateView.setAttribute('aria-hidden', 'true');
+
+                chatView.classList.remove('is-hidden');
+                chatView.classList.add('is-active');
+                chatView.setAttribute('aria-hidden', 'false');
+
+                // Initial welcome message
+                chatStream.innerHTML = '';
+                addAssistantMessage(
+                    `Hello! I am ready. What would you like to know about **${currentEntity}**?\n` +
+                    `You can ask for today's attendance, emergency pickups, classroom ratio, tuition balance, or allergy alerts.`
+                );
+
+                requestAnimationFrame(() => {
+                    composerTextarea.focus();
+                });
+            }
+
+            // 3. View Switching: Chat -> Gate (Change button)
+            function switchToGate() {
+                chatView.classList.remove('is-active');
+                chatView.classList.add('is-hidden');
+                chatView.setAttribute('aria-hidden', 'true');
+
+                gateView.classList.remove('is-hidden');
+                gateView.classList.add('is-active');
+                gateView.setAttribute('aria-hidden', 'false');
+
+                entityChip.style.display = 'none';
+                staffLabel.style.display = 'inline-block';
+
+                gateInput.value = currentEntity;
+                gateError.style.display = 'none';
+                gateInput.focus();
+            }
+
+            entityChip.addEventListener('click', switchToGate);
+
+            // 4. Quick suggestions & Gate Form Submission
+            window.selectQuickEntity = function(name) {
+                gateInput.value = name;
+                switchToChat(name);
+            };
+
+            gateForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const val = gateInput.value.trim();
+                if (!val) {
+                    gateError.textContent = "Please enter a child's name, email, or educator.";
+                    gateError.style.display = 'block';
+                    return;
+                }
+                gateError.style.display = 'none';
+                switchToChat(val);
+            });
+
+            // 5. Message Rendering & Helpers
+            function scrollToBottom() {
+                chatScroll.scrollTop = chatScroll.scrollHeight;
+            }
+
+            function addUserMessage(text) {
+                const article = document.createElement('article');
+                article.className = 'chat-message user';
+                article.innerHTML = `
+                    <div class="message-role">You</div>
+                    <div class="message-text">${escapeHtml(text)}</div>
+                `;
+                chatStream.appendChild(article);
+                scrollToBottom();
+            }
+
+            function addAssistantMessage(markdownText, msgId) {
+                const id = msgId || 'msg-' + Math.random().toString(36).substring(2, 9);
+                const article = document.createElement('article');
+                article.className = 'chat-message assistant';
+                article.id = id;
+
+                const formattedContent = renderMarkdownToHtml(markdownText);
+
+                article.innerHTML = `
+                    <div class="message-role">KidSynq Copilot</div>
+                    <div class="message-text">${formattedContent}</div>
+                    <button type="button" class="copy-message-button" onclick="copyResponse('${id}', this)" aria-label="Copy response" title="Copy response">
+                        <svg viewBox="0 0 24 24" aria-hidden="true" class="copy-icon">
+                            <rect x="9" y="9" width="10" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="1.7"></rect>
+                            <path d="M15 9V7a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"></path>
+                        </svg>
+                    </button>
+                `;
+                chatStream.appendChild(article);
+                scrollToBottom();
+            }
+
+            function showTypingIndicator() {
+                const indicator = document.createElement('article');
+                indicator.className = 'chat-message assistant';
+                indicator.id = 'typingIndicator';
+                indicator.innerHTML = `
+                    <div class="message-role">Checking On It</div>
+                    <div class="typing-dots" aria-label="Checking records...">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                `;
+                chatStream.appendChild(indicator);
+                scrollToBottom();
+            }
+
+            function removeTypingIndicator() {
+                const ind = document.getElementById('typingIndicator');
+                if (ind) ind.remove();
+            }
+
+            function escapeHtml(text) {
+                const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+                return text.replace(/[&<>"']/g, m => map[m]);
+            }
+
+            function renderMarkdownToHtml(text) {
+                let s = escapeHtml(text);
+                // Bold: **text**
+                s = s.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                // Italics: *text*
+                s = s.replace(/\*(.*?)\*/g, '<em>$1</em>');
+                // Bullet points: • or -
+                s = s.replace(/\n\s*•\s*(.*?)(?=\n|$)/g, '<br/>&nbsp;&bull;&nbsp;$1');
+                // New lines to <br/>
+                s = s.replace(/\n/g, '<br/>');
+                return s;
+            }
+
+            // 6. Copy Response to Clipboard
+            window.copyResponse = function(msgId, btn) {
+                const article = document.getElementById(msgId);
+                if (!article) return;
+                const textElem = article.querySelector('.message-text');
+                const rawText = textElem ? textElem.innerText : '';
+
+                navigator.clipboard.writeText(rawText).then(() => {
+                    btn.classList.add('is-copied');
+                    btn.title = "Copied!";
+                    btn.innerHTML = `
+                        <svg viewBox="0 0 24 24" aria-hidden="true" class="copy-icon">
+                            <path d="M5 12.5l4 4L19 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                        </svg>
+                    `;
+                    setTimeout(() => {
+                        btn.classList.remove('is-copied');
+                        btn.title = "Copy response";
+                        btn.innerHTML = `
+                            <svg viewBox="0 0 24 24" aria-hidden="true" class="copy-icon">
+                                <rect x="9" y="9" width="10" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="1.7"></rect>
+                                <path d="M15 9V7a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"></path>
+                            </svg>
+                        `;
+                    }, 1600);
+                }).catch(err => {
+                    console.error('Copy failed:', err);
+                });
+            };
+
+            // 7. Send Query to Backend
+            async function sendMessage() {
+                const text = composerTextarea.value.trim();
+                if (!text || isThinking) return;
+
+                composerTextarea.value = '';
+                composerTextarea.style.height = '38px';
+                sendButton.disabled = true;
+                topicsPopover.style.display = 'none';
+
+                addUserMessage(text);
+                isThinking = true;
+                showTypingIndicator();
+
+                try {
+                    const response = await fetch("{% url 'daycare_chat' %}", {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': getCookie('csrftoken')
+                        },
+                        body: JSON.stringify({
+                            message: text,
+                            entity: currentEntity,
+                            conversationId: conversationId
+                        })
+                    });
+
+                    const data = await response.json();
+                    removeTypingIndicator();
+                    isThinking = false;
+
+                    if (!response.ok || data.error) {
+                        addAssistantMessage(data.error || "Unable to reach operations assistant. Please try again.");
+                    } else {
+                        if (data.conversationId) conversationId = data.conversationId;
+                        addAssistantMessage(data.answer, data.messageId);
+                    }
+                } catch (err) {
+                    removeTypingIndicator();
+                    isThinking = false;
+                    addAssistantMessage("Connection issue. Please ensure your session is active and try again.");
+                    console.error(err);
+                } finally {
+                    composerTextarea.focus();
+                }
+            }
+
+            function getCookie(name) {
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    const cookies = document.cookie.split(';');
+                    for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i].trim();
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            }
+
+            composerForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                sendMessage();
+            });
+
+            // Composer Textarea Auto-expand & Enter to send
+            composerTextarea.addEventListener('input', function() {
+                sendButton.disabled = !this.value.trim() || isThinking;
+                this.style.height = 'auto';
+                this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+            });
+
+            composerTextarea.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+
+            // Help Topics Popover
+            topicsButton.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const isExpanded = topicsButton.getAttribute('aria-expanded') === 'true';
+                topicsButton.setAttribute('aria-expanded', !isExpanded);
+                topicsPopover.style.display = isExpanded ? 'none' : 'block';
+            });
+
+            document.addEventListener('click', function(e) {
+                if (!topicsPopover.contains(e.target) && e.target !== topicsButton) {
+                    topicsPopover.style.display = 'none';
+                    topicsButton.setAttribute('aria-expanded', 'false');
+                }
+            });
+
+            window.askTopic = function(question) {
+                topicsPopover.style.display = 'none';
+                topicsButton.setAttribute('aria-expanded', 'false');
+                composerTextarea.value = question;
+                composerTextarea.dispatchEvent(new Event('input'));
+                sendMessage();
+            };
+
+            // Pre-selected initialization if provided via query param
+            if (currentEntity) {
+                switchToChat(currentEntity);
+            }
+        })();
+    </script>
+</body>
+</html>

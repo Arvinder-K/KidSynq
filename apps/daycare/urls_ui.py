@@ -1,9 +1,11 @@
 from django.urls import path
 from . import views_ui
+from . import views_chat
 
 urlpatterns = [
     # Dashboard & Profile
     path('dashboard/', views_ui.DaycareDashboardView.as_view(), name='daycare_dashboard'),
+    path('chat/', views_chat.ChatAssistantView.as_view(), name='daycare_chat'),
     path('settings/', views_ui.DaycareSettingsView.as_view(), name='daycare_settings'),
     path('profile/', views_ui.UserProfileView.as_view(), name='daycare_profile'),
     path('branches/', views_ui.BranchListView.as_view(), name='daycare_branches'),

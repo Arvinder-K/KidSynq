@@ -9,10 +9,12 @@ from django.views.generic import RedirectView
 
 from core import views_auth
 from daycare import views_ui as daycare_views_ui
+from daycare import views_chat as daycare_views_chat
 
 urlpatterns = [
     # Core Authentication & Routing
     path('', views_auth.DashboardRouterView.as_view(), name='home'),
+    path('chat/', daycare_views_chat.ChatAssistantView.as_view(), name='chat'),
     path('login/', views_auth.UserLoginView.as_view(), name='login'),
     path('logout/', views_auth.UserLogoutView.as_view(), name='logout'),
     path('dashboard/', views_auth.DashboardRouterView.as_view(), name='dashboard_router'),

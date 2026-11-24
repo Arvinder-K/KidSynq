@@ -339,6 +339,12 @@
             class="sidebar-link {% if request.resolver_match.url_name == 'daycare_dashboard' %}active{% endif %}">
             <i class="bi bi-speedometer2"></i> <span>Dashboard</span>
         </a>
+        <a href="{% url 'daycare_chat' %}"
+            class="sidebar-link {% if request.resolver_match.url_name == 'daycare_chat' %}active{% endif %}"
+            style="{% if request.resolver_match.url_name != 'daycare_chat' %}color: #2563eb !important; font-weight: 600;{% endif %}">
+            <i class="bi bi-robot" style="color: #6366f1 !important;"></i> <span>Operations Copilot</span>
+            <span class="badge rounded-pill ms-auto" style="background: linear-gradient(135deg, #6366f1, #06b6d4); font-size: 0.65rem; color: #fff; padding: 2px 7px;">AI</span>
+        </a>
 
         <!-- 1. STAFF & HR TASKS (Accordion) -->
         <div class="sidebar-section-title">Human Resources</div>
