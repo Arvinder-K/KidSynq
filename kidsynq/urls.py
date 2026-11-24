@@ -8,12 +8,14 @@ from django.conf.urls.static import static
 from django.views.generic import RedirectView
 
 from core import views_auth
+from core import views_home
 from daycare import views_ui as daycare_views_ui
 from daycare import views_chat as daycare_views_chat
 
 urlpatterns = [
-    # Core Authentication & Routing
-    path('', views_auth.DashboardRouterView.as_view(), name='home'),
+    # Core Public & Business Home Page (Not Login)
+    path('', views_home.HomeBusinessPageView.as_view(), name='home'),
+    path('home/', views_home.HomeBusinessPageView.as_view(), name='home_business'),
     path('chat/', daycare_views_chat.ChatAssistantView.as_view(), name='chat'),
     path('login/', views_auth.UserLoginView.as_view(), name='login'),
     path('logout/', views_auth.UserLogoutView.as_view(), name='logout'),
