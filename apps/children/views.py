@@ -208,6 +208,10 @@ class ChildCreateView(StaffRequiredMixin, View):
             payment_action = request.POST.get('payment_action', 'pay_now')
             due_date = request.POST.get('due_date') or (
                 timezone.now().date() + timezone.timedelta(days=14))
+            pay_method = 'ETRANSFER'
+            txn_ref = f"TXN-{uuid.uuid4().hex[:8].upper()}"
+            payer_name = f"{guardian_first_name} {guardian_last_name}".strip() or f"{family.family_name}"
+            pay_date = timezone.now().date()
 
             if payment_action == 'pay_now':
                 paid_str = request.POST.get('paid_amount') or str(total_amount)
@@ -221,11 +225,11 @@ class ChildCreateView(StaffRequiredMixin, View):
                     '0.00') else 'PARTIALLY_PAID'
                 pay_method = request.POST.get('payment_method', 'ETRANSFER')
                 txn_ref = request.POST.get(
-                    'transaction_reference') or f"TXN-{uuid.uuid4().hex[:8].upper()}"
+                    'transaction_reference') or txn_ref
                 payer_name = request.POST.get(
-                    'payer_name') or f"{guardian_first_name} {guardian_last_name}".strip() or f"{family.family_name}"
+                    'payer_name') or payer_name
                 pay_date = request.POST.get(
-                    'payment_date') or timezone.now().date()
+                    'payment_date') or pay_date
             else:
                 amount_paid = Decimal('0.00')
                 balance_due = total_amount
