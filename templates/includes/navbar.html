@@ -38,11 +38,11 @@
         {% if request.user.daycare and not request.user.is_superuser and request.user.role != 'Guardian' %}
             <!-- Fast Workflow Shortcuts -->
             <div class="d-none d-lg-flex align-items-center gap-2">
-                <a href="{% url 'daycare_chat' %}" class="btn btn-sm d-inline-flex align-items-center gap-1.5 shadow-xs text-white" 
-                   style="background: linear-gradient(135deg, #07111d 0%, #112642 100%); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 8px;"
+                <a href="{% url 'daycare_chat' %}" class="btn btn-sm d-inline-flex align-items-center gap-1.5 text-white" 
+                   style="background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%); border: none; border-radius: 8px; box-shadow: 0 2px 8px rgba(37, 99, 235, 0.28);"
                    title="Launch KidSynq AI Operations Copilot">
-                    <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #62e4ff; box-shadow: 0 0 8px #62e4ff;"></span>
-                    <i class="bi bi-stars" style="color: #93c5fd; font-size: 0.9rem;"></i> <span>AI Copilot</span>
+                    <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #ffffff; box-shadow: 0 0 6px #ffffff;"></span>
+                    <i class="bi bi-stars" style="color: #fde047; font-size: 0.9rem;"></i> <span class="fw-semibold">AI Copilot</span>
                 </a>
                 <a href="{% url 'daycare_child_new' %}" class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1 shadow-xs">
                     <i class="bi bi-person-plus"></i> <span>Enroll Child</span>
