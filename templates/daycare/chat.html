@@ -56,10 +56,12 @@
             outline: 2px solid #8fc7ffbf;
         }
 
-        /* Ambient Background Page */
+        /* Ambient Background Page with Daycare Background Image */
         .ambient-page {
-            background: radial-gradient(circle at 50% 38%, #1a34528c, transparent 42%), 
-                        linear-gradient(145deg, #06101b 0%, var(--primary) 55%, #07101b 100%);
+            background: 
+                radial-gradient(circle at 50% 38%, rgba(26, 52, 82, 0.65), transparent 45%),
+                linear-gradient(145deg, rgba(6, 16, 27, 0.88) 0%, var(--primary) 55%, rgba(7, 16, 27, 0.94) 100%),
+                url('{% static "images/daycare_bg.jpg" %}') center / cover no-repeat fixed;
             width: 100vw;
             height: 100dvh;
             min-height: 100dvh;
@@ -67,7 +69,7 @@
             overflow: hidden;
         }
 
-        /* Glowing Floating Ambient Orbs */
+        /* Glowing Floating Ambient Orbs (Tuned to CheckOnIt Screenshot) */
         .ambient-orbs {
             pointer-events: none;
             position: absolute;
@@ -76,8 +78,8 @@
         }
 
         .ambient-orb {
-            opacity: 0.72;
-            filter: blur(2px) saturate(110%);
+            opacity: 0.82;
+            filter: blur(4px) saturate(135%);
             will-change: transform;
             box-shadow: none;
             border-radius: 50%;
@@ -87,32 +89,32 @@
 
         .orb-a {
             aspect-ratio: 1;
-            background: radial-gradient(circle at 34% 28%, #62e4ff 0 17%, #2b83d7 38%, #174979 70%, #1749792e 100%);
-            width: min(46vw, 620px);
+            background: radial-gradient(circle at 34% 28%, #62e4ff 0 18%, #2b83d7 40%, #174979 75%, transparent 100%);
+            width: min(48vw, 640px);
             top: -12%;
             left: -8%;
         }
 
         .orb-b {
             aspect-ratio: 1;
-            background: radial-gradient(circle at 35% 33%, #ff8a54 0 15%, #ff376d 35%, #8f2ccc 66%, #8f2ccc26 100%);
-            width: min(40vw, 560px);
+            background: radial-gradient(circle at 35% 33%, #ff8a54 0 16%, #ff376d 38%, #8f2ccc 72%, transparent 100%);
+            width: min(42vw, 580px);
             top: -4%;
             right: -7%;
         }
 
         .orb-c {
             aspect-ratio: 1;
-            background: radial-gradient(circle at 42% 34%, #ffd15a 0 16%, #ff7a45 37%, #d43a7b 68%, #d43a7b26 100%);
-            width: min(44vw, 590px);
+            background: radial-gradient(circle at 42% 34%, #ffd15a 0 18%, #ff7a45 42%, #d43a7b 75%, transparent 100%);
+            width: min(46vw, 610px);
             bottom: -21%;
             left: 12%;
         }
 
         .orb-d {
             aspect-ratio: 1;
-            background: radial-gradient(circle at 37% 31%, #72f1d5 0 15%, #2bbbc3 38%, #2164a6 69%, #2164a624 100%);
-            width: min(36vw, 500px);
+            background: radial-gradient(circle at 37% 31%, #72f1d5 0 16%, #2bbbc3 40%, #2164a6 75%, transparent 100%);
+            width: min(38vw, 520px);
             bottom: -18%;
             right: 16%;
         }

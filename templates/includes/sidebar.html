@@ -1,39 +1,41 @@
 <style>
-/* Modern React SaaS Sidebar Design System */
+/* Modern React SaaS Sidebar Design System - Dark Glassmorphism */
 .app-sidebar {
-    background-color: #ffffff !important;
-    border-right: 1px solid #e2e8f0 !important;
-    color: #475569 !important;
-    box-shadow: 1px 0 3px 0 rgba(0, 0, 0, 0.02) !important;
+    background: linear-gradient(180deg, rgba(7, 16, 28, 0.94) 0%, rgba(10, 20, 34, 0.97) 100%) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+    color: #cbd5e1 !important;
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.35) !important;
 }
 .sidebar-brand-header {
     padding: 1.15rem 1.25rem !important;
-    background-color: #ffffff !important;
-    border-bottom: 1px solid #f1f5f9 !important;
+    background-color: transparent !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
 }
 .brand-logo-box {
     width: 38px !important;
     height: 38px !important;
     border-radius: 10px !important;
-    background: linear-gradient(135deg, #0d9488 0%, #06b6d4 100%) !important;
+    background: linear-gradient(135deg, #0284c7 0%, #0d9488 100%) !important;
     color: #ffffff !important;
     font-weight: 800 !important;
-    box-shadow: 0 4px 12px rgba(13, 148, 136, 0.25) !important;
+    box-shadow: 0 4px 12px rgba(2, 132, 199, 0.35) !important;
 }
 .brand-text-title {
-    color: #0f172a !important;
+    color: #f7f9fc !important;
     font-size: 0.98rem !important;
     font-weight: 700 !important;
     line-height: 1.25 !important;
 }
 .brand-status-indicator {
-    color: #0d9488 !important;
+    color: #62e4ff !important;
     font-size: 0.68rem !important;
     font-weight: 600 !important;
     letter-spacing: 0.04em !important;
 }
 .sidebar-section-title {
-    color: #94a3b8 !important;
+    color: #64748b !important;
     font-size: 0.68rem !important;
     font-weight: 700 !important;
     letter-spacing: 0.08em !important;
@@ -44,7 +46,7 @@
     padding: 0.75rem 0.65rem !important;
 }
 .sidebar-link {
-    color: #475569 !important;
+    color: #94a3b8 !important;
     font-weight: 500 !important;
     font-size: 0.86rem !important;
     border-radius: 8px !important;
@@ -55,55 +57,55 @@
     border: 1px solid transparent !important;
 }
 .sidebar-link i {
-    color: #64748b !important;
+    color: #8da2be !important;
     font-size: 1.1rem !important;
     transition: color 0.15s ease !important;
 }
 .sidebar-link:hover {
-    color: #0f172a !important;
-    background-color: #f1f5f9 !important;
+    color: #ffffff !important;
+    background-color: rgba(255, 255, 255, 0.08) !important;
 }
 .sidebar-link:hover i {
-    color: #0d9488 !important;
+    color: #62e4ff !important;
 }
 
-/* Accordion Toggle (Parent Category) - Never Heavy Dark! */
+/* Accordion Toggle (Parent Category) */
 .sidebar-dropdown-toggle {
     cursor: pointer !important;
     background: transparent !important;
     box-shadow: none !important;
 }
 .sidebar-dropdown-toggle:hover {
-    background-color: #f1f5f9 !important;
-    color: #0f172a !important;
+    background-color: rgba(255, 255, 255, 0.08) !important;
+    color: #ffffff !important;
 }
 .sidebar-dropdown-toggle.active {
-    background-color: #f8fafc !important;
-    color: #0f172a !important;
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    color: #ffffff !important;
     font-weight: 600 !important;
     box-shadow: none !important;
-    border: 1px solid #e2e8f0 !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
 }
 .sidebar-dropdown-toggle.active > i:first-child {
-    color: #0d9488 !important;
+    color: #62e4ff !important;
 }
 .sidebar-dropdown-toggle .chevron-icon {
     margin-left: auto !important;
     font-size: 0.75rem !important;
-    color: #94a3b8 !important;
+    color: #64748b !important;
     transition: transform 0.2s ease, color 0.15s ease !important;
 }
 .sidebar-dropdown-toggle.active .chevron-icon,
 .sidebar-dropdown-toggle[aria-expanded="true"] .chevron-icon {
     transform: rotate(90deg) !important;
-    color: #0d9488 !important;
+    color: #62e4ff !important;
 }
 
 /* Submenu Accordion Container */
 .sidebar-submenu {
     padding-left: 0.4rem !important;
     margin-left: 1.15rem !important;
-    border-left: 2px solid #e2e8f0 !important;
+    border-left: 2px solid rgba(255, 255, 255, 0.12) !important;
     margin-top: 0.25rem !important;
     margin-bottom: 0.5rem !important;
 }
@@ -111,7 +113,7 @@
     padding: 0.44rem 0.75rem !important;
     font-size: 0.835rem !important;
     font-weight: 500 !important;
-    color: #64748b !important;
+    color: #94a3b8 !important;
     border-radius: 6px !important;
     background: transparent !important;
     border: none !important;
@@ -120,57 +122,57 @@
 }
 .sidebar-submenu .sidebar-link i {
     font-size: 0.95rem !important;
-    color: #94a3b8 !important;
+    color: #64748b !important;
 }
 .sidebar-submenu .sidebar-link:hover {
-    color: #0f172a !important;
-    background-color: #f1f5f9 !important;
+    color: #ffffff !important;
+    background-color: rgba(255, 255, 255, 0.06) !important;
 }
 .sidebar-submenu .sidebar-link:hover i {
-    color: #0d9488 !important;
+    color: #62e4ff !important;
 }
 
 /* Active Highlight for Submenu Items (Shift Scheduling, Children, etc.) */
 .sidebar-submenu .sidebar-link.active {
-    background-color: #f0fdfa !important;
-    color: #0f766e !important;
+    background-color: rgba(43, 131, 215, 0.22) !important;
+    color: #62e4ff !important;
     font-weight: 700 !important;
-    border-left: 3px solid #0d9488 !important;
+    border-left: 3px solid #62e4ff !important;
     border-radius: 0 8px 8px 0 !important;
-    box-shadow: 0 1px 3px rgba(13, 148, 136, 0.08) !important;
+    box-shadow: 0 0 16px rgba(98, 228, 255, 0.15) !important;
 }
 .sidebar-submenu .sidebar-link.active i,
 .sidebar-submenu .sidebar-link.active span {
-    color: #0f766e !important;
+    color: #62e4ff !important;
     font-weight: 700 !important;
 }
 
 /* Top-Level Standalone Active Link (e.g. Dashboard) */
 .sidebar-menu > a.sidebar-link.active {
-    background-color: #f0fdfa !important;
-    color: #0f766e !important;
+    background-color: rgba(43, 131, 215, 0.22) !important;
+    color: #62e4ff !important;
     font-weight: 700 !important;
-    border-left: 3px solid #0d9488 !important;
+    border-left: 3px solid #62e4ff !important;
     border-radius: 0 8px 8px 0 !important;
-    box-shadow: 0 1px 3px rgba(13, 148, 136, 0.08) !important;
+    box-shadow: 0 0 16px rgba(98, 228, 255, 0.15) !important;
 }
 .sidebar-menu > a.sidebar-link.active i,
 .sidebar-menu > a.sidebar-link.active span {
-    color: #0f766e !important;
+    color: #62e4ff !important;
     font-weight: 700 !important;
 }
 
 /* User Footer */
 .sidebar-user-footer {
     padding: 0.85rem 1.15rem !important;
-    background-color: #ffffff !important;
-    border-top: 1px solid #f1f5f9 !important;
+    background-color: rgba(7, 16, 28, 0.8) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
 }
 .sidebar-user-avatar {
     width: 36px !important;
     height: 36px !important;
     border-radius: 8px !important;
-    background: linear-gradient(135deg, #0d9488 0%, #06b6d4 100%) !important;
+    background: linear-gradient(135deg, #0284c7 0%, #0d9488 100%) !important;
     color: #ffffff !important;
     font-weight: 700 !important;
 }
