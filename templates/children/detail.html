@@ -11,74 +11,81 @@
 
     <!-- Child Profile Hero Header Card -->
     <div class="card border-0 shadow-sm mt-2 overflow-hidden rounded-4">
-        <div class="card-body p-4">
-            <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+        <div class="card-body p-4 pb-3">
+            <div class="d-flex flex-column flex-xl-row justify-content-between align-items-xl-center gap-3">
+                <!-- Child Identity Block -->
                 <div class="d-flex align-items-center gap-3">
                     <div class="rounded-circle d-flex align-items-center justify-content-center fw-bold fs-2 text-white shadow-sm flex-shrink-0"
-                         style="width: 72px; height: 72px; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);">
+                         style="width: 68px; height: 68px; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);">
                         {{ child.first_name|make_list|first }}{{ child.last_name|make_list|first }}
                     </div>
                     <div>
-                        <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
-                            <h2 class="h4 fw-bold text-slate-800 mb-0">{{ child.first_name }} {{ child.last_name }}</h2>
+                        <div class="d-flex align-items-center gap-2 flex-wrap mb-1.5">
+                            <h2 class="h4 fw-bold text-slate-900 mb-0">{{ child.first_name }} {{ child.last_name }}</h2>
                             {% if child.preferred_name %}
                                 <span class="badge bg-light text-muted border">"{{ child.preferred_name }}"</span>
                             {% endif %}
                             {% if child.status|lower == 'active' %}
-                                <span class="badge badge-soft-success"><i class="bi bi-check-circle-fill me-1"></i>Active</span>
+                                <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 rounded-pill px-2.5 py-1 small fw-semibold">
+                                    <span class="pulse-dot me-1" style="width: 6px; height: 6px; background-color: #10b981; border-radius: 50%; display: inline-block;"></span>Active
+                                </span>
                             {% else %}
-                                <span class="badge badge-soft-secondary">{{ child.status|title }}</span>
+                                <span class="badge badge-soft-secondary rounded-pill px-2.5">{{ child.status|title }}</span>
                             {% endif %}
                         </div>
 
                         <div class="d-flex flex-wrap align-items-center gap-2 small text-muted">
                             {% if current_classroom %}
-                                <span class="badge badge-soft-primary d-inline-flex align-items-center gap-1">
+                                <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-20 d-inline-flex align-items-center gap-1 py-1 px-2.5 rounded-pill">
                                     <i class="bi bi-door-open"></i> {{ current_classroom.room_name }}
                                 </span>
                             {% else %}
-                                <span class="badge badge-soft-warning"><i class="bi bi-exclamation-circle me-1"></i>No Classroom Allocated</span>
+                                <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 rounded-pill py-1 px-2.5">
+                                    <i class="bi bi-exclamation-circle me-1"></i>No Classroom Allocated
+                                </span>
                             {% endif %}
 
                             {% if child.admission_number %}
-                                <span class="font-monospace text-muted">#{{ child.admission_number }}</span>
-                                <span class="text-secondary">&bull;</span>
+                                <span class="font-monospace text-muted small">#{{ child.admission_number }}</span>
+                                <span class="text-slate-300">&bull;</span>
                             {% endif %}
 
                             {% if child.date_of_birth %}
-                                <span><i class="bi bi-balloon me-1 text-danger"></i> Born: {{ child.date_of_birth|date:"M d, Y" }}</span>
-                                <span class="text-secondary">&bull;</span>
+                                <span class="text-slate-600"><i class="bi bi-balloon me-1 text-danger"></i>Born: {{ child.date_of_birth|date:"M d, Y" }}</span>
+                                <span class="text-slate-300">&bull;</span>
                             {% endif %}
 
                             {% if subsidy %}
-                                <span class="badge badge-soft-info" title="{{ subsidy.program_name }} - {{ subsidy.subsidy_rate }}% Reduction">
+                                <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 rounded-pill py-1 px-2.5" title="{{ subsidy.program_name }} - {{ subsidy.subsidy_rate }}% Reduction">
                                     <i class="bi bi-shield-check me-1"></i> CWELCC ({{ subsidy.subsidy_rate }}% Subsidized)
                                 </span>
                             {% endif %}
 
                             {% if child.allergies or child.medical_conditions %}
-                                <span class="badge badge-soft-danger"><i class="bi bi-exclamation-triangle-fill me-1"></i> Medical Alert</span>
+                                <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 rounded-pill py-1 px-2.5">
+                                    <i class="bi bi-exclamation-triangle-fill me-1"></i> Medical Alert
+                                </span>
                             {% endif %}
                         </div>
                     </div>
                 </div>
 
-                <!-- Action Buttons Toolbar -->
-                <div class="d-flex align-items-center gap-2 flex-wrap">
-                    <button type="button" class="btn btn-success btn-sm px-3 shadow-sm d-inline-flex align-items-center gap-1.5 fw-semibold" data-bs-toggle="modal" data-bs-target="#recordPaymentModal">
-                        <i class="bi bi-credit-card-2-front"></i> Record Payment
+                <!-- Neatly Aligned Action Toolbar (Stays clean on 1 row, no dangling Manage button!) -->
+                <div class="profile-action-toolbar d-flex align-items-center gap-2 flex-wrap flex-sm-nowrap">
+                    <button type="button" class="btn btn-sm btn-success shadow-xs d-inline-flex align-items-center gap-1.5 fw-semibold px-3 text-nowrap" style="height: 38px; border-radius: 8px;" data-bs-toggle="modal" data-bs-target="#recordPaymentModal">
+                        <i class="bi bi-credit-card-2-front"></i> <span>Record Payment</span>
                     </button>
-                    <button type="button" class="btn btn-outline-primary btn-sm px-3 shadow-sm d-inline-flex align-items-center gap-1.5 fw-semibold" data-bs-toggle="modal" data-bs-target="#createInvoiceModal">
-                        <i class="bi bi-file-earmark-plus"></i> Attach Invoice
+                    <button type="button" class="btn btn-sm btn-outline-primary shadow-xs d-inline-flex align-items-center gap-1.5 fw-semibold px-3 text-nowrap" style="height: 38px; border-radius: 8px;" data-bs-toggle="modal" data-bs-target="#createInvoiceModal">
+                        <i class="bi bi-file-earmark-plus"></i> <span>Attach Invoice</span>
                     </button>
-                    <button type="button" class="btn btn-outline-info btn-sm px-3 shadow-sm d-inline-flex align-items-center gap-1.5 fw-semibold" data-bs-toggle="modal" data-bs-target="#recordAttendanceModal">
-                        <i class="bi bi-calendar-check"></i> Roll Call
+                    <button type="button" class="btn btn-sm btn-outline-info shadow-xs d-inline-flex align-items-center gap-1.5 fw-semibold px-3 text-nowrap" style="height: 38px; border-radius: 8px;" data-bs-toggle="modal" data-bs-target="#recordAttendanceModal">
+                        <i class="bi bi-calendar-check"></i> <span>Roll Call</span>
                     </button>
                     <div class="dropdown">
-                        <button class="btn btn-light border btn-sm px-3 shadow-sm d-inline-flex align-items-center gap-1.5 fw-semibold dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="bi bi-three-dots-vertical"></i> Manage
+                        <button class="btn btn-sm btn-light border shadow-xs d-inline-flex align-items-center gap-1.5 fw-semibold px-3 dropdown-toggle text-nowrap" style="height: 38px; border-radius: 8px;" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-gear text-slate-500"></i> <span>Manage</span>
                         </button>
-                        <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-3">
+                        <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3 mt-1 py-1" style="min-width: 200px;">
                             <li>
                                 <a class="dropdown-item d-flex align-items-center gap-2 py-2 small" href="#" data-bs-toggle="modal" data-bs-target="#switchClassroomModal">
                                     <i class="bi bi-arrow-left-right text-primary"></i> Allocate / Switch Classroom
@@ -101,19 +108,19 @@
             </div>
         </div>
 
-        <!-- Metric KPI Cards Row -->
+        <!-- Metric KPI Cards Row (Neat, Equal Heights, Perfectly Aligned) -->
         <div class="px-4 pb-3">
             <div class="row g-3">
                 <!-- Classroom Card -->
                 <div class="col-12 col-sm-6 col-xl-3">
-                    <div class="p-3 bg-white rounded-3 border shadow-xs h-100 d-flex flex-column justify-content-between">
-                        <div class="d-flex justify-content-between align-items-start mb-1">
+                    <div class="p-3 bg-white rounded-3 border shadow-xs h-100 d-flex flex-column justify-content-between" style="min-height: 104px;">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
                             <span class="text-muted small text-uppercase fw-bold" style="font-size: 0.68rem; letter-spacing: 0.06em;">CLASSROOM ALLOCATION</span>
-                            <span class="p-1.5 bg-primary bg-opacity-10 text-primary rounded-2"><i class="bi bi-door-open fs-6"></i></span>
+                            <span class="p-1 rounded-2" style="background-color: #e0f2fe; color: #0284c7;"><i class="bi bi-door-open fs-6"></i></span>
                         </div>
                         <div>
-                            <h6 class="fw-bold text-slate-900 mb-0 text-truncate">{{ current_classroom.room_name|default:"Unallocated" }}</h6>
-                            <small class="text-muted d-block text-truncate mt-0.5">
+                            <h6 class="fw-bold text-slate-900 mb-0 text-truncate" title="{{ current_classroom.room_name|default:'Unallocated' }}">{{ current_classroom.room_name|default:"Unallocated" }}</h6>
+                            <small class="text-muted d-block text-truncate mt-1">
                                 {% if current_classroom.primary_teacher %}
                                     <i class="bi bi-person-check text-success me-1"></i>{{ current_classroom.primary_teacher.get_full_name|default:"Lead Educator" }}
                                 {% else %}
@@ -126,13 +133,13 @@
 
                 <!-- Primary Guardian Card -->
                 <div class="col-12 col-sm-6 col-xl-3">
-                    <div class="p-3 bg-white rounded-3 border shadow-xs h-100 d-flex flex-column justify-content-between">
-                        <div class="d-flex justify-content-between align-items-start mb-1">
+                    <div class="p-3 bg-white rounded-3 border shadow-xs h-100 d-flex flex-column justify-content-between" style="min-height: 104px;">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
                             <span class="text-muted small text-uppercase fw-bold" style="font-size: 0.68rem; letter-spacing: 0.06em;">PRIMARY GUARDIAN</span>
-                            <span class="p-1.5 rounded-2" style="background-color: rgba(13, 148, 136, 0.1); color: #0d9488;"><i class="bi bi-people fs-6"></i></span>
+                            <span class="p-1 rounded-2" style="background-color: #f0fdfa; color: #0d9488;"><i class="bi bi-people fs-6"></i></span>
                         </div>
                         <div>
-                            <div class="d-flex align-items-center justify-content-between">
+                            <div class="d-flex align-items-center justify-content-between gap-1">
                                 <h6 class="fw-bold text-slate-900 mb-0 text-truncate">
                                     {% if primary_guardian %}
                                         {{ primary_guardian.guardian.first_name }} {{ primary_guardian.guardian.last_name }}
@@ -143,12 +150,12 @@
                                     {% endif %}
                                 </h6>
                                 {% if primary_guardian.guardian.user %}
-                                    <span class="badge bg-success-subtle text-success py-0 px-1.5" style="font-size: 0.65rem;"><i class="bi bi-check-circle me-1"></i>Active</span>
+                                    <span class="badge bg-success bg-opacity-10 text-success py-0.5 px-1.5" style="font-size: 0.65rem;"><i class="bi bi-check-circle me-1"></i>Active</span>
                                 {% else %}
-                                    <span class="badge bg-secondary-subtle text-muted py-0 px-1.5" style="font-size: 0.65rem;">Pending</span>
+                                    <span class="badge bg-secondary-subtle text-muted py-0.5 px-1.5" style="font-size: 0.65rem;">Pending</span>
                                 {% endif %}
                             </div>
-                            <small class="text-muted d-block text-truncate mt-0.5">
+                            <small class="text-muted d-block text-truncate mt-1">
                                 {% if primary_guardian.guardian.email %}
                                     <i class="bi bi-envelope me-1"></i>{{ primary_guardian.guardian.email }}
                                 {% elif primary_guardian.guardian.phone %}
@@ -157,22 +164,16 @@
                                     No contact on file
                                 {% endif %}
                             </small>
-                            <div class="mt-1 pt-1 border-top d-flex align-items-center justify-content-between" style="font-size: 0.72rem;">
-                                <span class="text-muted">Portal URL:</span>
-                                <a href="/login/?type=family" target="_blank" class="text-primary text-decoration-none fw-semibold">
-                                    /login/?type=family <i class="bi bi-box-arrow-up-right ms-0.5" style="font-size: 0.62rem;"></i>
-                                </a>
-                            </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Billing Balance Card -->
                 <div class="col-12 col-sm-6 col-xl-3">
-                    <div class="p-3 bg-white rounded-3 border shadow-xs h-100 d-flex flex-column justify-content-between">
-                        <div class="d-flex justify-content-between align-items-start mb-1">
+                    <div class="p-3 bg-white rounded-3 border shadow-xs h-100 d-flex flex-column justify-content-between" style="min-height: 104px;">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
                             <span class="text-muted small text-uppercase fw-bold" style="font-size: 0.68rem; letter-spacing: 0.06em;">ACCOUNT BALANCE</span>
-                            <span class="p-1.5 bg-success bg-opacity-10 text-success rounded-2"><i class="bi bi-cash-stack fs-6"></i></span>
+                            <span class="p-1 rounded-2" style="background-color: #ecfdf5; color: #059669;"><i class="bi bi-cash-stack fs-6"></i></span>
                         </div>
                         <div>
                             <div class="d-flex align-items-baseline gap-1.5">
@@ -183,7 +184,7 @@
                                     {% if balance_due > 0 %}DUE{% else %}SETTLED{% endif %}
                                 </span>
                             </div>
-                            <small class="text-muted d-block text-truncate mt-0.5">
+                            <small class="text-muted d-block text-truncate mt-1">
                                 Paid: <strong class="text-slate-800">${{ total_paid|floatformat:2 }}</strong> &bull; {{ payments|length }} Receipts
                             </small>
                         </div>
@@ -192,14 +193,14 @@
 
                 <!-- Attendance KPI Card -->
                 <div class="col-12 col-sm-6 col-xl-3">
-                    <div class="p-3 bg-white rounded-3 border shadow-xs h-100 d-flex flex-column justify-content-between">
-                        <div class="d-flex justify-content-between align-items-start mb-1">
+                    <div class="p-3 bg-white rounded-3 border shadow-xs h-100 d-flex flex-column justify-content-between" style="min-height: 104px;">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
                             <span class="text-muted small text-uppercase fw-bold" style="font-size: 0.68rem; letter-spacing: 0.06em;">ATTENDANCE RECORD</span>
-                            <span class="p-1.5 bg-info bg-opacity-10 text-info rounded-2"><i class="bi bi-calendar-check fs-6"></i></span>
+                            <span class="p-1 rounded-2" style="background-color: #f0f9ff; color: #0284c7;"><i class="bi bi-calendar-check fs-6"></i></span>
                         </div>
                         <div>
                             <h6 class="fw-bold font-monospace text-slate-900 mb-0">{{ total_days_attended }} Days Logged</h6>
-                            <small class="text-muted d-block text-truncate mt-0.5">
+                            <small class="text-muted d-block text-truncate mt-1">
                                 {% if recent_attendance.0 %}
                                     Last: {{ recent_attendance.0.attendance_date|date:"M d" }} ({{ recent_attendance.0.attendance_status|title }})
                                 {% else %}
@@ -212,65 +213,73 @@
             </div>
         </div>
 
-        <!-- Navigation Tabs -->
-        <div class="border-top px-4 bg-white">
-            <ul class="nav nav-tabs border-0 pt-2 flex-nowrap overflow-x-auto" id="childProfileTabs" role="tablist" style="scrollbar-width: thin;">
+        <!-- Navigation Tabs Bar (Clean, Hidden Scrollbar, Smooth Chevron Controls) -->
+        <div class="profile-tabs-wrapper position-relative border-top px-3 px-md-4 bg-white">
+            <button type="button" class="tab-scroll-btn tab-scroll-left d-none d-md-flex" id="tabScrollLeft" aria-label="Scroll tabs left" onclick="scrollProfileTabs('left')" title="Scroll left">
+                <i class="bi bi-chevron-left"></i>
+            </button>
+            
+            <ul class="nav profile-nav-tabs border-0 flex-nowrap" id="childProfileTabs" role="tablist">
                 <li class="nav-item">
-                    <a class="nav-link text-nowrap py-2.5 px-3 fw-semibold small d-inline-flex align-items-center gap-1.5 {% if active_tab == 'overview' %}active text-teal border-bottom border-teal border-2{% else %}text-muted{% endif %}" href="?tab=overview">
-                        <i class="bi bi-grid-1x2"></i> Overview
+                    <a class="nav-link {% if active_tab == 'overview' %}active{% endif %}" href="?tab=overview">
+                        <i class="bi bi-grid-1x2"></i> <span>Overview</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link text-nowrap py-2.5 px-3 fw-semibold small d-inline-flex align-items-center gap-1.5 {% if active_tab == 'classroom' %}active text-teal border-bottom border-teal border-2{% else %}text-muted{% endif %}" href="?tab=classroom">
-                        <i class="bi bi-door-open"></i> Classroom
+                    <a class="nav-link {% if active_tab == 'classroom' %}active{% endif %}" href="?tab=classroom">
+                        <i class="bi bi-door-open"></i> <span>Classroom</span>
                         {% if current_classroom %}
-                            <span class="badge bg-primary bg-opacity-10 text-primary ms-1" style="font-size: 0.7rem;">Allocated</span>
+                            <span class="tab-micro-badge badge-primary-subtle">Allocated</span>
                         {% endif %}
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link text-nowrap py-2.5 px-3 fw-semibold small d-inline-flex align-items-center gap-1.5 {% if active_tab == 'family' %}active text-teal border-bottom border-teal border-2{% else %}text-muted{% endif %}" href="?tab=family">
-                        <i class="bi bi-people"></i> Parents & Family
-                        <span class="badge bg-secondary rounded-pill ms-1" style="font-size: 0.7rem;">{{ family_guardians|length }}</span>
+                    <a class="nav-link {% if active_tab == 'family' %}active{% endif %}" href="?tab=family">
+                        <i class="bi bi-people"></i> <span>Parents &amp; Family</span>
+                        <span class="tab-micro-badge badge-secondary-subtle">{{ family_guardians|length }}</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link text-nowrap py-2.5 px-3 fw-semibold small d-inline-flex align-items-center gap-1.5 {% if active_tab == 'billing' %}active text-teal border-bottom border-teal border-2{% else %}text-muted{% endif %}" href="?tab=billing">
-                        <i class="bi bi-receipt"></i> Billing & Receipts
-                        <span class="badge bg-success bg-opacity-10 text-success ms-1" style="font-size: 0.7rem;">{{ payments|length }}</span>
+                    <a class="nav-link {% if active_tab == 'billing' %}active{% endif %}" href="?tab=billing">
+                        <i class="bi bi-receipt"></i> <span>Billing &amp; Receipts</span>
+                        <span class="tab-micro-badge badge-success-subtle">{{ payments|length }}</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link text-nowrap py-2.5 px-3 fw-semibold small d-inline-flex align-items-center gap-1.5 {% if active_tab == 'reports' %}active text-teal border-bottom border-teal border-2{% else %}text-muted{% endif %}" href="?tab=reports">
-                        <i class="bi bi-journal-check"></i> Daily Reports
-                        <span class="badge bg-info bg-opacity-10 text-info ms-1" style="font-size: 0.7rem;">{{ recent_reports|length }}</span>
+                    <a class="nav-link {% if active_tab == 'reports' %}active{% endif %}" href="?tab=reports">
+                        <i class="bi bi-journal-check"></i> <span>Daily Reports</span>
+                        <span class="tab-micro-badge badge-info-subtle">{{ recent_reports|length }}</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link text-nowrap py-2.5 px-3 fw-semibold small d-inline-flex align-items-center gap-1.5 {% if active_tab == 'medical' %}active text-teal border-bottom border-teal border-2{% else %}text-muted{% endif %}" href="?tab=medical">
-                        <i class="bi bi-heart-pulse"></i> Medical & Health
+                    <a class="nav-link {% if active_tab == 'medical' %}active{% endif %}" href="?tab=medical">
+                        <i class="bi bi-heart-pulse"></i> <span>Medical &amp; Health</span>
                         {% if child.allergies %}
-                            <span class="badge bg-danger rounded-circle p-1" style="width: 6px; height: 6px;"></span>
+                            <span class="badge bg-danger rounded-circle p-1" style="width: 6px; height: 6px;" title="Medical alert active"></span>
                         {% endif %}
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link text-nowrap py-2.5 px-3 fw-semibold small d-inline-flex align-items-center gap-1.5 {% if active_tab == 'attendance' %}active text-teal border-bottom border-teal border-2{% else %}text-muted{% endif %}" href="?tab=attendance">
-                        <i class="bi bi-calendar-check"></i> Attendance
+                    <a class="nav-link {% if active_tab == 'attendance' %}active{% endif %}" href="?tab=attendance">
+                        <i class="bi bi-calendar-check"></i> <span>Attendance</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link text-nowrap py-2.5 px-3 fw-semibold small d-inline-flex align-items-center gap-1.5 {% if active_tab == 'documents' %}active text-teal border-bottom border-teal border-2{% else %}text-muted{% endif %}" href="?tab=documents">
-                        <i class="bi bi-file-earmark-check"></i> Consents
-                        <span class="badge bg-secondary rounded-pill ms-1" style="font-size: 0.7rem;">{{ consent_assignments|length }}</span>
+                    <a class="nav-link {% if active_tab == 'documents' %}active{% endif %}" href="?tab=documents">
+                        <i class="bi bi-file-earmark-check"></i> <span>Consents</span>
+                        <span class="tab-micro-badge badge-secondary-subtle">{{ consent_assignments|length }}</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link text-nowrap py-2.5 px-3 fw-semibold small d-inline-flex align-items-center gap-1.5 {% if active_tab == 'personal' %}active text-teal border-bottom border-teal border-2{% else %}text-muted{% endif %}" href="?tab=personal">
-                        <i class="bi bi-pencil-square"></i> Edit Info
+                    <a class="nav-link {% if active_tab == 'personal' %}active{% endif %}" href="?tab=personal">
+                        <i class="bi bi-pencil-square"></i> <span>Edit Info</span>
                     </a>
                 </li>
             </ul>
+
+            <button type="button" class="tab-scroll-btn tab-scroll-right d-none d-md-flex" id="tabScrollRight" aria-label="Scroll tabs right" onclick="scrollProfileTabs('right')" title="Scroll right">
+                <i class="bi bi-chevron-right"></i>
+            </button>
         </div>
     </div>
 </div>
@@ -2115,8 +2124,20 @@ function copyParentCredentials(parentName, username, defaultPass) {
     }
 }
 
+function scrollProfileTabs(direction) {
+    const el = document.getElementById('childProfileTabs');
+    if (!el) return;
+    const amount = direction === 'left' ? -220 : 220;
+    el.scrollBy({ left: amount, behavior: 'smooth' });
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     calculateModalInvoice();
+    // Smoothly ensure active tab is in view on tab navigation
+    const activeTab = document.querySelector('#childProfileTabs .nav-link.active');
+    if (activeTab) {
+        activeTab.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    }
 });
 </script>
 
