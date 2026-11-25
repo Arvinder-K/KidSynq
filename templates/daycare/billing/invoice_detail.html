@@ -1,77 +1,171 @@
 {% extends "base.html" %}
 
-{% block title %}Invoice {{ invoice.invoice_number|default:invoice.id|stringformat:".8s" }} - KidSynq{% endblock %}
+{% block title %}Invoice #{{ invoice.invoice_number|default:invoice.id|stringformat:".8s" }} - KidSynq{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-        <h2 class="h4 fw-bold text-slate-800 mb-1">Invoice {{ invoice.invoice_number|default:invoice.id|stringformat:".8s" }}</h2>
-        <p class="text-muted small mb-0">Issued {{ invoice.issue_date|date:"F d, Y" }} &bull; Due {{ invoice.due_date|date:"F d, Y" }}</p>
-    </div>
-    <div class="d-flex gap-2">
-        <a href="{% url 'daycare_invoices' %}" class="btn btn-outline-secondary d-inline-flex align-items-center gap-2">
-            <i class="bi bi-arrow-left"></i> All Invoices
-        </a>
-        <button class="btn btn-outline-primary d-inline-flex align-items-center gap-2" onclick="window.print()">
-            <i class="bi bi-printer"></i> Print Statement
-        </button>
-    </div>
-</div>
+<div class="container-fluid px-0 py-2">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb small mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'daycare_invoices' %}" class="text-decoration-none text-muted"><i class="bi bi-receipt me-1"></i>Invoices &amp; Billing</a></li>
+            {% if invoice.student %}
+                <li class="breadcrumb-item"><a href="{% url 'daycare_child_detail' invoice.student.id %}?tab=billing" class="text-decoration-none text-muted">{{ invoice.student.first_name }} {{ invoice.student.last_name }}</a></li>
+            {% endif %}
+            <li class="breadcrumb-item active text-slate-800 fw-semibold" aria-current="page">Invoice #{{ invoice.invoice_number|default:invoice.id|stringformat:".8s" }}</li>
+        </ol>
+    </nav>
 
-<div class="row g-4">
-    <div class="col-12 col-lg-8">
-        <div class="card border-0 shadow-sm mb-4">
-            <div class="card-header bg-white border-bottom py-3">
-                <h5 class="card-title mb-0 fw-semibold">Billed Line Items</h5>
+    <!-- Header & Action Controls -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden">
+        <div class="card-body p-4">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center text-white shadow-xs flex-shrink-0"
+                         style="width: 56px; height: 56px; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);">
+                        <i class="bi bi-file-earmark-text fs-3"></i>
+                    </div>
+                    <div>
+                        <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+                            <h2 class="h4 fw-bold text-slate-900 mb-0">Statement #{{ invoice.invoice_number|default:invoice.id|stringformat:".8s" }}</h2>
+                            {% if invoice.status|lower == 'paid' %}
+                                <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 rounded-pill px-3 py-1 fw-semibold small">
+                                    <i class="bi bi-check-circle-fill me-1"></i> Paid in Full
+                                </span>
+                            {% elif invoice.status|lower == 'overdue' %}
+                                <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 rounded-pill px-3 py-1 fw-semibold small">
+                                    <i class="bi bi-exclamation-triangle-fill me-1"></i> Overdue
+                                </span>
+                            {% elif invoice.status|lower == 'partially_paid' %}
+                                <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 rounded-pill px-3 py-1 fw-semibold small">
+                                    <i class="bi bi-pie-chart-fill me-1"></i> Partially Paid
+                                </span>
+                            {% else %}
+                                <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 rounded-pill px-3 py-1 fw-semibold small">
+                                    <i class="bi bi-clock-history me-1"></i> {{ invoice.status|title }}
+                                </span>
+                            {% endif %}
+                        </div>
+                        <p class="text-muted small mb-0">
+                            <span><i class="bi bi-calendar-event me-1"></i> Issued: <strong>{{ invoice.issue_date|date:"F d, Y" }}</strong></span>
+                            <span class="mx-2 text-slate-300">&bull;</span>
+                            <span><i class="bi bi-calendar-check me-1"></i> Due: <strong>{{ invoice.due_date|date:"F d, Y" }}</strong></span>
+                            {% if invoice.daycare %}
+                                <span class="mx-2 text-slate-300">&bull;</span>
+                                <span class="text-slate-600"><i class="bi bi-building me-1"></i> {{ invoice.daycare.name }}</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Action Toolbar -->
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <a href="{% url 'daycare_invoices' %}" class="btn btn-sm btn-light border shadow-xs d-inline-flex align-items-center gap-1.5 fw-semibold px-3" style="height: 38px; border-radius: 8px;">
+                        <i class="bi bi-arrow-left"></i> All Invoices
+                    </a>
+                    {% if invoice.student %}
+                        <a href="{% url 'daycare_child_detail' invoice.student.id %}?tab=billing" class="btn btn-sm btn-outline-primary shadow-xs d-inline-flex align-items-center gap-1.5 fw-semibold px-3" style="height: 38px; border-radius: 8px;">
+                            <i class="bi bi-person"></i> Child Profile
+                        </a>
+                    {% endif %}
+                    <button type="button" class="btn btn-sm btn-primary shadow-xs d-inline-flex align-items-center gap-1.5 fw-semibold px-3" style="height: 38px; border-radius: 8px;" onclick="window.print()">
+                        <i class="bi bi-printer"></i> Print Statement
+                    </button>
+                </div>
             </div>
-            <div class="card-body p-0">
+        </div>
+    </div>
+
+    <!-- Main Content Grid -->
+    <div class="row g-4">
+        <!-- Left: Line items and payments -->
+        <div class="col-12 col-lg-8">
+            <!-- Billed Line Items -->
+            <div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden">
+                <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0 fw-bold text-slate-800 d-inline-flex align-items-center gap-2">
+                        <i class="bi bi-list-check text-primary"></i>
+                        <span>Billed Line Items</span>
+                    </h5>
+                    <span class="badge bg-secondary-subtle text-muted rounded-pill">{{ items|length }} item{{ items|length|pluralize }}</span>
+                </div>
                 <div class="table-responsive">
-                    <table class="table align-middle mb-0">
-                        <thead class="table-light">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light text-muted small text-uppercase">
                             <tr>
                                 <th class="ps-4">Item Description</th>
-                                <th>Quantity</th>
-                                <th>Rate</th>
-                                <th class="text-end pe-4">Amount</th>
+                                <th class="text-center" style="width: 100px;">Qty</th>
+                                <th class="text-end" style="width: 120px;">Unit Rate</th>
+                                <th class="text-end pe-4" style="width: 140px;">Amount</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for item in items %}
                             <tr>
-                                <td class="ps-4 fw-medium text-slate-800">{{ item.description }}</td>
-                                <td>{{ item.quantity|default:"1" }}</td>
-                                <td>${{ item.unit_price|floatformat:2 }}</td>
-                                <td class="text-end pe-4 font-monospace">${{ item.amount|floatformat:2 }}</td>
+                                <td class="ps-4">
+                                    <div class="fw-semibold text-slate-900">{{ item.description }}</div>
+                                    {% if item.notes %}
+                                        <small class="text-muted">{{ item.notes }}</small>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">{{ item.quantity|default:"1" }}</td>
+                                <td class="text-end font-monospace">${{ item.unit_price|floatformat:2 }}</td>
+                                <td class="text-end pe-4 font-monospace fw-bold text-slate-900">${{ item.amount|floatformat:2 }}</td>
                             </tr>
                             {% empty %}
                             <tr>
-                                <td class="ps-4 fw-medium text-slate-800">Tuition & Child Care Services</td>
-                                <td>1</td>
-                                <td>${{ invoice.total_amount|floatformat:2 }}</td>
-                                <td class="text-end pe-4 font-monospace">${{ invoice.total_amount|floatformat:2 }}</td>
+                                <td class="ps-4">
+                                    <div class="fw-semibold text-slate-900">{{ invoice.notes|default:"Tuition & Child Care Services" }}</div>
+                                    <small class="text-muted">Standard enrollment fee period</small>
+                                </td>
+                                <td class="text-center">1</td>
+                                <td class="text-end font-monospace">${{ invoice.total_amount|floatformat:2 }}</td>
+                                <td class="text-end pe-4 font-monospace fw-bold text-slate-900">${{ invoice.total_amount|floatformat:2 }}</td>
                             </tr>
                             {% endfor %}
-                            <tr class="table-light fw-bold">
-                                <td colspan="3" class="text-end">Total Due:</td>
-                                <td class="text-end pe-4 font-monospace fs-5 text-primary">${{ invoice.total_amount|floatformat:2 }}</td>
-                            </tr>
                         </tbody>
+                        <tfoot class="border-top">
+                            {% if invoice.discount_total and invoice.discount_total > 0 %}
+                            <tr class="table-light text-muted small">
+                                <td colspan="3" class="text-end">Subtotal Before Subsidies / Discounts:</td>
+                                <td class="text-end pe-4 font-monospace">${{ invoice.subtotal|default:invoice.total_amount|floatformat:2 }}</td>
+                            </tr>
+                            <tr class="table-light text-success small">
+                                <td colspan="3" class="text-end fw-semibold">
+                                    <i class="bi bi-shield-check me-1"></i> CWELCC Subsidies &amp; Discounts Applied:
+                                </td>
+                                <td class="text-end pe-4 font-monospace fw-semibold">-${{ invoice.discount_total|floatformat:2 }}</td>
+                            </tr>
+                            {% endif %}
+                            {% if invoice.tax_total and invoice.tax_total > 0 %}
+                            <tr class="table-light text-muted small">
+                                <td colspan="3" class="text-end">Taxes (HST/GST):</td>
+                                <td class="text-end pe-4 font-monospace">${{ invoice.tax_total|floatformat:2 }}</td>
+                            </tr>
+                            {% endif %}
+                            <tr class="table-light">
+                                <td colspan="3" class="text-end fw-bold text-slate-800">Total Billed Statement:</td>
+                                <td class="text-end pe-4 font-monospace fw-bold fs-5 text-primary">${{ invoice.total_amount|floatformat:2 }}</td>
+                            </tr>
+                        </tfoot>
                     </table>
                 </div>
             </div>
-        </div>
 
-        <!-- Payments Logged -->
-        <div class="card border-0 shadow-sm">
-            <div class="card-header bg-white border-bottom py-3">
-                <h5 class="card-title mb-0 fw-semibold">Recorded Payments & Credits</h5>
-            </div>
-            <div class="card-body p-0">
+            <!-- Payments & Receipts Logged -->
+            <div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden">
+                <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0 fw-bold text-slate-800 d-inline-flex align-items-center gap-2">
+                        <i class="bi bi-cash-stack text-success"></i>
+                        <span>Recorded Payments &amp; Credits</span>
+                    </h5>
+                    <span class="badge bg-success-subtle text-success rounded-pill fw-semibold">{{ payments|length }} logged</span>
+                </div>
                 <div class="table-responsive">
-                    <table class="table align-middle mb-0">
-                        <thead class="table-light">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light text-muted small text-uppercase">
                             <tr>
-                                <th class="ps-4">Payment Date</th>
+                                <th class="ps-4">Receipt #</th>
+                                <th>Payment Date</th>
                                 <th>Method</th>
                                 <th>Transaction Ref</th>
                                 <th class="text-end pe-4">Amount Paid</th>
@@ -80,14 +174,30 @@
                         <tbody>
                             {% for pay in payments %}
                             <tr>
-                                <td class="ps-4">{{ pay.payment_date|date:"M d, Y" }}</td>
-                                <td><span class="badge bg-light text-dark">{{ pay.payment_method|title }}</span></td>
-                                <td class="font-monospace small text-muted">{{ pay.transaction_id|default:"-" }}</td>
-                                <td class="text-end pe-4 font-monospace fw-bold text-success">${{ pay.amount|floatformat:2 }}</td>
+                                <td class="ps-4 font-monospace fw-bold text-primary">
+                                    {{ pay.receipt_number|default:pay.transaction_reference|default:pay.id|stringformat:".12s" }}
+                                </td>
+                                <td>{{ pay.payment_date|date:"M d, Y" }}</td>
+                                <td>
+                                    <span class="badge bg-light text-dark border">
+                                        {% if 'etransfer' in pay.payment_method|lower %}
+                                            <i class="bi bi-arrow-left-right text-info me-1"></i> Interac e-Transfer
+                                        {% elif 'credit' in pay.payment_method|lower %}
+                                            <i class="bi bi-credit-card text-primary me-1"></i> Credit Card
+                                        {% else %}
+                                            {{ pay.payment_method|title }}
+                                        {% endif %}
+                                    </span>
+                                </td>
+                                <td class="font-monospace small text-muted">{{ pay.transaction_reference|default:pay.receipt_number|default:"-" }}</td>
+                                <td class="text-end pe-4 font-monospace fw-bold text-success fs-6">${{ pay.amount|floatformat:2 }}</td>
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="4" class="text-center py-4 text-muted small">No payments recorded against this invoice yet.</td>
+                                <td colspan="5" class="text-center py-4 text-muted small">
+                                    <i class="bi bi-wallet2 d-block fs-3 text-secondary opacity-50 mb-1"></i>
+                                    No payments recorded against this invoice yet.
+                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -95,40 +205,84 @@
                 </div>
             </div>
         </div>
-    </div>
 
-    <div class="col-12 col-lg-4">
-        <div class="card border-0 shadow-sm mb-4">
-            <div class="card-header bg-white border-bottom py-3">
-                <h5 class="card-title mb-0 fw-semibold">Invoice Overview</h5>
-            </div>
-            <div class="card-body p-4">
-                <div class="mb-3">
-                    <label class="form-label text-muted small fw-semibold text-uppercase">Billed To Child</label>
-                    <p class="fs-5 fw-bold text-slate-800 mb-0">{{ invoice.student.first_name }} {{ invoice.student.last_name }}</p>
-                    <small class="text-muted">Room: {{ invoice.student.classroom.name|default:"General" }}</small>
+        <!-- Right: Overview sidebar -->
+        <div class="col-12 col-lg-4">
+            <!-- Balance & Status Card -->
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h5 class="card-title mb-0 fw-bold text-slate-800">Statement Financial Summary</h5>
                 </div>
-                <hr>
-                <div class="mb-3">
-                    <label class="form-label text-muted small fw-semibold text-uppercase">Payment Status</label>
-                    <div>
-                        {% if invoice.status == 'paid' %}
-                            <span class="badge bg-success text-white px-3 py-2">Paid in Full</span>
-                        {% elif invoice.status == 'overdue' %}
-                            <span class="badge bg-danger text-white px-3 py-2">Past Due</span>
-                        {% else %}
-                            <span class="badge bg-warning text-dark px-3 py-2">Awaiting Payment</span>
-                        {% endif %}
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="text-muted small text-uppercase fw-bold" style="font-size: 0.72rem; letter-spacing: 0.05em;">Total Invoiced</span>
+                        <span class="font-monospace fw-bold text-slate-900 fs-5">${{ invoice.total_amount|floatformat:2 }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="text-muted small text-uppercase fw-bold" style="font-size: 0.72rem; letter-spacing: 0.05em;">Total Paid</span>
+                        <span class="font-monospace fw-bold text-success fs-5">${{ invoice.amount_paid|default:"0.00"|floatformat:2 }}</span>
+                    </div>
+                    <hr class="my-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="text-muted small text-uppercase fw-bold d-block" style="font-size: 0.72rem; letter-spacing: 0.05em;">Balance Due</span>
+                            <span class="badge {% if invoice.balance_due > 0 %}bg-danger bg-opacity-10 text-danger{% else %}bg-success bg-opacity-10 text-success{% endif %} mt-1" style="font-size: 0.7rem;">
+                                {% if invoice.balance_due > 0 %}PAYMENT OUTSTANDING{% else %}SETTLED IN FULL{% endif %}
+                            </span>
+                        </div>
+                        <span class="font-monospace fw-bold fs-4 {% if invoice.balance_due > 0 %}text-danger{% else %}text-success{% endif %}">
+                            ${{ invoice.balance_due|default:"0.00"|floatformat:2 }}
+                        </span>
                     </div>
                 </div>
-                <hr>
-                <div class="d-flex justify-content-between align-items-center">
-                    <span class="text-muted small">Outstanding Balance</span>
-                    <span class="fs-5 fw-bold text-danger font-monospace">${{ invoice.balance_due|floatformat:2 }}</span>
+            </div>
+
+            <!-- Parties Details Card -->
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h5 class="card-title mb-0 fw-bold text-slate-800">Child &amp; Family Account</h5>
+                </div>
+                <div class="card-body p-4">
+                    <!-- Student -->
+                    <div class="mb-3.5 pb-3 border-bottom">
+                        <span class="text-muted small text-uppercase fw-bold d-block mb-1" style="font-size: 0.7rem; letter-spacing: 0.05em;">Enrolled Student</span>
+                        {% if invoice.student %}
+                            <a href="{% url 'daycare_child_detail' invoice.student.id %}" class="fs-6 fw-bold text-primary text-decoration-none d-block">
+                                {{ invoice.student.first_name }} {{ invoice.student.last_name }} &rarr;
+                            </a>
+                            <small class="text-muted">
+                                {% if invoice.student.classroom %}
+                                    <i class="bi bi-door-open me-1"></i>{{ invoice.student.classroom.room_name|default:invoice.student.classroom.name }}
+                                {% else %}
+                                    Room: Toddler Operations
+                                {% endif %}
+                            </small>
+                        {% else %}
+                            <p class="text-slate-800 mb-0 font-italic">Unassigned</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Family -->
+                    <div class="mb-3.5 pb-3 border-bottom">
+                        <span class="text-muted small text-uppercase fw-bold d-block mb-1" style="font-size: 0.7rem; letter-spacing: 0.05em;">Family / Household</span>
+                        <p class="fw-bold text-slate-800 mb-0">
+                            {{ invoice.family.family_name|default:"Primary Guardian Account" }}
+                        </p>
+                        {% if invoice.family.primary_email %}
+                            <small class="text-muted d-block"><i class="bi bi-envelope me-1"></i>{{ invoice.family.primary_email }}</small>
+                        {% endif %}
+                    </div>
+
+                    <!-- Notes -->
+                    {% if invoice.notes %}
+                    <div>
+                        <span class="text-muted small text-uppercase fw-bold d-block mb-1" style="font-size: 0.7rem; letter-spacing: 0.05em;">Statement Memo</span>
+                        <p class="small text-muted mb-0 bg-light p-2.5 rounded-3">{{ invoice.notes }}</p>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
     </div>
 </div>
 {% endblock %}
-

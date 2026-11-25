@@ -1508,6 +1508,20 @@ class InvoiceViewSet(viewsets.ModelViewSet):
     ordering_fields = ['issue_date', 'due_date', 'total', 'balance_due', 'created_at', 'invoice_number', 'status']
     ordering = ['-issue_date', '-created_at']
 
+    def retrieve(self, request, *args, **kwargs):
+        accept_header = request.META.get('HTTP_ACCEPT', '')
+        if 'text/html' in accept_header and request.query_params.get('format') != 'json':
+            from django.shortcuts import redirect
+            return redirect('daycare_invoice_detail', pk=kwargs.get('pk'))
+        return super().retrieve(request, *args, **kwargs)
+
+    def list(self, request, *args, **kwargs):
+        accept_header = request.META.get('HTTP_ACCEPT', '')
+        if 'text/html' in accept_header and request.query_params.get('format') != 'json':
+            from django.shortcuts import redirect
+            return redirect('daycare_invoices')
+        return super().list(request, *args, **kwargs)
+
     def get_serializer_class(self):
         if self.action in ['retrieve', 'issue', 'void', 'cancel', 'apply_credit', 'apply_deposit', 'assess_late_fee']:
             return InvoiceDetailSerializer

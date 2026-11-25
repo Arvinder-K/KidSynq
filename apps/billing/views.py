@@ -31,8 +31,11 @@ class InvoiceDetailView(StaffRequiredMixin, View):
     template_name = 'daycare/billing/invoice_detail.html'
 
     def get(self, request, pk):
-        daycare = get_user_daycare(request.user)
-        invoice = get_object_or_404(Invoice, pk=pk, daycare=daycare)
+        if request.user.is_superuser:
+            invoice = get_object_or_404(Invoice, pk=pk)
+        else:
+            daycare = get_user_daycare(request.user)
+            invoice = get_object_or_404(Invoice, pk=pk, daycare=daycare)
         items = InvoiceItem.objects.filter(invoice=invoice)
         payments = Payment.objects.filter(invoice=invoice)
 
