@@ -557,43 +557,6 @@ html, body {
     transform: translateX(3px);
 }
 
-/* Quick Fill Demo Access Bar */
-.demo-access-card {
-    background: #f8fafc;
-    border: 1px dashed #cbd5e1;
-    border-radius: 10px;
-    padding: 0.75rem 0.95rem;
-    margin-top: 1.5rem;
-}
-
-.demo-pills-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.45rem;
-    align-items: center;
-}
-
-.demo-fast-btn {
-    background: #ffffff;
-    border: 1px solid #cbd5e1;
-    color: var(--ks-slate-700);
-    font-size: 0.75rem;
-    font-weight: 600;
-    padding: 0.25rem 0.65rem;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: all 0.15s ease;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-}
-
-.demo-fast-btn:hover {
-    background: #f0f9ff;
-    border-color: #bae6fd;
-    color: #0284c7;
-    transform: translateY(-1px);
-}
 
 /* Security Trust Micro Footer */
 .auth-panel-footer {
@@ -865,29 +828,8 @@ html, body {
                 </button>
             </form>
 
-            <!-- Quick Demo 1-Click Fast Fill (Convenience for Testing) -->
-            <div class="demo-access-card">
-                <div class="d-flex align-items-center justify-content-between mb-2">
-                    <span class="small text-slate-600 fw-bold" style="font-size: 0.76rem; letter-spacing: 0.02em;">
-                        <i class="bi bi-lightning-charge-fill text-warning me-1"></i> Quick Test Logins:
-                    </span>
-                    <span class="text-slate-400 small" style="font-size: 0.7rem;">Click to fill</span>
-                </div>
-                <div class="demo-pills-row">
-                    <button type="button" class="demo-fast-btn" onclick="quickFill('daycaremanager', 'password123', 'daycare')">
-                        <i class="bi bi-building text-primary"></i> Daycare Admin
-                    </button>
-                    <button type="button" class="demo-fast-btn" onclick="quickFill('s.jenkins@sunnydays.example.com', 'password123', 'staff')">
-                        <i class="bi bi-person-badge text-info"></i> Educator
-                    </button>
-                    <button type="button" class="demo-fast-btn" onclick="quickFill('parent@example.com', 'password123', 'family')">
-                        <i class="bi bi-heart text-danger"></i> Parent
-                    </button>
-                </div>
-            </div>
-
             <!-- Alternative Gateway Note -->
-            <div class="text-center mt-3 pt-2">
+            <div class="text-center mt-4 pt-2">
                 <span class="small text-slate-500" style="font-size: 0.81rem;">
                     Platform SuperAdmin? <a href="{% url 'superadmin_login' %}" class="fw-bold text-decoration-none" style="color: #0284c7;">Access Console &rarr;</a>
                 </span>
@@ -981,15 +923,6 @@ function selectLoginPortal(type, button) {
     iconBox.style.background = cfg.badgeBg;
     iconBox.style.borderColor = cfg.badgeBorder;
     iconBox.style.color = cfg.badgeColor;
-}
-
-function quickFill(user, pass, portalType) {
-    selectLoginPortal(portalType);
-    const uInput = document.getElementById('usernameInput');
-    const pInput = document.getElementById('passwordInput');
-    uInput.value = user;
-    pInput.value = pass;
-    pInput.focus();
 }
 
 function togglePwdVisibility() {
