@@ -1,0 +1,317 @@
+{% extends "base.html" %}
+
+{% block title %}Child Enrollment Application — {{ daycare.name }}{% endblock %}
+
+{% block layout %}
+<div class="min-vh-100 d-flex flex-column bg-light">
+    <!-- Public Header / Navbar -->
+    <header class="navbar navbar-expand-lg bg-white border-bottom shadow-xs py-3 sticky-top">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center gap-2 text-decoration-none" href="{% url 'registration_landing' daycare_slug=daycare.id %}">
+                <div class="rounded-3 bg-primary bg-opacity-10 text-primary p-2 d-inline-flex align-items-center justify-content-center" style="width: 42px; height: 42px;">
+                    <i class="bi bi-building fs-5"></i>
+                </div>
+                <div>
+                    <span class="fw-bold text-slate-800 fs-5 d-block lh-sm">{{ daycare.name }}</span>
+                    <span class="text-muted small d-block" style="font-size: 0.75rem;">Licensed Child Care Center</span>
+                </div>
+            </a>
+
+            <div class="d-flex align-items-center gap-2">
+                <a href="{% url 'registration_landing' daycare_slug=daycare.id %}" class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-1">
+                    <i class="bi bi-arrow-left"></i>
+                    <span>Back to Overview</span>
+                </a>
+                <a href="{% url 'login' %}" class="btn btn-outline-primary btn-sm fw-medium d-none d-sm-inline-flex align-items-center gap-1">
+                    <i class="bi bi-person"></i>
+                    <span>Family Login</span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-grow-1 py-5">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-12 col-lg-9 col-xl-8">
+                    <!-- Flash Messages -->
+                    {% include "includes/messages.html" %}
+
+                    <!-- Form Header Banner -->
+                    <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+                        <div class="bg-primary text-white p-4 p-md-5">
+                            <span class="badge bg-white text-primary mb-2 fw-semibold px-3 py-1">Official Enrollment Application</span>
+                            <h2 class="h3 fw-bold mb-2">Admissions & Registration Form</h2>
+                            <p class="text-white-50 mb-0">
+                                Please provide child details, guardian contact, birth records, and required care consents for enrollment at <strong>{{ daycare.name }}</strong>.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Application Form Card -->
+                    <div class="card border-0 shadow-sm rounded-4">
+                        <div class="card-body p-4 p-md-5">
+                            <form method="post" id="registrationForm" enctype="multipart/form-data">
+                                {% csrf_token %}
+
+                                <!-- Step 1: Child Details, Requested Program & Preferred Start Date -->
+                                <div class="mb-5">
+                                    <div class="d-flex align-items-center gap-2 pb-2 mb-3 border-bottom">
+                                        <div class="rounded-circle bg-primary bg-opacity-10 text-primary p-2 d-inline-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                                            <i class="bi bi-person-fill small"></i>
+                                        </div>
+                                        <h5 class="fw-bold text-slate-800 mb-0">1. Child Information & Requested Program</h5>
+                                    </div>
+
+                                    <div class="row g-3">
+                                        <div class="col-12 col-md-6">
+                                            <label class="form-label small fw-semibold text-slate-800">Child's First Name <span class="text-danger">*</span></label>
+                                            <input type="text" name="child_first_name" class="form-control" placeholder="e.g. Liam" required>
+                                        </div>
+                                        <div class="col-12 col-md-6">
+                                            <label class="form-label small fw-semibold text-slate-800">Child's Last Name <span class="text-danger">*</span></label>
+                                            <input type="text" name="child_last_name" class="form-control" placeholder="e.g. Miller" required>
+                                        </div>
+                                        <div class="col-12 col-md-6">
+                                            <label class="form-label small fw-semibold text-slate-800">Date of Birth <span class="text-danger">*</span></label>
+                                            <input type="date" name="date_of_birth" class="form-control" required>
+                                        </div>
+                                        <div class="col-12 col-md-6">
+                                            <label class="form-label small fw-semibold text-slate-800">Gender</label>
+                                            <select name="gender" class="form-select">
+                                                <option value="unspecified">Prefer not to say</option>
+                                                <option value="male">Male</option>
+                                                <option value="female">Female</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-12 col-md-6">
+                                            <label class="form-label small fw-semibold text-slate-800">Requested Program</label>
+                                            <select name="program" class="form-select">
+                                                <option value="">-- General / Placement by Age Group --</option>
+                                                {% for p in programs %}
+                                                    <option value="{{ p.id }}">{{ p.name }} (Ages {{ p.min_age_months }}-{{ p.max_age_months }} mos)</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <div class="col-12 col-md-6">
+                                            <label class="form-label small fw-semibold text-slate-800">Preferred Start Date <span class="text-danger">*</span></label>
+                                            <input type="date" name="preferred_start_date" class="form-control" value="{% now 'Y-m-d' %}" required>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Step 2: Guardian Details -->
+                                <div class="mb-5">
+                                    <div class="d-flex align-items-center gap-2 pb-2 mb-3 border-bottom">
+                                        <div class="rounded-circle bg-primary bg-opacity-10 text-primary p-2 d-inline-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                                            <i class="bi bi-people-fill small"></i>
+                                        </div>
+                                        <h5 class="fw-bold text-slate-800 mb-0">2. Parent & Guardian Details</h5>
+                                    </div>
+
+                                    <div class="row g-3">
+                                        <div class="col-12 col-md-6">
+                                            <label class="form-label small fw-semibold text-slate-800">Parent First Name <span class="text-danger">*</span></label>
+                                            <input type="text" name="guardian_first_name" class="form-control" placeholder="e.g. Sarah" required>
+                                        </div>
+                                        <div class="col-12 col-md-6">
+                                            <label class="form-label small fw-semibold text-slate-800">Parent Last Name <span class="text-danger">*</span></label>
+                                            <input type="text" name="guardian_last_name" class="form-control" placeholder="e.g. Miller" required>
+                                        </div>
+                                        <div class="col-12 col-md-6">
+                                            <label class="form-label small fw-semibold text-slate-800">Relationship to Child</label>
+                                            <select name="guardian_relationship" class="form-select">
+                                                <option value="Mother" selected>Mother</option>
+                                                <option value="Father">Father</option>
+                                                <option value="Guardian">Legal Guardian</option>
+                                                <option value="Other">Other Family Member</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-12 col-md-6">
+                                            <label class="form-label small fw-semibold text-slate-800">Primary Phone Number <span class="text-danger">*</span></label>
+                                            <input type="tel" name="guardian_phone" class="form-control" placeholder="(416) 555-0199" required>
+                                        </div>
+                                        <div class="col-12 col-md-6">
+                                            <label class="form-label small fw-semibold text-slate-800">Email Address <span class="text-danger">*</span></label>
+                                            <input type="email" name="guardian_email" class="form-control" placeholder="parent@example.com" required>
+                                            <small class="text-muted">Admissions decisions and parent credentials will be sent here.</small>
+                                        </div>
+                                        <div class="col-12 col-md-6">
+                                            <label class="form-label small fw-semibold text-slate-800">Home Address</label>
+                                            <input type="text" name="guardian_address" class="form-control" placeholder="123 Main Street, Toronto, ON">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Step 3: Document Uploads & Birth Information -->
+                                <div class="mb-5">
+                                    <div class="d-flex align-items-center gap-2 pb-2 mb-3 border-bottom">
+                                        <div class="rounded-circle bg-primary bg-opacity-10 text-primary p-2 d-inline-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                                            <i class="bi bi-file-earmark-arrow-up-fill small"></i>
+                                        </div>
+                                        <h5 class="fw-bold text-slate-800 mb-0">3. Document Uploads & Birth Information</h5>
+                                    </div>
+
+                                    <div class="row g-3">
+                                        <div class="col-12 col-md-6">
+                                            <label class="form-label small fw-semibold text-slate-800">Birth Certificate / Reg Number</label>
+                                            <input type="text" name="birth_reg_number" class="form-control" placeholder="e.g. BC-9834210">
+                                            <small class="text-muted">Provincial birth registration or health card ID</small>
+                                        </div>
+                                        <div class="col-12 col-md-6">
+                                            <label class="form-label small fw-semibold text-slate-800">Upload Birth Certificate / ID</label>
+                                            <input type="file" name="birth_document" class="form-control" accept=".pdf,.png,.jpg,.jpeg">
+                                            <small class="text-muted">PDF or clear photo of birth record</small>
+                                        </div>
+                                        <div class="col-12">
+                                            <label class="form-label small fw-semibold text-slate-800">Upload Immunization / Vaccine Record</label>
+                                            <input type="file" name="immunization_document" class="form-control" accept=".pdf,.png,.jpg,.jpeg">
+                                            <small class="text-muted">Yellow immunization card or medical exemption record</small>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Step 4: Medical Information & Emergency Contacts -->
+                                <div class="mb-5">
+                                    <div class="d-flex align-items-center gap-2 pb-2 mb-3 border-bottom">
+                                        <div class="rounded-circle bg-primary bg-opacity-10 text-primary p-2 d-inline-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                                            <i class="bi bi-shield-plus small"></i>
+                                        </div>
+                                        <h5 class="fw-bold text-slate-800 mb-0">4. Medical Information & Emergency Contacts</h5>
+                                    </div>
+
+                                    <div class="row g-3">
+                                        <div class="col-12 col-md-6">
+                                            <label class="form-label small fw-semibold text-slate-800">Allergies & Medical Alerts</label>
+                                            <textarea name="medical_notes" class="form-control" rows="2" placeholder="List food/environmental allergies, asthma, EpiPen requirement..."></textarea>
+                                        </div>
+                                        <div class="col-12 col-md-6">
+                                            <label class="form-label small fw-semibold text-slate-800">Dietary Restrictions</label>
+                                            <textarea name="dietary_restrictions" class="form-control" rows="2" placeholder="e.g. Halal, Kosher, Vegetarian, Lactose-free, Nut-free..."></textarea>
+                                        </div>
+                                        <div class="col-12 col-md-6">
+                                            <label class="form-label small fw-semibold text-slate-800">Family Doctor / Pediatrician</label>
+                                            <input type="text" name="doctor_name" class="form-control" placeholder="Dr. Jane Smith, MD">
+                                        </div>
+                                        <div class="col-12 col-md-6">
+                                            <label class="form-label small fw-semibold text-slate-800">Doctor / Clinic Phone</label>
+                                            <input type="tel" name="doctor_phone" class="form-control" placeholder="(416) 555-0144">
+                                        </div>
+                                        <div class="col-12 col-md-4">
+                                            <label class="form-label small fw-semibold text-slate-800">Emergency Contact Name</label>
+                                            <input type="text" name="emergency_contact_name" class="form-control" placeholder="Grandparent or relative">
+                                        </div>
+                                        <div class="col-12 col-md-4">
+                                            <label class="form-label small fw-semibold text-slate-800">Emergency Contact Relationship</label>
+                                            <input type="text" name="emergency_contact_relation" class="form-control" placeholder="e.g. Grandparent, Aunt">
+                                        </div>
+                                        <div class="col-12 col-md-4">
+                                            <label class="form-label small fw-semibold text-slate-800">Emergency Contact Phone</label>
+                                            <input type="tel" name="emergency_contact_phone" class="form-control" placeholder="(416) 555-0188">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Step 5: Required Consent Documents -->
+                                <div class="mb-5">
+                                    <div class="d-flex align-items-center gap-2 pb-2 mb-3 border-bottom">
+                                        <div class="rounded-circle bg-primary bg-opacity-10 text-primary p-2 d-inline-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                                            <i class="bi bi-file-earmark-check-fill small"></i>
+                                        </div>
+                                        <h5 class="fw-bold text-slate-800 mb-0">5. Required Consent Documents</h5>
+                                    </div>
+
+                                    <div class="d-flex flex-column gap-3">
+                                        <!-- Consent 1: Medical -->
+                                        <div class="p-3 bg-light rounded-3 border">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="consent_medical" id="consentMedical" value="true" checked required>
+                                                <label class="form-check-label small fw-semibold text-slate-900" for="consentMedical">
+                                                    Emergency Medical Treatment Consent
+                                                </label>
+                                            </div>
+                                            <div class="small text-muted mt-1 ps-4">
+                                                I authorize center staff to seek emergency medical care, call EMS, and administer certified First Aid or CPR in the event of an urgent medical situation.
+                                            </div>
+                                        </div>
+
+                                        <!-- Consent 2: Walks -->
+                                        <div class="p-3 bg-light rounded-3 border">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="consent_walks" id="consentWalks" value="true" checked>
+                                                <label class="form-check-label small fw-semibold text-slate-900" for="consentWalks">
+                                                    Neighborhood Excursions & Supervised Walks
+                                                </label>
+                                            </div>
+                                            <div class="small text-muted mt-1 ps-4">
+                                                I grant permission for my child to participate in educator-supervised outdoor neighborhood walks, park visits, and center walking excursions.
+                                            </div>
+                                        </div>
+
+                                        <!-- Consent 3: Media -->
+                                        <div class="p-3 bg-light rounded-3 border">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="consent_photos" id="consentPhotos" value="true" checked>
+                                                <label class="form-check-label small fw-semibold text-slate-900" for="consentPhotos">
+                                                    Photography & Internal Activity Reports
+                                                </label>
+                                            </div>
+                                            <div class="small text-muted mt-1 ps-4">
+                                                I consent to photos of my child taken by classroom educators solely for secure daily activity updates, milestone logs, and communication via the KidSynq Parent Portal.
+                                            </div>
+                                        </div>
+
+                                        <!-- Consent 4: Topical -->
+                                        <div class="p-3 bg-light rounded-3 border">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="consent_topical" id="consentTopical" value="true" checked>
+                                                <label class="form-check-label small fw-semibold text-slate-900" for="consentTopical">
+                                                    Topical Medications & Sunscreen Application
+                                                </label>
+                                            </div>
+                                            <div class="small text-muted mt-1 ps-4">
+                                                I authorize center staff to apply parent-provided sunscreen, diaper rash cream, insect repellent, and non-prescription topical care products.
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Submission Confirmation -->
+                                <div class="p-3 bg-primary bg-opacity-10 border border-primary border-opacity-25 rounded-3 mb-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="consentLegal" required checked>
+                                        <label class="form-check-label small fw-bold text-slate-900" for="consentLegal">
+                                            I declare that the information provided in this application is true and complete. I understand that submitting this application places my child for admissions review and enrollment confirmation by {{ daycare.name }}.
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <!-- Form Submit -->
+                                <div class="d-grid gap-2">
+                                    <button type="submit" class="btn btn-primary btn-lg fw-bold d-inline-flex align-items-center justify-content-center gap-2 shadow-sm py-3">
+                                        <span>Submit Complete Application</span>
+                                        <i class="bi bi-send-fill"></i>
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Public Footer -->
+    <footer class="bg-white border-top py-4 text-center text-muted small">
+        <div class="container d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <div>
+                &copy; {% now "Y" %} <strong>{{ daycare.name }}</strong> &bull; Admissions Department
+            </div>
+            <div>
+                Powered by <strong>KidSynq</strong> Early Childhood Platform
+            </div>
+        </div>
+    </footer>
+</div>
+{% endblock layout %}

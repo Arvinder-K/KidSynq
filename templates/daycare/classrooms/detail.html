@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block title %}{{ classroom.name }} &mdash; Classroom Detail{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <a href="{% url 'daycare_classrooms' %}" class="small text-muted text-decoration-none">
+        <i class="bi bi-arrow-left me-1"></i> Back to Classrooms
+    </a>
+    <div class="d-flex justify-content-between align-items-center mt-2">
+        <div>
+            <h2 class="h4 fw-bold text-slate-800 mb-1">{{ classroom.name }}</h2>
+            <div class="text-muted small">
+                Licensed Capacity: <strong>{{ classroom.capacity }} children</strong> &bull;
+                Current Enrolled: <strong>{{ students|length }} children</strong>
+            </div>
+        </div>
+        <a href="{% url 'daycare_classroom_edit' classroom.id %}" class="btn btn-outline-primary btn-sm">
+            <i class="bi bi-pencil me-1"></i> Edit Room
+        </a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Enrolled Children -->
+    <div class="col-12 col-lg-7">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-transparent fw-bold d-flex justify-content-between align-items-center">
+                <span>Children Assigned to {{ classroom.name }}</span>
+                <span class="badge badge-soft-primary">{{ students|length }} / {{ classroom.capacity }}</span>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0 small">
+                    <thead>
+                        <tr>
+                            <th>Child Name</th>
+                            <th>Date of Birth</th>
+                            <th>Medical / Allergies</th>
+                            <th class="text-end">Profile</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for s in students %}
+                        <tr>
+                            <td class="fw-bold">
+                                <a href="{% url 'daycare_child_detail' s.id %}" class="text-decoration-none text-slate-800">
+                                    {{ s.first_name }} {{ s.last_name }}
+                                </a>
+                            </td>
+                            <td class="text-muted">{{ s.date_of_birth|date:"M d, Y"|default:"-" }}</td>
+                            <td>
+                                {% if s.medical_info or s.allergies %}
+                                    <span class="badge badge-soft-danger"><i class="bi bi-exclamation-triangle-fill me-1"></i> Alert</span>
+                                {% else %}
+                                    <span class="text-muted">None</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+                                <a href="{% url 'daycare_child_detail' s.id %}" class="btn btn-xs btn-light border py-1 px-2">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="4" class="text-center py-4 text-muted">No children assigned to this room yet.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Assigned Teachers -->
+    <div class="col-12 col-lg-5">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-transparent fw-bold">Educators & Teachers</div>
+            <div class="list-group list-group-flush">
+                {% for t in teachers %}
+                <div class="list-group-item d-flex justify-content-between align-items-center py-3">
+                    <div>
+                        <div class="fw-bold text-slate-800">{{ t.teacher.first_name }} {{ t.teacher.last_name }}</div>
+                        <div class="text-muted small">{{ t.role|default:"Lead Educator" }}</div>
+                    </div>
+                    <span class="badge badge-soft-success">Assigned</span>
+                </div>
+                {% empty %}
+                <div class="p-4 text-center text-muted">No educators assigned directly to this classroom yet.</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

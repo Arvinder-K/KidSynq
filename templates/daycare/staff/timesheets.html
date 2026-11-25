@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}Timesheets - KidSynq{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="h4 fw-bold text-slate-800 mb-1">Staff Timesheets & Payroll Logs</h2>
+        <p class="text-muted small mb-0">Compiled hourly records, work sessions, and payroll export records</p>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4">Employee</th>
+                        <th>Date</th>
+                        <th>Clock In</th>
+                        <th>Clock Out</th>
+                        <th>Break Duration</th>
+                        <th class="text-end pe-4">Billable Hours</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for rec in records %}
+                    <tr>
+                        <td class="ps-4 fw-medium text-slate-800">
+                            {{ rec.employee.first_name }} {{ rec.employee.last_name }}
+                        </td>
+                        <td>{{ rec.date|date:"M d, Y" }}</td>
+                        <td>{{ rec.check_in|time:"g:i A"|default:"-" }}</td>
+                        <td>{{ rec.check_out|time:"g:i A"|default:"-" }}</td>
+                        <td>{{ rec.break_minutes|default:"30" }} mins</td>
+                        <td class="text-end pe-4 font-monospace fw-bold text-slate-800">
+                            {{ rec.total_hours|default:"8.0" }} hrs
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5 text-muted">
+                            <i class="bi bi-file-earmark-spreadsheet fs-1 d-block mb-2 text-secondary opacity-50"></i>
+                            No timesheet records available.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

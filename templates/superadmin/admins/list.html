@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+
+{% block title %}Daycare Administrators{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="h4 fw-bold text-slate-800 mb-1">Daycare Administrators</h2>
+        <p class="text-muted small mb-0">Manage daycare primary administrators, credentials, and access statuses</p>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body p-3">
+        <form method="get" class="row g-2 align-items-center">
+            <div class="col-12 col-md-8">
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-search"></i></span>
+                    <input type="text" class="form-control border-start-0 ps-0" name="q" value="{{ q|default:'' }}" placeholder="Search admin username, name, email, daycare...">
+                </div>
+            </div>
+            <div class="col-12 col-md-4 d-flex gap-2">
+                <button type="submit" class="btn btn-primary flex-grow-1">Search</button>
+                <a href="{% url 'superadmin_admins' %}" class="btn btn-light border">Reset</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Administrator</th>
+                    <th>Email</th>
+                    <th>Associated Daycare</th>
+                    <th>Account Status</th>
+                    <th>Date Created</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for admin in page_obj %}
+                <tr>
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="d-inline-flex align-items-center justify-content-center bg-primary bg-opacity-10 text-primary rounded-circle fw-bold" style="width: 34px; height: 34px; font-size: 0.85rem;">
+                                {{ admin.username|slice:":1"|upper }}
+                            </span>
+                            <div>
+                                <div class="fw-bold text-slate-800">{{ admin.get_full_name|default:admin.username }}</div>
+                                <div class="text-muted small font-monospace">@{{ admin.username }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="small">{{ admin.email|default:"-" }}</td>
+                    <td>
+                        {% if admin.daycare %}
+                            <a href="{% url 'superadmin_daycare_detail' admin.daycare.id %}" class="text-decoration-none fw-semibold">
+                                {{ admin.daycare.name }}
+                            </a>
+                        {% else %}
+                            <span class="text-muted">-</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if admin.is_active %}
+                            <span class="badge badge-soft-success">Active</span>
+                        {% else %}
+                            <span class="badge badge-soft-danger">Deactivated</span>
+                        {% endif %}
+                    </td>
+                    <td class="small text-muted">{{ admin.date_joined|date:"M d, Y" }}</td>
+                    <td class="text-end">
+                        <button type="button" class="btn btn-sm btn-outline-warning text-dark d-inline-flex align-items-center gap-1 shadow-sm" data-bs-toggle="modal" data-bs-target="#resetPasswordModal{{ admin.id }}">
+                            <i class="bi bi-key-fill text-warning"></i>
+                            <span>Reset Password</span>
+                        </button>
+                    </td>
+                </tr>
+
+                <!-- Reset Password Modal for {{ admin.username }} -->
+                <div class="modal fade" id="resetPasswordModal{{ admin.id }}" tabindex="-1" aria-labelledby="resetPasswordLabel{{ admin.id }}" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content border-0 shadow-lg" style="border-radius: 1rem;">
+                            <form method="post">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="reset_admin_password">
+                                <input type="hidden" name="user_id" value="{{ admin.id }}">
+                                <div class="modal-header border-bottom-0 pb-0">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="bg-warning bg-opacity-10 text-warning rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                            <i class="bi bi-key-fill fs-5"></i>
+                                        </div>
+                                        <div>
+                                            <h5 class="modal-title fw-bold text-slate-800" id="resetPasswordLabel{{ admin.id }}">Reset Admin Password</h5>
+                                            <p class="text-muted small mb-0">Set a new password for <strong>{{ admin.username }}</strong></p>
+                                        </div>
+                                    </div>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body pt-3">
+                                    <div class="p-3 bg-light rounded-3 mb-3 border">
+                                        <div class="row g-2 small">
+                                            <div class="col-6">
+                                                <span class="text-muted d-block">Username:</span>
+                                                <span class="fw-bold font-monospace text-slate-800">@{{ admin.username }}</span>
+                                            </div>
+                                            <div class="col-6">
+                                                <span class="text-muted d-block">Full Name:</span>
+                                                <span class="fw-semibold text-slate-800">{{ admin.get_full_name|default:admin.username }}</span>
+                                            </div>
+                                            <div class="col-6">
+                                                <span class="text-muted d-block">Email:</span>
+                                                <span class="text-slate-700">{{ admin.email|default:"No email set" }}</span>
+                                            </div>
+                                            <div class="col-6">
+                                                <span class="text-muted d-block">Daycare:</span>
+                                                <span class="text-slate-700">{{ admin.daycare.name|default:"None" }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-semibold text-slate-700">New Password <span class="text-danger">*</span></label>
+                                        <div class="input-group">
+                                            <input type="text" name="new_password" id="adminPwdInput{{ admin.id }}" class="form-control font-monospace" placeholder="Enter new password" required minlength="6">
+                                            <button type="button" class="btn btn-outline-secondary" onclick="generatePassword('adminPwdInput{{ admin.id }}')" title="Generate random secure password">
+                                                <i class="bi bi-shuffle me-1"></i> Generate
+                                            </button>
+                                        </div>
+                                        <div class="form-text small text-muted">Must be at least 6 characters. Click <strong>Generate</strong> for a secure password.</div>
+                                    </div>
+                                </div>
+                                <div class="modal-footer border-top-0 pt-0">
+                                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                                    <button type="submit" class="btn btn-warning text-dark fw-bold">
+                                        <i class="bi bi-check2-circle me-1"></i> Update Password
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center py-5 text-muted">No daycare administrators found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="card-footer bg-transparent py-3">
+        {% include "includes/pagination.html" %}
+    </div>
+</div>
+
+<script>
+function generatePassword(targetId) {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%';
+    let pwd = '';
+    for (let i = 0; i < 10; i++) {
+        pwd += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    const input = document.getElementById(targetId);
+    if (input) {
+        input.value = pwd;
+        input.focus();
+        input.select();
+    }
+}
+</script>
+{% endblock %}
+

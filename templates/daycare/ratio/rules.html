@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}Provincial Ratio Rules - KidSynq{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="h4 fw-bold text-slate-800 mb-1">Ratio Rules & Regulatory Standards</h2>
+        <p class="text-muted small mb-0">Legal staffing ratios mandated under CCEYA and center operating licenses</p>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4">Age Classification</th>
+                        <th>Age Range (Months)</th>
+                        <th>Mandatory Educator Ratio</th>
+                        <th>Maximum Group Size</th>
+                        <th class="text-end pe-4">Regulatory Standard</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for rule in rules %}
+                    <tr>
+                        <td class="ps-4 fw-medium text-slate-800">
+                            {{ rule.age_group|title }}
+                        </td>
+                        <td>{{ rule.min_age_months }} &ndash; {{ rule.max_age_months }} mos</td>
+                        <td>
+                            <span class="badge bg-primary-subtle text-primary fw-bold">1 Educator : {{ rule.ratio_child_count }} Children</span>
+                        </td>
+                        <td>{{ rule.max_group_size|default:"15" }} children</td>
+                        <td class="text-end pe-4">
+                            <span class="badge bg-success-subtle text-success">Compliant</span>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center py-5 text-muted">
+                            <i class="bi bi-shield-check fs-1 d-block mb-2 text-secondary opacity-50"></i>
+                            No custom ratio overrides specified. Default CCEYA rules (Infant 3:10, Toddler 1:5, Preschool 1:8, Kindergarten 1:13) active.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

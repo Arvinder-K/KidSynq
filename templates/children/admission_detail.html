@@ -1,0 +1,655 @@
+{% extends "base.html" %}
+
+{% block title %}Application Review — {{ app.child_name }} — KidSynq{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <!-- Breadcrumb -->
+    <a href="{% url 'daycare_admissions' %}" class="small text-muted text-decoration-none">
+        <i class="bi bi-arrow-left me-1"></i> Back to Admissions & Applications
+    </a>
+
+    <!-- Application Review Header Banner -->
+    <div class="card border-0 shadow-sm rounded-4 mt-2 mb-4">
+        <div class="card-body p-4">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="rounded-circle bg-primary bg-opacity-10 text-primary p-3 d-inline-flex align-items-center justify-content-center" style="width: 56px; height: 56px;">
+                        <i class="bi bi-person-badge-fill fs-3"></i>
+                    </div>
+                    <div>
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <h3 class="fw-bold text-slate-800 mb-0">{{ app.child_name }}</h3>
+                            {% if app.status == 'approved' %}
+                                <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2 py-1">
+                                    <i class="bi bi-check-circle-fill me-1"></i> Approved & Enrolled
+                                </span>
+                            {% elif app.status == 'waitlisted' %}
+                                <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 px-2 py-1">
+                                    <i class="bi bi-hourglass-split me-1"></i> Waitlisted
+                                </span>
+                            {% elif app.status == 'rejected' %}
+                                <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-2 py-1">
+                                    <i class="bi bi-x-circle-fill me-1"></i> Declined
+                                </span>
+                            {% else %}
+                                <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 px-2 py-1">
+                                    <i class="bi bi-clock-fill me-1"></i> Pending Review
+                                </span>
+                            {% endif %}
+                        </div>
+                        <div class="text-muted small">
+                            Application Ref: <strong class="font-monospace text-primary">{{ app.application_number }}</strong> &bull; Submitted {{ app.submitted_at|date:"F d, Y" }}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons: Admission Decision -->
+                <div class="d-flex flex-wrap gap-2">
+                    {% if app.status != 'approved' %}
+                        <button type="button" class="btn btn-success btn-sm px-3 py-2 fw-semibold d-inline-flex align-items-center gap-2 shadow-sm"
+                                data-bs-toggle="modal" data-bs-target="#approveEnrollModal">
+                            <i class="bi bi-check-circle-fill fs-6"></i>
+                            <span>Approve & Enroll Child</span>
+                        </button>
+                        <button type="button" class="btn btn-outline-info btn-sm px-3 py-2 fw-semibold d-inline-flex align-items-center gap-1 shadow-sm"
+                                data-bs-toggle="modal" data-bs-target="#waitlistModal">
+                            <i class="bi bi-hourglass-split"></i>
+                            <span>Place on Waitlist</span>
+                        </button>
+                        <button type="button" class="btn btn-outline-danger btn-sm px-3 py-2 fw-semibold d-inline-flex align-items-center gap-1 shadow-sm"
+                                data-bs-toggle="modal" data-bs-target="#rejectModal">
+                            <i class="bi bi-x-circle"></i>
+                            <span>Decline</span>
+                        </button>
+                    {% else %}
+                        {% if app_data.enrolled_student_id %}
+                            <a href="{% url 'daycare_child_detail' pk=app_data.enrolled_student_id %}" class="btn btn-primary btn-sm px-3 py-2 fw-semibold d-inline-flex align-items-center gap-2 shadow-sm">
+                                <i class="bi bi-person-check-fill"></i>
+                                <span>View Enrolled Child Profile</span>
+                            </a>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Review Content Layout (2 Columns) -->
+    <div class="row g-4">
+        <!-- Left Column: Child, Documents, Health & Consents -->
+        <div class="col-12 col-lg-7">
+            <!-- 1. Child Details & Requested Program -->
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-header bg-transparent py-3 fw-bold text-slate-800 d-flex justify-content-between align-items-center">
+                    <span class="d-inline-flex align-items-center gap-2">
+                        <i class="bi bi-person text-primary fs-5"></i>
+                        <span>1. Child Details & Requested Program</span>
+                    </span>
+                    <span class="badge bg-light text-primary border">Step 1 Verified</span>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row g-3 small">
+                        <div class="col-6 col-md-4 text-muted">First Name:</div>
+                        <div class="col-6 col-md-8 fw-semibold text-slate-800">{{ app.child_first_name }}</div>
+
+                        <div class="col-6 col-md-4 text-muted">Last Name:</div>
+                        <div class="col-6 col-md-8 fw-semibold text-slate-800">{{ app.child_last_name }}</div>
+
+                        <div class="col-6 col-md-4 text-muted">Date of Birth:</div>
+                        <div class="col-6 col-md-8 text-slate-800">
+                            <strong>{{ app.date_of_birth|date:"F d, Y"|default:app.date_of_birth }}</strong>
+                            {% if app.age_in_months is not None %}
+                                <span class="badge bg-info bg-opacity-10 text-info ms-2">{{ app.age_in_months }} Months Old</span>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-6 col-md-4 text-muted">Gender:</div>
+                        <div class="col-6 col-md-8 text-slate-800">{{ app.gender|title }}</div>
+
+                        <div class="col-6 col-md-4 text-muted">Requested Program:</div>
+                        <div class="col-6 col-md-8 text-primary fw-semibold">{{ app.program_interest|default:"General Placement" }}</div>
+
+                        <div class="col-6 col-md-4 text-muted">Preferred Start Date:</div>
+                        <div class="col-6 col-md-8 text-success fw-bold">
+                            <i class="bi bi-calendar-check me-1"></i> {{ app.preferred_start_date|date:"F d, Y"|default:app.preferred_start_date|default:"Immediate Start" }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. Uploaded Documents & Birth Information (Step 2) -->
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-header bg-transparent py-3 fw-bold text-slate-800 d-flex justify-content-between align-items-center">
+                    <span class="d-inline-flex align-items-center gap-2">
+                        <i class="bi bi-file-earmark-arrow-up text-primary fs-5"></i>
+                        <span>2. Uploaded Documents & Birth Records</span>
+                    </span>
+                    <span class="badge bg-light text-success border"><i class="bi bi-shield-check me-1"></i> Documentation</span>
+                </div>
+                <div class="card-body p-4">
+                    <div class="d-flex flex-column gap-3">
+                        <!-- Birth Certificate Document -->
+                        <div class="p-3 bg-light rounded-3 border d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="fw-semibold text-slate-800 d-flex align-items-center gap-2">
+                                    <i class="bi bi-file-earmark-person text-primary fs-5"></i>
+                                    <span>Birth Certificate / Government ID</span>
+                                </div>
+                                <div class="small text-muted mt-1">
+                                    {% if app.birth_reg_number %}
+                                        Registration / Document ID: <strong class="font-monospace text-slate-800">{{ app.birth_reg_number }}</strong>
+                                    {% else %}
+                                        ID number not provided
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div>
+                                {% if app.birth_document_url %}
+                                    <a href="{{ app.birth_document_url }}" target="_blank" class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1 shadow-xs">
+                                        <i class="bi bi-download"></i> View Document
+                                    </a>
+                                {% else %}
+                                    <span class="badge bg-secondary bg-opacity-10 text-secondary">No File Attached</span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Immunization Document -->
+                        <div class="p-3 bg-light rounded-3 border d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="fw-semibold text-slate-800 d-flex align-items-center gap-2">
+                                    <i class="bi bi-shield-fill-plus text-info fs-5"></i>
+                                    <span>Immunization / Vaccination Record</span>
+                                </div>
+                                <div class="small text-muted mt-1">
+                                    Provincial yellow card or medical exemption record
+                                </div>
+                            </div>
+                            <div>
+                                {% if app.immunization_document_url %}
+                                    <a href="{{ app.immunization_document_url }}" target="_blank" class="btn btn-sm btn-outline-info d-inline-flex align-items-center gap-1 shadow-xs">
+                                        <i class="bi bi-download"></i> View Record
+                                    </a>
+                                {% else %}
+                                    <span class="badge bg-secondary bg-opacity-10 text-secondary">No File Attached</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. Medical, Dietary & Care Information -->
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-header bg-transparent py-3 fw-bold text-slate-800">
+                    <i class="bi bi-heart-pulse text-danger fs-5 me-2"></i>
+                    <span>3. Health, Dietary & Emergency Information</span>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row g-3 small">
+                        <div class="col-12 col-md-6">
+                            <label class="text-muted d-block mb-1">Allergies & Medical Alerts:</label>
+                            <div class="p-3 bg-light rounded-3 border text-slate-800">
+                                {{ app.medical_notes|default:"No known allergies or medical conditions reported." }}
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="text-muted d-block mb-1">Dietary Restrictions:</label>
+                            <div class="p-3 bg-light rounded-3 border text-slate-800">
+                                {{ app.dietary_restrictions|default:"Standard meal and snack program." }}
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <span class="text-muted d-block">Family Doctor / Clinic:</span>
+                            <strong class="text-slate-800">{{ app.doctor_name|default:"Not specified" }}</strong>
+                            {% if app.doctor_phone %}
+                                <div class="text-muted">{{ app.doctor_phone }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <span class="text-muted d-block">Designated Emergency Contact:</span>
+                            <strong class="text-slate-800">{{ app.emergency_contact_name|default:"Primary Guardian" }}</strong>
+                            {% if app.emergency_contact_phone %}
+                                <div class="text-muted">{{ app.emergency_contact_phone }} ({{ app.emergency_contact_relation|default:"Contact" }})</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. Required Consent Documents Verification -->
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-header bg-transparent py-3 fw-bold text-slate-800">
+                    <i class="bi bi-file-earmark-check text-success fs-5 me-2"></i>
+                    <span>4. Required Consent Acknowledgments</span>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row g-2 small">
+                        <div class="col-12 col-md-6 d-flex align-items-center gap-2">
+                            <i class="bi bi-check-circle-fill text-success fs-5"></i>
+                            <span>Emergency Medical Treatment Consent</span>
+                        </div>
+                        <div class="col-12 col-md-6 d-flex align-items-center gap-2">
+                            <i class="bi bi-check-circle-fill text-success fs-5"></i>
+                            <span>Neighborhood Walks / Excursions</span>
+                        </div>
+                        <div class="col-12 col-md-6 d-flex align-items-center gap-2">
+                            <i class="bi bi-check-circle-fill text-success fs-5"></i>
+                            <span>Photography & Daily Activity Logs</span>
+                        </div>
+                        <div class="col-12 col-md-6 d-flex align-items-center gap-2">
+                            <i class="bi bi-check-circle-fill text-success fs-5"></i>
+                            <span>Topical Creams & Sunscreen Application</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Guardian Details & Classroom Eligibility / Available Seats -->
+        <div class="col-12 col-lg-5">
+            <!-- Guardian Profile Card -->
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-header bg-transparent py-3 fw-bold text-slate-800">
+                    <i class="bi bi-people text-primary fs-5 me-2"></i>
+                    <span>Parent & Guardian Contact</span>
+                </div>
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <div class="rounded-circle bg-primary bg-opacity-10 text-primary p-3 d-inline-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                            <i class="bi bi-person-fill fs-4"></i>
+                        </div>
+                        <div>
+                            <h5 class="fw-bold text-slate-800 mb-0">{{ app.parent_first_name }} {{ app.parent_last_name }}</h5>
+                            <span class="badge bg-light text-dark border">{{ app_data.parent_relationship|default:"Primary Guardian" }}</span>
+                        </div>
+                    </div>
+
+                    <div class="d-flex flex-column gap-2 small">
+                        <div class="d-flex align-items-center gap-2 text-slate-800">
+                            <i class="bi bi-telephone text-primary"></i>
+                            <a href="tel:{{ app.parent_phone }}" class="text-decoration-none fw-medium text-slate-800">{{ app.parent_phone }}</a>
+                        </div>
+                        <div class="d-flex align-items-center gap-2 text-slate-800">
+                            <i class="bi bi-envelope text-primary"></i>
+                            <a href="mailto:{{ app.parent_email }}" class="text-decoration-none text-slate-800">{{ app.parent_email }}</a>
+                        </div>
+                        {% if app_data.parent_address %}
+                        <div class="d-flex align-items-center gap-2 text-muted">
+                            <i class="bi bi-geo-alt text-secondary"></i>
+                            <span>{{ app_data.parent_address }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Available Seats & Classroom Eligibility (Step 3 & 6) -->
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-header bg-transparent py-3 fw-bold text-slate-800 d-flex justify-content-between align-items-center">
+                    <span class="d-inline-flex align-items-center gap-2">
+                        <i class="bi bi-door-open text-primary fs-5"></i>
+                        <span>Classroom Capacity & Available Seats</span>
+                    </span>
+                    <span class="badge bg-light text-dark">{{ classroom_data|length }} Rooms</span>
+                </div>
+                <div class="card-body p-3">
+                    <div class="d-flex flex-column gap-3">
+                        {% for c in classroom_data %}
+                        <div class="p-3 rounded-3 border {% if c.is_matching_age %}border-primary border-2 bg-primary bg-opacity-10{% else %}bg-light{% endif %}">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <strong class="text-slate-800 fs-6">{{ c.room.room_name }}</strong>
+                                {% if c.available_seats > 0 %}
+                                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25">
+                                        {{ c.available_seats }} Seats Available
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25">
+                                        Room Full
+                                    </span>
+                                {% endif %}
+                            </div>
+
+                            <div class="d-flex justify-content-between align-items-center small text-muted">
+                                <div>
+                                    <span>Age: <strong>{{ c.room.age_group.name|default:"General" }}</strong></span>
+                                    {% if c.room.primary_teacher %}
+                                        &bull; <span>Lead: {{ c.room.primary_teacher.get_full_name|default:c.room.primary_teacher.username }}</span>
+                                    {% endif %}
+                                </div>
+                                <div class="font-monospace">
+                                    {{ c.enrolled_count }} / {{ c.capacity }} Enrolled
+                                </div>
+                            </div>
+
+                            {% if c.is_matching_age %}
+                                <div class="mt-2 text-primary small fw-semibold">
+                                    <i class="bi bi-star-fill text-warning me-1"></i> Recommended room matching child's age ({{ app.age_in_months }} mos)
+                                </div>
+                            {% endif %}
+                        </div>
+                        {% empty %}
+                        <div class="text-muted text-center py-3">No classrooms configured yet.</div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ========================================================================= -->
+<!-- MODAL: APPROVE APPLICATION, ASSIGN CLASSROOM, FEES & ACTIVATE ENROLLMENT -->
+<!-- ========================================================================= -->
+<div class="modal fade" id="approveEnrollModal" tabindex="-1" aria-labelledby="approveEnrollModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <form method="post" id="approveEnrollForm">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="approve_and_enroll">
+
+                <div class="modal-header bg-success bg-opacity-10 border-bottom py-3">
+                    <h5 class="modal-title fw-bold text-success" id="approveEnrollModalLabel">
+                        <i class="bi bi-person-check-fill me-2"></i> Approve & Activate Enrollment for {{ app.child_name }}
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body p-4">
+                    <!-- Step 6: Assign Classroom & Start Date -->
+                    <h6 class="fw-bold text-slate-800 pb-2 border-bottom mb-3">
+                        <i class="bi bi-door-open-fill text-primary me-1"></i> Step 1: Assign Classroom & Enrollment Start Date
+                    </h6>
+                    <div class="row g-3 mb-4">
+                        <div class="col-12 col-md-6">
+                            <label class="form-label small fw-semibold">Select Classroom <span class="text-danger">*</span></label>
+                            <select name="classroom_id" class="form-select" required>
+                                {% for c in classroom_data %}
+                                    <option value="{{ c.room.id }}" {% if c.is_matching_age and c.available_seats > 0 %}selected{% endif %}>
+                                        {{ c.room.room_name }} ({{ c.available_seats }} seats available • {{ c.room.age_group.name|default:"General" }})
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label small fw-semibold">Enrollment Start Date <span class="text-danger">*</span></label>
+                            <input type="date" name="enrollment_date" class="form-control" value="{{ app.preferred_start_date|date:'Y-m-d'|default:app.preferred_start_date|default:'' }}" required>
+                            <small class="text-success"><i class="bi bi-info-circle"></i> Child becomes eligible for daily attendance from this date.</small>
+                        </div>
+                    </div>
+
+                    <!-- Step 5: Assign Fee Structure -->
+                    <h6 class="fw-bold text-slate-800 pb-2 border-bottom mb-3">
+                        <i class="bi bi-receipt-cutoff text-primary me-1"></i> Step 2: Assign Fee Structure & Attach Initial Statement
+                    </h6>
+                    <div class="row g-3 mb-3">
+                        <!-- Registration Fee -->
+                        <div class="col-12 col-md-4">
+                            <label class="form-label small fw-semibold">Registration Fee ($)</label>
+                            <input type="number" step="0.01" min="0" name="reg_fee_amount" id="regFeeInput" class="form-control font-monospace" value="{{ reg_fee.amount|floatformat:2|default:'100.00' }}" oninput="calculateAdmissionsBilling()">
+                            <small class="text-muted">One-time enrollment fee</small>
+                        </div>
+
+                        <!-- Tuition Fee Structure -->
+                        <div class="col-12 col-md-4">
+                            <label class="form-label small fw-semibold">Base Tuition Fee ($)</label>
+                            <input type="number" step="0.01" min="0" name="tuition_fee_amount" id="tuitionFeeInput" class="form-control font-monospace" value="1150.00" oninput="calculateAdmissionsBilling()">
+                            <small class="text-muted">Standard recurring rate</small>
+                        </div>
+
+                        <!-- Security Deposit -->
+                        <div class="col-12 col-md-4">
+                            <label class="form-label small fw-semibold">Security Deposit ($)</label>
+                            <input type="number" step="0.01" min="0" name="deposit_amount" id="depositInput" class="form-control font-monospace" value="0.00" oninput="calculateAdmissionsBilling()">
+                            <small class="text-muted">Refundable deposit (optional)</small>
+                        </div>
+
+                        <!-- Tuition Description -->
+                        <div class="col-12">
+                            <label class="form-label small fw-semibold">Tuition Description</label>
+                            <input type="text" name="tuition_description" class="form-control form-control-sm" value="Monthly Childcare Tuition Services">
+                        </div>
+                    </div>
+
+                    <!-- CWELCC 52.75% Subsidy Toggle -->
+                    <div class="p-3 bg-info bg-opacity-10 border border-info border-opacity-25 rounded-3 mb-3">
+                        <div class="form-check form-switch fs-6 mb-0">
+                            <input class="form-check-input" type="checkbox" name="apply_cwelcc" id="applyCwelccSwitch" value="true" checked onchange="calculateAdmissionsBilling()">
+                            <label class="form-check-label fw-bold text-slate-800 ms-2" for="applyCwelccSwitch">
+                                Apply CWELCC 52.75% Provincial Fee Reduction
+                            </label>
+                        </div>
+                        <small class="text-muted d-block ps-4 mt-1">Applies standard 52.75% fee discount to monthly tuition co-pay for licensed Ontario child care.</small>
+                    </div>
+
+                    <!-- Live Statement Summary Calculation -->
+                    <div class="p-3 bg-light rounded-3 border mb-4 small">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="text-muted">Registration Fee:</span>
+                            <span class="font-monospace fw-semibold" id="calcRegFee">$100.00</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="text-muted">Standard Tuition:</span>
+                            <span class="font-monospace fw-semibold" id="calcTuitionFee">$1,150.00</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-1 text-info" id="calcSubsidyRow">
+                            <span>CWELCC Subsidy Reduction (-52.75%):</span>
+                            <span class="font-monospace fw-semibold" id="calcSubsidyDisc">-$606.63</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-1" id="calcDepositRow">
+                            <span class="text-muted">Security Deposit:</span>
+                            <span class="font-monospace fw-semibold" id="calcDepositFee">$0.00</span>
+                        </div>
+                        <div class="d-flex justify-content-between pt-2 border-top fw-bold fs-6">
+                            <span>Initial Total Invoiced:</span>
+                            <span class="font-monospace text-primary" id="calcNetTotal">$643.38</span>
+                        </div>
+                    </div>
+
+                    <!-- Step 3: Payment Option -->
+                    <h6 class="fw-bold text-slate-800 pb-2 border-bottom mb-3">
+                        <i class="bi bi-credit-card-fill text-primary me-1"></i> Step 3: Initial Payment Option
+                    </h6>
+                    <div class="row g-3 mb-3">
+                        <div class="col-12 col-md-6">
+                            <label class="form-check p-3 rounded-3 border cursor-pointer h-100" id="admPayNowLabel">
+                                <input class="form-check-input me-2" type="radio" name="payment_action" id="admPayNowRadio" value="pay_now" checked onchange="toggleAdmPaymentFields()">
+                                <strong class="d-block text-slate-800">Collect Payment Now</strong>
+                                <small class="text-muted">Generates official payment receipt REC-...</small>
+                            </label>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-check p-3 rounded-3 border cursor-pointer h-100" id="admBillLaterLabel">
+                                <input class="form-check-input me-2" type="radio" name="payment_action" id="admBillLaterRadio" value="bill_later" onchange="toggleAdmPaymentFields()">
+                                <strong class="d-block text-slate-800">Bill Family Later</strong>
+                                <small class="text-muted">Issues unpaid statement to parent portal</small>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div id="admPaymentFieldsContainer" class="p-3 bg-success bg-opacity-10 border border-success border-opacity-25 rounded-3 mb-3">
+                        <div class="row g-2">
+                            <div class="col-12 col-md-4">
+                                <label class="form-label small fw-semibold">Amount Paid ($)</label>
+                                <input type="number" step="0.01" min="0" name="amount_paid" id="admPaidAmountInput" class="form-control form-control-sm font-monospace fw-bold text-success" value="643.38">
+                            </div>
+                            <div class="col-12 col-md-4">
+                                <label class="form-label small fw-semibold">Payment Method</label>
+                                <select name="payment_method" class="form-select form-select-sm">
+                                    <option value="ETRANSFER" selected>Interac e-Transfer</option>
+                                    <option value="CREDIT_CARD">Credit Card</option>
+                                    <option value="DEBIT_CARD">Debit / POS</option>
+                                    <option value="CASH">Cash</option>
+                                    <option value="CHEQUE">Cheque</option>
+                                </select>
+                            </div>
+                            <div class="col-12 col-md-4">
+                                <label class="form-label small fw-semibold">Transaction Reference</label>
+                                <input type="text" name="transaction_reference" class="form-control form-control-sm" placeholder="e.g. TXN-98402">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label small fw-semibold">Payer Name</label>
+                                <input type="text" name="payer_name" class="form-control form-control-sm" value="{{ app.parent_first_name }} {{ app.parent_last_name }}">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer border-top-0 pt-0">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success px-4 fw-bold d-inline-flex align-items-center gap-2">
+                        <i class="bi bi-check2-circle fs-5"></i>
+                        <span>Confirm Admission & Activate Enrollment</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ========================================== -->
+<!-- MODAL: PLACE APPLICATION ON WAITLIST      -->
+<!-- ========================================== -->
+<div class="modal fade" id="waitlistModal" tabindex="-1" aria-labelledby="waitlistModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="waitlist">
+
+                <div class="modal-header border-bottom py-3">
+                    <h5 class="modal-title fw-bold text-info" id="waitlistModalLabel">
+                        <i class="bi bi-hourglass-split me-1"></i> Place {{ app.child_name }} on Waitlist
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Waitlist Priority Ranking</label>
+                        <select name="priority" class="form-select">
+                            <option value="1">Priority 1 — High (Sibling at center / Essential worker)</option>
+                            <option value="2" selected>Priority 2 — Standard Queue</option>
+                            <option value="3">Priority 3 — Flexible / Future Semester</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Target Start Date</label>
+                        <input type="date" name="target_start_date" class="form-control" value="{{ app.preferred_start_date|date:'Y-m-d'|default:app.preferred_start_date|default:'' }}">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Administrative Notes</label>
+                        <textarea name="notes" rows="3" class="form-control" placeholder="Room preference, contact attempts, or parent notes..."></textarea>
+                    </div>
+                </div>
+
+                <div class="modal-footer border-top-0 pt-0">
+                    <button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-info text-white btn-sm fw-semibold">
+                        Confirm Placement on Waitlist
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ========================================== -->
+<!-- MODAL: DECLINE APPLICATION                -->
+<!-- ========================================== -->
+<div class="modal fade" id="rejectModal" tabindex="-1" aria-labelledby="rejectModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="reject">
+
+                <div class="modal-header border-bottom py-3">
+                    <h5 class="modal-title fw-bold text-danger" id="rejectModalLabel">
+                        <i class="bi bi-x-circle-fill me-1"></i> Decline Application
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body p-4">
+                    <p class="text-slate-800 small mb-3">
+                        Please record the reason for declining <strong>{{ app.child_name }}'s</strong> application.
+                    </p>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Reason for Decline</label>
+                        <select name="reason" class="form-select mb-2">
+                            <option value="Capacity exceeded for age group">Center at maximum capacity for age group</option>
+                            <option value="Program not offered at this location">Requested program not available</option>
+                            <option value="Parent requested cancellation">Parent requested withdrawal / cancellation</option>
+                            <option value="Other">Other administrative reason</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="modal-footer border-top-0 pt-0">
+                    <button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger btn-sm fw-semibold">
+                        Record Decision & Decline
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function calculateAdmissionsBilling() {
+    const regFee = parseFloat(document.getElementById('regFeeInput').value) || 0.00;
+    const tuitionFee = parseFloat(document.getElementById('tuitionFeeInput').value) || 0.00;
+    const deposit = parseFloat(document.getElementById('depositInput').value) || 0.00;
+    const cwelcc = document.getElementById('applyCwelccSwitch').checked;
+
+    let discount = 0.00;
+    if (cwelcc && tuitionFee > 0) {
+        discount = tuitionFee * 0.5275;
+        document.getElementById('calcSubsidyRow').style.display = 'flex';
+    } else {
+        document.getElementById('calcSubsidyRow').style.display = 'none';
+    }
+
+    const net = Math.max(0.00, regFee + tuitionFee + deposit - discount);
+
+    document.getElementById('calcRegFee').textContent = '$' + regFee.toFixed(2);
+    document.getElementById('calcTuitionFee').textContent = '$' + tuitionFee.toFixed(2);
+    document.getElementById('calcSubsidyDisc').textContent = '-$' + discount.toFixed(2);
+    document.getElementById('calcDepositFee').textContent = '$' + deposit.toFixed(2);
+    document.getElementById('calcNetTotal').textContent = '$' + net.toFixed(2);
+
+    const paidInput = document.getElementById('admPaidAmountInput');
+    if (paidInput) {
+        paidInput.value = net.toFixed(2);
+    }
+}
+
+function toggleAdmPaymentFields() {
+    const payNow = document.getElementById('admPayNowRadio').checked;
+    const fields = document.getElementById('admPaymentFieldsContainer');
+    const payNowLabel = document.getElementById('admPayNowLabel');
+    const billLaterLabel = document.getElementById('admBillLaterLabel');
+
+    if (payNow) {
+        fields.style.display = 'block';
+        payNowLabel.classList.add('border-success', 'bg-success', 'bg-opacity-10');
+        billLaterLabel.classList.remove('border-success', 'bg-success', 'bg-opacity-10');
+    } else {
+        fields.style.display = 'none';
+        billLaterLabel.classList.add('border-success', 'bg-success', 'bg-opacity-10');
+        payNowLabel.classList.remove('border-success', 'bg-success', 'bg-opacity-10');
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    calculateAdmissionsBilling();
+    toggleAdmPaymentFields();
+});
+</script>
+{% endblock %}

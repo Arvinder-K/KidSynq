@@ -1,0 +1,315 @@
+{% extends "base.html" %}
+
+{% block title %}{{ child.first_name }} {{ child.last_name }} &mdash; Child Profile{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <a href="{% url 'daycare_children' %}" class="small text-muted text-decoration-none">
+        <i class="bi bi-arrow-left me-1"></i> Back to Children Roster
+    </a>
+
+    <!-- Child Profile Header Card -->
+    <div class="card border-0 shadow-sm mt-2 overflow-hidden">
+        <div class="card-body p-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+            <div class="d-flex align-items-center gap-3">
+                <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center fw-bold fs-3" style="width: 64px; height: 64px;">
+                    {{ child.first_name|make_list|first }}{{ child.last_name|make_list|first }}
+                </div>
+                <div>
+                    <h2 class="h4 fw-bold text-slate-800 mb-1">{{ child.first_name }} {{ child.last_name }}</h2>
+                    <div class="d-flex flex-wrap align-items-center gap-2 small text-muted">
+                        {% if child.classroom %}
+                            <span class="badge badge-soft-primary"><i class="bi bi-door-open me-1"></i> {{ child.classroom.name }}</span>
+                        {% else %}
+                            <span class="badge badge-soft-secondary">No Classroom</span>
+                        {% endif %}
+
+                        {% if child.date_of_birth %}
+                            <span><i class="bi bi-balloon me-1"></i> Born: {{ child.date_of_birth|date:"M d, Y" }}</span>
+                        {% endif %}
+
+                        {% if child.medical_info or child.allergies %}
+                            <span class="badge badge-soft-danger"><i class="bi bi-exclamation-triangle-fill me-1"></i> Medical Alert</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <a href="{% url 'daycare_attendance' %}?date={{ 'now'|date:'Y-m-d' }}" class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-calendar-check me-1"></i> Record Attendance
+                </a>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="border-top px-4">
+            <ul class="nav nav-tabs border-0 pt-2" id="childProfileTabs" role="tablist">
+                <li class="nav-item">
+                    <a class="nav-link py-2 px-3 fw-semibold small {% if active_tab == 'overview' %}active{% endif %}" href="?tab=overview">Overview</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link py-2 px-3 fw-semibold small {% if active_tab == 'personal' %}active{% endif %}" href="?tab=personal">Personal Info</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link py-2 px-3 fw-semibold small {% if active_tab == 'contacts' %}active{% endif %}" href="?tab=contacts">Emergency Contacts</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link py-2 px-3 fw-semibold small {% if active_tab == 'pickups' %}active{% endif %}" href="?tab=pickups">Authorized Pickups</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link py-2 px-3 fw-semibold small {% if active_tab == 'attendance' %}active{% endif %}" href="?tab=attendance">Attendance</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- Tab Content -->
+{% if active_tab == 'overview' %}
+<div class="row g-4">
+    <div class="col-12 col-lg-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-transparent fw-bold">Recent Attendance Records</div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0 small">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th>Check-in</th>
+                            <th>Check-out</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for att in recent_attendance %}
+                        <tr>
+                            <td class="fw-semibold">{{ att.date|date:"M d, Y" }}</td>
+                            <td>
+                                <span class="badge {% if att.status == 'present' or att.status == 'checked_in' %}badge-soft-success{% elif att.status == 'absent' %}badge-soft-danger{% else %}badge-soft-warning{% endif %}">
+                                    {{ att.status|title }}
+                                </span>
+                            </td>
+                            <td>{{ att.check_in|time:"H:i"|default:"-" }}</td>
+                            <td>{{ att.check_out|time:"H:i"|default:"-" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="4" class="text-center py-4 text-muted">No attendance logged yet.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-lg-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-transparent fw-bold">Medical & Care Instructions</div>
+            <div class="card-body">
+                <h6 class="fw-bold small text-muted mb-1">Allergies & Medical Alerts</h6>
+                <p class="text-slate-800 small mb-3">{{ child.medical_info|default:"None reported" }}</p>
+
+                <h6 class="fw-bold small text-muted mb-1">Dietary Restrictions</h6>
+                <p class="text-slate-800 small mb-0">{{ child.dietary_restrictions|default:"Standard meal program" }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% elif active_tab == 'personal' %}
+<form method="post" class="card border-0 shadow-sm" style="max-width: 800px;">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="update_personal">
+    <input type="hidden" name="tab" value="personal">
+    <div class="card-body p-4">
+        <h5 class="fw-bold text-slate-800 mb-4">Edit Personal Information</h5>
+        <div class="row g-3">
+            <div class="col-12 col-md-6">
+                <label class="form-label small fw-semibold">First Name</label>
+                <input type="text" name="first_name" class="form-control" value="{{ child.first_name }}" required>
+            </div>
+            <div class="col-12 col-md-6">
+                <label class="form-label small fw-semibold">Last Name</label>
+                <input type="text" name="last_name" class="form-control" value="{{ child.last_name }}" required>
+            </div>
+            <div class="col-12 col-md-6">
+                <label class="form-label small fw-semibold">Date of Birth</label>
+                <input type="date" name="date_of_birth" class="form-control" value="{{ child.date_of_birth|date:'Y-m-d' }}">
+            </div>
+            <div class="col-12 col-md-6">
+                <label class="form-label small fw-semibold">Gender</label>
+                <select name="gender" class="form-select">
+                    <option value="male" {% if child.gender == 'male' %}selected{% endif %}>Male</option>
+                    <option value="female" {% if child.gender == 'female' %}selected{% endif %}>Female</option>
+                    <option value="other" {% if child.gender == 'other' %}selected{% endif %}>Other</option>
+                    <option value="unspecified" {% if child.gender == 'unspecified' %}selected{% endif %}>Unspecified</option>
+                </select>
+            </div>
+            <div class="col-12">
+                <label class="form-label small fw-semibold">Medical / Allergy Notes</label>
+                <textarea name="medical_info" class="form-control" rows="3">{{ child.medical_info|default:'' }}</textarea>
+            </div>
+            <div class="col-12">
+                <label class="form-label small fw-semibold">Dietary Restrictions</label>
+                <textarea name="dietary_restrictions" class="form-control" rows="3">{{ child.dietary_restrictions|default:'' }}</textarea>
+            </div>
+        </div>
+        <div class="mt-4 pt-3 border-top text-end">
+            <button type="submit" class="btn btn-primary px-4 fw-semibold">Save Changes</button>
+        </div>
+    </div>
+</form>
+
+{% elif active_tab == 'contacts' %}
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+        <span class="fw-bold">Emergency Contacts</span>
+        <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="collapse" data-bs-target="#addContactCollapse">
+            <i class="bi bi-plus-circle me-1"></i> Add Contact
+        </button>
+    </div>
+
+    <!-- Collapsible Add Contact Form -->
+    <div class="collapse p-4 border-bottom bg-light" id="addContactCollapse">
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="add_contact">
+            <input type="hidden" name="tab" value="contacts">
+            <h6 class="fw-bold mb-3">Add Emergency Contact</h6>
+            <div class="row g-2">
+                <div class="col-12 col-md-4">
+                    <input type="text" name="contact_name" class="form-control form-control-sm" placeholder="Full Name" required>
+                </div>
+                <div class="col-12 col-md-4">
+                    <input type="text" name="relation" class="form-control form-control-sm" placeholder="Relationship (e.g. Aunt, Grandparent)" required>
+                </div>
+                <div class="col-12 col-md-3">
+                    <input type="text" name="phone" class="form-control form-control-sm" placeholder="Phone Number" required>
+                </div>
+                <div class="col-12 col-md-1">
+                    <button type="submit" class="btn btn-sm btn-primary w-100">Save</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Contact Name</th>
+                    <th>Relationship</th>
+                    <th>Phone Number</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in emergency_contacts %}
+                <tr>
+                    <td class="fw-bold">{{ c.name }}</td>
+                    <td>{{ c.relationship }}</td>
+                    <td>{{ c.phone_number }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="3" class="text-center py-4 text-muted">No emergency contacts registered yet.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% elif active_tab == 'pickups' %}
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+        <span class="fw-bold">Authorized Pickup Persons</span>
+        <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="collapse" data-bs-target="#addPickupCollapse">
+            <i class="bi bi-plus-circle me-1"></i> Add Pickup Person
+        </button>
+    </div>
+
+    <!-- Collapsible Add Pickup Form -->
+    <div class="collapse p-4 border-bottom bg-light" id="addPickupCollapse">
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="add_pickup">
+            <input type="hidden" name="tab" value="pickups">
+            <h6 class="fw-bold mb-3">Authorize New Pickup Person</h6>
+            <div class="row g-2">
+                <div class="col-12 col-md-4">
+                    <input type="text" name="pickup_name" class="form-control form-control-sm" placeholder="Full Name" required>
+                </div>
+                <div class="col-12 col-md-4">
+                    <input type="text" name="relation" class="form-control form-control-sm" placeholder="Relationship" required>
+                </div>
+                <div class="col-12 col-md-3">
+                    <input type="text" name="phone" class="form-control form-control-sm" placeholder="Phone Number" required>
+                </div>
+                <div class="col-12 col-md-1">
+                    <button type="submit" class="btn btn-sm btn-primary w-100">Save</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Authorized Person</th>
+                    <th>Relationship</th>
+                    <th>Phone</th>
+                    <th>Authorization</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in pickups %}
+                <tr>
+                    <td class="fw-bold">{{ p.name }}</td>
+                    <td>{{ p.relationship }}</td>
+                    <td>{{ p.phone }}</td>
+                    <td><span class="badge badge-soft-success">Authorized</span></td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="4" class="text-center py-4 text-muted">No pickup persons designated yet.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% elif active_tab == 'attendance' %}
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-transparent fw-bold">Attendance Record History</div>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Classroom</th>
+                    <th>Status</th>
+                    <th>Check In Time</th>
+                    <th>Check Out Time</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for att in recent_attendance %}
+                <tr>
+                    <td class="fw-semibold">{{ att.date|date:"M d, Y" }}</td>
+                    <td>{{ att.classroom.name|default:"-" }}</td>
+                    <td>
+                        <span class="badge {% if att.status == 'present' or att.status == 'checked_in' %}badge-soft-success{% elif att.status == 'absent' %}badge-soft-danger{% else %}badge-soft-warning{% endif %}">
+                            {{ att.status|title }}
+                        </span>
+                    </td>
+                    <td>{{ att.check_in|time:"H:i"|default:"-" }}</td>
+                    <td>{{ att.check_out|time:"H:i"|default:"-" }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5" class="text-center py-5 text-muted">No attendance logs available.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+

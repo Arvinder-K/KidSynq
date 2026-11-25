@@ -1,0 +1,13 @@
+{
+    "include": [
+        "apps",
+        "kidsynq",
+        "scripts"
+    ],
+    "extraPaths": [
+        ".",
+        "apps"
+    ],
+    "venvPath": ".",
+    "venv": "venv"
+}

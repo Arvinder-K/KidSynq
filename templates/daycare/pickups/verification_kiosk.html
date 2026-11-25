@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+
+{% block title %}Pickup & Drop-Off Security Kiosk - KidSynq{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="h4 fw-bold text-slate-800 mb-1">Pickup & Arrival Verification Kiosk</h2>
+        <p class="text-muted small mb-0">Authorized guardian ID verification, custodial security check, and arrival/departure terminal.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{% url 'daycare_attendance' %}" class="btn btn-outline-primary d-inline-flex align-items-center gap-2">
+            <i class="bi bi-calendar-check"></i> Roll Call
+        </a>
+        <a href="{% url 'daycare_safe_arrival' %}" class="btn btn-outline-danger d-inline-flex align-items-center gap-2">
+            <i class="bi bi-shield-exclamation"></i> Safe Arrival
+        </a>
+    </div>
+</div>
+
+<div class="row g-4 justify-content-center">
+    <!-- Verification Terminal Card -->
+    <div class="col-12 col-lg-8">
+        <div class="card border-0 shadow-sm p-4">
+            <div class="text-center mb-4">
+                <div class="avatar-placeholder rounded-circle bg-primary bg-opacity-10 text-primary mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 64px; height: 64px;">
+                    <i class="bi bi-shield-lock-fill fs-2"></i>
+                </div>
+                <h5 class="fw-bold text-slate-800 mb-1">Guardian & Pickup Security Terminal</h5>
+                <p class="text-muted small mb-0">Select child and authorized guardian to verify identity and custody permissions.</p>
+            </div>
+
+            <!-- Terminal Form -->
+            <form method="post" class="mb-4">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="verify">
+                <div class="row g-3">
+                    <div class="col-12 col-md-6">
+                        <label class="form-label fw-semibold text-slate-800">Select Child</label>
+                        <select name="child_id" class="form-select" id="childSelect" onchange="updatePickupList(this.value)" required>
+                            <option value="">-- Choose Child --</option>
+                            {% for c in children %}
+                            <option value="{{ c.id }}" {% if selected_child and selected_child.id == c.id %}selected{% endif %}>
+                                {{ c.first_name }} {{ c.last_name }} ({{ c.classroom.room_name|default:"General" }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label class="form-label fw-semibold text-slate-800">Authorized Pickup / Drop-Off Person</label>
+                        <select name="pickup_person_id" class="form-select" id="pickupSelect" required>
+                            <option value="">-- Select Person --</option>
+                            {% if selected_child %}
+                                {% for p in selected_child.pickups.all %}
+                                <option value="{{ p.id }}">{{ p.name }} ({{ p.relationship }}) - {{ p.authorization_status|default:"Active" }}</option>
+                                {% endfor %}
+                            {% endif %}
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label class="form-label fw-semibold text-slate-800">Guardian Security PIN (Optional)</label>
+                        <input type="password" name="pin_code" class="form-control font-monospace" placeholder="4-digit PIN" maxlength="6">
+                    </div>
+                    <div class="col-12 col-md-6 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold d-inline-flex align-items-center justify-content-center gap-2">
+                            <i class="bi bi-shield-check"></i> Verify Authorization
+                        </button>
+                    </div>
+                </div>
+            </form>
+
+            <!-- Verification Results Display -->
+            {% if verification_result %}
+            <div class="border rounded p-4 mb-4 {% if verification_result.is_authorized %}bg-success-subtle border-success-subtle{% else %}bg-danger-subtle border-danger-subtle{% endif %}">
+                <div class="d-flex align-items-start gap-3">
+                    <div class="rounded-circle {% if verification_result.is_authorized %}bg-success text-white{% else %}bg-danger text-white{% endif %} p-2 d-flex align-items-center justify-content-center" style="width: 44px; height: 44px; flex-shrink: 0;">
+                        {% if verification_result.is_authorized %}
+                            <i class="bi bi-check-lg fs-4"></i>
+                        {% else %}
+                            <i class="bi bi-x-lg fs-4"></i>
+                        {% endif %}
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="fw-bold mb-1 {% if verification_result.is_authorized %}text-success{% else %}text-danger{% endif %}">
+                                {% if verification_result.is_authorized %}
+                                    AUTHORIZED & CLEAR FOR DEPARTURE / ARRIVAL
+                                {% else %}
+                                    AUTHORIZATION WARNING / DENIED
+                                {% endif %}
+                            </h5>
+                            <span class="badge {% if verification_result.is_authorized %}bg-success{% else %}bg-danger{% endif %}">
+                                {{ verification_result.status_code }}
+                            </span>
+                        </div>
+                        <p class="mb-2 text-slate-800 small">{{ verification_result.reason }}</p>
+
+                        <!-- Quick Process Buttons -->
+                        {% if verification_result.is_authorized %}
+                        <div class="d-flex gap-2 mt-3 pt-2 border-top border-success-subtle">
+                            <form method="post" class="d-inline">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="kiosk_check_in">
+                                <input type="hidden" name="child_id" value="{{ selected_child.id }}">
+                                <button type="submit" class="btn btn-sm btn-success d-inline-flex align-items-center gap-1">
+                                    <i class="bi bi-box-arrow-in-right"></i> Process Arrival Check-In
+                                </button>
+                            </form>
+                            <form method="post" class="d-inline">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="kiosk_check_out">
+                                <input type="hidden" name="child_id" value="{{ selected_child.id }}">
+                                <input type="hidden" name="pickup_person_id" value="{{ verification_result.pickup_summary.id|default:'' }}">
+                                <button type="submit" class="btn btn-sm btn-primary d-inline-flex align-items-center gap-1">
+                                    <i class="bi bi-box-arrow-right"></i> Process Dismissal Check-Out
+                                </button>
+                            </form>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="p-3 bg-light rounded text-muted small">
+                <i class="bi bi-info-circle me-1 text-primary"></i> 
+                Authorized pickup lists are synchronized with parent custodial agreements. Any temporary authorization requires signed digital consent.
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// JSON map of child to authorized pickups
+const pickupsData = {
+    {% for c in children %}
+    "{{ c.id }}": [
+        {% for p in c.pickups.all %}
+        { "id": "{{ p.id }}", "name": "{{ p.name|escapejs }}", "rel": "{{ p.relationship|escapejs }}", "status": "{{ p.authorization_status|default:'Active'|escapejs }}" },
+        {% endfor %}
+    ],
+    {% endfor %}
+};
+
+function updatePickupList(childId) {
+    const sel = document.getElementById('pickupSelect');
+    sel.innerHTML = '<option value="">-- Select Person --</option>';
+    if (pickupsData[childId]) {
+        pickupsData[childId].forEach(p => {
+            const opt = document.createElement('option');
+            opt.value = p.id;
+            opt.textContent = `${p.name} (${p.rel}) - ${p.status}`;
+            sel.appendChild(opt);
+        });
+    }
+}
+</script>
+{% endblock %}

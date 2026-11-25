@@ -1,0 +1,242 @@
+{% extends "base.html" %}
+
+{% block title %}Admissions & Registration Applications - KidSynq{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <!-- Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <h2 class="h4 fw-bold text-slate-800 mb-1">Admissions & Applications</h2>
+            <p class="text-muted small mb-0">Incoming child enrollment inquiries submitted via the online registration
+                portal</p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <a href="{% url 'daycare_waitlist' %}"
+                class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-1 shadow-sm">
+                <i class="bi bi-hourglass-split"></i>
+                <span>View Waitlist ({{ waitlisted_count }})</span>
+            </a>
+            <a href="{% url 'daycare_child_new' %}"
+                class="btn btn-primary btn-sm d-inline-flex align-items-center gap-1 shadow-sm">
+                <i class="bi bi-person-plus-fill"></i>
+                <span>Direct Child Enrollment</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- KPI Metric Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-sm-6 col-xl-3">
+            <a href="?status=all" class="text-decoration-none">
+                <div
+                    class="card border-0 shadow-sm h-100 {% if status_filter == 'all' %}border-primary border-2{% endif %}">
+                    <div class="card-body p-3 d-flex align-items-center gap-3">
+                        <div class="bg-primary bg-opacity-10 text-primary p-3 rounded-3 fs-4">
+                            <i class="bi bi-inbox-fill"></i>
+                        </div>
+                        <div>
+                            <div class="text-muted small text-uppercase fw-semibold" style="font-size: 0.7rem;">TOTAL
+                                INQUIRIES</div>
+                            <h4 class="fw-bold text-slate-800 mb-0 font-monospace">{{ total_count }}</h4>
+                            <small class="text-muted">All time applications</small>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-12 col-sm-6 col-xl-3">
+            <a href="?status=pending" class="text-decoration-none">
+                <div
+                    class="card border-0 shadow-sm h-100 {% if status_filter == 'pending' %}border-warning border-2{% endif %}">
+                    <div class="card-body p-3 d-flex align-items-center gap-3">
+                        <div class="bg-warning bg-opacity-10 text-warning p-3 rounded-3 fs-4">
+                            <i class="bi bi-clock-history"></i>
+                        </div>
+                        <div>
+                            <div class="text-muted small text-uppercase fw-semibold" style="font-size: 0.7rem;">PENDING
+                                REVIEW</div>
+                            <h4 class="fw-bold text-warning mb-0 font-monospace">{{ pending_count }}</h4>
+                            <small class="text-muted">Awaiting decision</small>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-12 col-sm-6 col-xl-3">
+            <a href="?status=approved" class="text-decoration-none">
+                <div
+                    class="card border-0 shadow-sm h-100 {% if status_filter == 'approved' %}border-success border-2{% endif %}">
+                    <div class="card-body p-3 d-flex align-items-center gap-3">
+                        <div class="bg-success bg-opacity-10 text-success p-3 rounded-3 fs-4">
+                            <i class="bi bi-check-circle-fill"></i>
+                        </div>
+                        <div>
+                            <div class="text-muted small text-uppercase fw-semibold" style="font-size: 0.7rem;">APPROVED
+                                & ENROLLED</div>
+                            <h4 class="fw-bold text-success mb-0 font-monospace">{{ approved_count }}</h4>
+                            <small class="text-muted">Active center students</small>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-12 col-sm-6 col-xl-3">
+            <a href="?status=waitlisted" class="text-decoration-none">
+                <div
+                    class="card border-0 shadow-sm h-100 {% if status_filter == 'waitlisted' %}border-info border-2{% endif %}">
+                    <div class="card-body p-3 d-flex align-items-center gap-3">
+                        <div class="bg-info bg-opacity-10 text-info p-3 rounded-3 fs-4">
+                            <i class="bi bi-hourglass-bottom"></i>
+                        </div>
+                        <div>
+                            <div class="text-muted small text-uppercase fw-semibold" style="font-size: 0.7rem;">
+                                WAITLISTED</div>
+                            <h4 class="fw-bold text-info mb-0 font-monospace">{{ waitlisted_count }}</h4>
+                            <small class="text-muted">Awaiting vacancy</small>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <!-- Filter Pills -->
+    <div class="d-flex flex-wrap gap-2 mb-3">
+        <a href="?status=all"
+            class="btn btn-sm {% if status_filter == 'all' %}btn-dark{% else %}btn-light border text-muted{% endif %} px-3 rounded-pill">
+            All ({{ total_count }})
+        </a>
+        <a href="?status=pending"
+            class="btn btn-sm {% if status_filter == 'pending' %}btn-warning text-dark fw-semibold{% else %}btn-light border text-muted{% endif %} px-3 rounded-pill">
+            <i class="bi bi-clock me-1"></i> Pending Review ({{ pending_count }})
+        </a>
+        <a href="?status=approved"
+            class="btn btn-sm {% if status_filter == 'approved' %}btn-success fw-semibold{% else %}btn-light border text-muted{% endif %} px-3 rounded-pill">
+            <i class="bi bi-check2 me-1"></i> Approved & Enrolled ({{ approved_count }})
+        </a>
+        <a href="?status=waitlisted"
+            class="btn btn-sm {% if status_filter == 'waitlisted' %}btn-info text-white fw-semibold{% else %}btn-light border text-muted{% endif %} px-3 rounded-pill">
+            <i class="bi bi-hourglass-split me-1"></i> Waitlisted ({{ waitlisted_count }})
+        </a>
+        <a href="?status=rejected"
+            class="btn btn-sm {% if status_filter == 'rejected' %}btn-danger fw-semibold{% else %}btn-light border text-muted{% endif %} px-3 rounded-pill">
+            <i class="bi bi-x-circle me-1"></i> Declined ({{ rejected_count }})
+        </a>
+    </div>
+
+    <!-- Applications Table -->
+    <div class="card border-0 shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light text-muted small text-uppercase">
+                    <tr>
+                        <th class="ps-4">App Ref #</th>
+                        <th>Child Name & Age</th>
+                        <th>Parent / Guardian</th>
+                        <th>Program & Start Date</th>
+                        <th>Documents & Consents</th>
+                        <th>Status</th>
+                        <th class="text-end pe-4" style="min-width: 160px;">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for app in applications %}
+                    <tr>
+                        <td class="ps-4">
+                            <span class="font-monospace fw-bold text-primary">{{ app.application_number }}</span>
+                            <div class="text-muted small" style="font-size: 0.72rem;">Submitted: {{ app.submitted_at|date:"M d, Y" }}</div>
+                        </td>
+                        <td>
+                            <div class="fw-bold text-slate-800">{{ app.child_first_name }} {{ app.child_last_name }}</div>
+                            <small class="text-muted">
+                                {% if app.date_of_birth %}
+                                Born {{ app.date_of_birth|date:"M d, Y" }}
+                                {% if app.age_in_months is not None %}
+                                ({{ app.age_in_months }} mos)
+                                {% endif %}
+                                {% else %}
+                                Age not provided
+                                {% endif %}
+                                &bull; {{ app.gender|title }}
+                            </small>
+                        </td>
+                        <td>
+                            <div class="text-slate-800 fw-medium">{{ app.parent_first_name }} {{ app.parent_last_name }}</div>
+                            <div class="small text-muted"><i class="bi bi-telephone me-1"></i> {{ app.parent_phone }}</div>
+                            <div class="small text-muted"><i class="bi bi-envelope me-1"></i> {{ app.parent_email }}</div>
+                        </td>
+                        <td>
+                            <span class="badge bg-light text-dark border">{{ app.program_interest|default:"General Childcare" }}</span>
+                            <div class="small text-muted mt-1">
+                                <i class="bi bi-calendar-event me-1"></i> Preferred: <strong>{{ app.preferred_start_date|date:"M d, Y"|default:app.preferred_start_date|default:"Immediate" }}</strong>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="d-flex flex-column gap-1">
+                                {% if app.birth_document_url or app.birth_reg_number %}
+                                <span
+                                    class="badge bg-light text-success border border-success border-opacity-25 text-start">
+                                    <i class="bi bi-file-earmark-check me-1"></i> Birth ID Verified
+                                </span>
+                                {% else %}
+                                <span class="badge bg-light text-muted border text-start">
+                                    <i class="bi bi-file-earmark me-1"></i> No Birth Doc
+                                </span>
+                                {% endif %}
+
+                                {% if app.immunization_document_url %}
+                                <span class="badge bg-light text-info border border-info border-opacity-25 text-start">
+                                    <i class="bi bi-shield-check me-1"></i> Immunization Record
+                                </span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td>
+                            {% if app.status == 'approved' %}
+                            <span
+                                class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2 py-1">
+                                <i class="bi bi-check-circle-fill me-1"></i> Approved & Enrolled
+                            </span>
+                            {% elif app.status == 'waitlisted' %}
+                            <span
+                                class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 px-2 py-1">
+                                <i class="bi bi-hourglass-split me-1"></i> On Waitlist
+                            </span>
+                            {% elif app.status == 'rejected' %}
+                            <span
+                                class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-2 py-1">
+                                <i class="bi bi-x-circle-fill me-1"></i> Declined
+                            </span>
+                            {% else %}
+                            <span
+                                class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 px-2 py-1">
+                                <i class="bi bi-clock-fill me-1"></i> Pending Review
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end pe-4">
+                            <a href="{% url 'daycare_admission_detail' app.id %}"
+                                class="btn btn-sm btn-primary py-1 px-3 fw-semibold d-inline-flex align-items-center gap-1 shadow-sm">
+                                <span>Review & Decide</span>
+                                <i class="bi bi-chevron-right small"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-5 text-muted">
+                            <i class="bi bi-inbox fs-1 d-block mb-2 text-secondary opacity-50"></i>
+                            No enrollment applications matching this filter.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

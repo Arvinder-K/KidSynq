@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}Center Communication - KidSynq{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="h4 fw-bold text-slate-800 mb-1">Center Communication Hub</h2>
+        <p class="text-muted small mb-0">Broadcast announcements, newsletters, and direct messages to families and staff</p>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-12 col-lg-8">
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0 fw-semibold">Recent Announcements</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for announcement in announcements %}
+                    <div class="list-group-item p-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <h6 class="fw-bold text-slate-800 mb-0">{{ announcement.title }}</h6>
+                            <span class="badge bg-light text-muted small">{{ announcement.created_at|date:"M d, Y" }}</span>
+                        </div>
+                        <p class="text-muted small mb-2">{{ announcement.content }}</p>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-primary-subtle text-primary">{{ announcement.target_audience|title|default:"All Families" }}</span>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-5 text-muted">
+                        <i class="bi bi-megaphone fs-1 d-block mb-2 text-secondary opacity-50"></i>
+                        No announcements posted yet.
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-lg-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-bottom py-3">
+                <h5 class="card-title mb-0 fw-semibold">Communication Channels</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <div class="stat-icon bg-success bg-opacity-10 text-success">
+                        <i class="bi bi-envelope-check"></i>
+                    </div>
+                    <div>
+                        <div class="fw-semibold text-slate-800">Email Notifications</div>
+                        <div class="text-muted small">Instant delivery enabled</div>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center gap-3">
+                    <div class="stat-icon bg-info bg-opacity-10 text-info">
+                        <i class="bi bi-phone"></i>
+                    </div>
+                    <div>
+                        <div class="fw-semibold text-slate-800">Family Portal Feed</div>
+                        <div class="text-muted small">Live sync to parent app</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
