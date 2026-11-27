@@ -88,8 +88,12 @@ class EmployeeDetailView(StaffRequiredMixin, View):
     template_name = 'staff/detail.html'
 
     def get(self, request, pk):
-        daycare = get_user_daycare(request.user)
-        emp = get_object_or_404(Employee, pk=pk, daycare=daycare)
+        if request.user.is_superuser:
+            emp = get_object_or_404(Employee, pk=pk)
+            daycare = emp.daycare
+        else:
+            daycare = get_user_daycare(request.user)
+            emp = get_object_or_404(Employee, pk=pk, daycare=daycare)
         credentials = ECECredential.objects.filter(employee=emp).select_related('credential_type', 'province').order_by('-issue_date')
         credential_types = CredentialType.objects.all().order_by('category', 'name')
         classrooms = Classroom.objects.filter(daycare=daycare, deleted_at__isnull=True).order_by('room_name')
@@ -132,8 +136,12 @@ class EmployeeDetailView(StaffRequiredMixin, View):
         })
 
     def post(self, request, pk):
-        daycare = get_user_daycare(request.user)
-        emp = get_object_or_404(Employee, pk=pk, daycare=daycare)
+        if request.user.is_superuser:
+            emp = get_object_or_404(Employee, pk=pk)
+            daycare = emp.daycare
+        else:
+            daycare = get_user_daycare(request.user)
+            emp = get_object_or_404(Employee, pk=pk, daycare=daycare)
         action = request.POST.get('action')
 
         if action == 'add_credential':

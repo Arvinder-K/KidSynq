@@ -27,9 +27,9 @@
                             {% if employee.employment_type %}
                             <span class="badge bg-light text-slate-700 border">{{ employee.employment_type }}</span>
                             {% endif %}
-                            <span><i class="bi bi-calendar-event me-1"></i>Hired: {{ employee.hire_date|date:"M d, Y"|default:employee.start_date|date:"M d, Y"|default:"Nov 1, 2024" }}</span>
+                            <span><i class="bi bi-calendar-event me-1"></i>Hired: {{ employee.start_date|date:"M d, Y"|default:"Nov 1, 2024" }}</span>
                             <span><i class="bi bi-envelope me-1"></i>{{ employee.email|default:"-" }}</span>
-                            <span><i class="bi bi-telephone me-1"></i>{{ employee.phone_number|default:employee.phone|default:"-" }}</span>
+                            <span><i class="bi bi-telephone me-1"></i>{{ employee.phone|default:"-" }}</span>
                         </div>
                     </div>
                 </div>
@@ -83,14 +83,22 @@
                         </div>
                         <div>
                             <span>Username / Email: </span>
-                            <strong class="text-slate-800">{{ employee.email|default:employee.user.username|default:"Not configured" }}</strong>
+                            <strong class="text-slate-800">
+                                {% if employee.email %}
+                                    {{ employee.email }}
+                                {% elif employee.user and employee.user.username %}
+                                    {{ employee.user.username }}
+                                {% else %}
+                                    Not configured
+                                {% endif %}
+                            </strong>
                             {% if employee.email %}
                             <button type="button" class="btn btn-link btn-sm p-0 ms-1 text-decoration-none text-muted" onclick="copyText('{{ employee.email }}', this)" title="Copy Email">
                                 <i class="bi bi-copy"></i>
                             </button>
                             {% endif %}
                         </div>
-                        {% if has_login and employee.user.last_login %}
+                        {% if has_login and employee.user and employee.user.last_login %}
                         <div>
                             <span>Last Login: </span>
                             <span class="text-slate-700">{{ employee.user.last_login|date:"M d, Y H:i" }}</span>
@@ -139,7 +147,11 @@
                 <div>
                     <div class="text-muted small fw-medium">Assigned Room</div>
                     <div class="fs-5 fw-bold text-slate-800 text-truncate" style="max-width: 160px;">
-                        {{ primary_assignment.classroom.room_name|default:primary_assignment.classroom.name|default:"Sunshine Toddlers" }}
+                        {% if primary_assignment and primary_assignment.classroom %}
+                            {{ primary_assignment.classroom.room_name }}
+                        {% else %}
+                            Sunshine Toddlers
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -281,7 +293,7 @@
                             <td>{{ s.shift_start|time:"H:i"|default:s.shift_start }} &ndash; {{ s.shift_end|time:"H:i"|default:s.shift_end }}</td>
                             <td>
                                 {% if s.classroom %}
-                                    <span class="badge bg-primary-subtle text-primary">{{ s.classroom.room_name|default:s.classroom.name }}</span>
+                                    <span class="badge bg-primary-subtle text-primary">{{ s.classroom.room_name }}</span>
                                 {% else %}
                                     <span class="badge bg-light text-muted border">All Rooms</span>
                                 {% endif %}
@@ -435,7 +447,7 @@
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-semibold">Phone Number</label>
-                            <input type="tel" name="phone" class="form-control" value="{{ employee.phone|default:employee.phone_number|default:'' }}">
+                            <input type="tel" name="phone" class="form-control" value="{{ employee.phone|default:'' }}">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-semibold">Employment Type</label>
@@ -451,15 +463,15 @@
                             <select name="classroom_id" class="form-select">
                                 <option value="">-- Floating / Center Wide --</option>
                                 {% for room in classrooms %}
-                                <option value="{{ room.id }}" {% if primary_assignment.classroom.id == room.id %}selected{% endif %}>
-                                    {{ room.room_name|default:room.name }}
+                                <option value="{{ room.id }}" {% if primary_assignment and primary_assignment.classroom and primary_assignment.classroom.id == room.id %}selected{% endif %}>
+                                    {{ room.room_name }}
                                 </option>
                                 {% endfor %}
                             </select>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-semibold">Hire Date</label>
-                            <input type="date" name="hire_date" class="form-control" value="{{ employee.start_date|date:'Y-m-d'|default:employee.hire_date|date:'Y-m-d'|default:'2024-11-01' }}">
+                            <input type="date" name="hire_date" class="form-control" value="{{ employee.start_date|date:'Y-m-d'|default:'2024-11-01' }}">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-semibold">Date of Birth</label>
