@@ -711,8 +711,115 @@ class LeaveManagementView(StaffRequiredMixin, View):
 
     def get(self, request):
         daycare = get_user_daycare(request.user)
-        requests = LeaveRequest.objects.filter(employee__daycare=daycare).select_related('employee').order_by('-start_date')
-        return render(request, self.template_name, {'requests': requests})
+        from apps.daycare.services.scheduling import LeaveService
+        from core.models import LeaveType
+
+        leave_types = LeaveService.get_or_create_default_leave_types(daycare)
+        employees = Employee.objects.filter(daycare=daycare, status='Active').order_by('first_name', 'last_name')
+        
+        status_filter = request.GET.get('status', 'all')
+        requests_qs = LeaveRequest.objects.filter(daycare=daycare).select_related('employee', 'leave_type', 'approved_by').order_by('-created_at')
+
+        today = timezone.now().date()
+        total_count = requests_qs.count()
+        pending_count = requests_qs.filter(status='pending').count()
+        approved_count = requests_qs.filter(status='approved').count()
+        active_today_count = requests_qs.filter(status='approved', start_date__lte=today, end_date__gte=today).count()
+
+        if status_filter == 'pending':
+            requests = requests_qs.filter(status='pending')
+        elif status_filter == 'approved':
+            requests = requests_qs.filter(status='approved')
+        elif status_filter == 'rejected':
+            requests = requests_qs.filter(status='rejected')
+        else:
+            requests = requests_qs
+
+        return render(request, self.template_name, {
+            'requests': requests,
+            'employees': employees,
+            'leave_types': leave_types,
+            'status_filter': status_filter,
+            'total_count': total_count,
+            'pending_count': pending_count,
+            'approved_count': approved_count,
+            'active_today_count': active_today_count,
+            'today': today,
+        })
+
+    def post(self, request):
+        daycare = get_user_daycare(request.user)
+        action = request.POST.get('action')
+
+        if action == 'create_leave':
+            employee_id = request.POST.get('employee_id')
+            leave_type_id = request.POST.get('leave_type_id')
+            start_date_str = request.POST.get('start_date')
+            end_date_str = request.POST.get('end_date')
+            reason = request.POST.get('reason', '').strip()
+            notes = request.POST.get('notes', '').strip()
+            direct_approve = request.POST.get('direct_approve') == 'true'
+
+            if not employee_id or not leave_type_id or not start_date_str or not end_date_str:
+                messages.error(request, "Please fill in all required fields (Employee, Leave Type, Start Date, End Date).")
+                return redirect('daycare_leave')
+
+            try:
+                start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
+                end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
+            except ValueError:
+                messages.error(request, "Invalid date format.")
+                return redirect('daycare_leave')
+
+            if start_date > end_date:
+                messages.error(request, "End date cannot be earlier than start date.")
+                return redirect('daycare_leave')
+
+            employee = get_object_or_404(Employee, pk=employee_id, daycare=daycare)
+            from core.models import LeaveType
+            leave_type = get_object_or_404(LeaveType, pk=leave_type_id, daycare=daycare)
+
+            initial_status = 'approved' if direct_approve else ('approved' if not leave_type.requires_approval else 'pending')
+            approved_by = request.user if initial_status == 'approved' else None
+            reviewed_at = timezone.now() if initial_status == 'approved' else None
+
+            LeaveRequest.objects.create(
+                daycare=daycare,
+                employee=employee,
+                leave_type=leave_type,
+                start_date=start_date,
+                end_date=end_date,
+                reason=reason,
+                notes=notes,
+                status=initial_status,
+                approved_by=approved_by,
+                reviewed_at=reviewed_at
+            )
+            messages.success(request, f"Leave recorded successfully for {employee.first_name} {employee.last_name}.")
+            return redirect('daycare_leave')
+
+        elif action == 'approve':
+            request_id = request.POST.get('request_id')
+            leave_req = get_object_or_404(LeaveRequest, pk=request_id, daycare=daycare)
+            leave_req.status = 'approved'
+            leave_req.approved_by = request.user
+            leave_req.reviewed_at = timezone.now()
+            leave_req.save()
+            messages.success(request, f"Leave request for {leave_req.employee.first_name} {leave_req.employee.last_name} has been approved.")
+            return redirect('daycare_leave')
+
+        elif action == 'reject':
+            request_id = request.POST.get('request_id')
+            rejection_reason = request.POST.get('rejection_reason', '').strip()
+            leave_req = get_object_or_404(LeaveRequest, pk=request_id, daycare=daycare)
+            leave_req.status = 'rejected'
+            leave_req.rejection_reason = rejection_reason
+            leave_req.reviewed_at = timezone.now()
+            leave_req.save()
+            messages.info(request, f"Leave request for {leave_req.employee.first_name} {leave_req.employee.last_name} has been declined.")
+            return redirect('daycare_leave')
+
+        return redirect('daycare_leave')
 
 class OvertimeManagementView(StaffRequiredMixin, View):
     template_name = 'staff/overtime.html'
